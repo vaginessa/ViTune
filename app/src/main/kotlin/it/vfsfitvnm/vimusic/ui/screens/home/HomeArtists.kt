@@ -35,6 +35,7 @@ import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.enums.ArtistSortBy
 import it.vfsfitvnm.vimusic.enums.SortOrder
 import it.vfsfitvnm.vimusic.models.Artist
+import it.vfsfitvnm.vimusic.preferences.OrderPreferences
 import it.vfsfitvnm.vimusic.ui.components.themed.FloatingActionsContainerWithScrollToTop
 import it.vfsfitvnm.vimusic.ui.components.themed.Header
 import it.vfsfitvnm.vimusic.ui.components.themed.HeaderIconButton
@@ -42,34 +43,27 @@ import it.vfsfitvnm.vimusic.ui.items.ArtistItem
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.ui.styling.px
-import it.vfsfitvnm.vimusic.utils.artistSortByKey
-import it.vfsfitvnm.vimusic.utils.artistSortOrderKey
-import it.vfsfitvnm.vimusic.utils.rememberPreference
 
-@ExperimentalFoundationApi
-@ExperimentalAnimationApi
+@OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
 @Composable
 fun HomeArtistList(
     onArtistClick: (Artist) -> Unit,
     onSearchClick: () -> Unit,
-) {
+) = with(OrderPreferences) {
     val (colorPalette) = LocalAppearance.current
-
-    var sortBy by rememberPreference(artistSortByKey, ArtistSortBy.DateAdded)
-    var sortOrder by rememberPreference(artistSortOrderKey, SortOrder.Descending)
 
     var items by persistList<Artist>("home/artists")
 
-    LaunchedEffect(sortBy, sortOrder) {
-        Database.artists(sortBy, sortOrder).collect { items = it }
+    LaunchedEffect(artistSortBy, artistSortOrder) {
+        Database.artists(artistSortBy, artistSortOrder).collect { items = it }
     }
 
     val thumbnailSizeDp = Dimensions.thumbnails.song * 2
     val thumbnailSizePx = thumbnailSizeDp.px
 
     val sortOrderIconRotation by animateFloatAsState(
-        targetValue = if (sortOrder == SortOrder.Ascending) 0f else 180f,
-        animationSpec = tween(durationMillis = 400, easing = LinearEasing)
+        targetValue = if (artistSortOrder == SortOrder.Ascending) 0f else 180f,
+        animationSpec = tween(durationMillis = 400, easing = LinearEasing), label = ""
     )
 
     val lazyGridState = rememberLazyGridState()
@@ -97,14 +91,14 @@ fun HomeArtistList(
                 Header(title = "Artists") {
                     HeaderIconButton(
                         icon = R.drawable.text,
-                        color = if (sortBy == ArtistSortBy.Name) colorPalette.text else colorPalette.textDisabled,
-                        onClick = { sortBy = ArtistSortBy.Name }
+                        color = if (artistSortBy == ArtistSortBy.Name) colorPalette.text else colorPalette.textDisabled,
+                        onClick = { artistSortBy = ArtistSortBy.Name }
                     )
 
                     HeaderIconButton(
                         icon = R.drawable.time,
-                        color = if (sortBy == ArtistSortBy.DateAdded) colorPalette.text else colorPalette.textDisabled,
-                        onClick = { sortBy = ArtistSortBy.DateAdded }
+                        color = if (artistSortBy == ArtistSortBy.DateAdded) colorPalette.text else colorPalette.textDisabled,
+                        onClick = { artistSortBy = ArtistSortBy.DateAdded }
                     )
 
                     Spacer(
@@ -115,7 +109,7 @@ fun HomeArtistList(
                     HeaderIconButton(
                         icon = R.drawable.arrow_up,
                         color = colorPalette.text,
-                        onClick = { sortOrder = !sortOrder },
+                        onClick = { artistSortOrder = !artistSortOrder },
                         modifier = Modifier
                             .graphicsLayer { rotationZ = sortOrderIconRotation }
                     )

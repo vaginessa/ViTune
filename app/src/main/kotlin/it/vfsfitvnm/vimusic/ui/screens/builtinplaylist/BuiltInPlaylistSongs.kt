@@ -1,10 +1,12 @@
 package it.vfsfitvnm.vimusic.ui.screens.builtinplaylist
 
+import androidx.annotation.OptIn
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
@@ -17,9 +19,13 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.media3.common.util.UnstableApi
 import it.vfsfitvnm.compose.persist.persistList
 import it.vfsfitvnm.vimusic.Database
 import it.vfsfitvnm.vimusic.LocalPlayerAwareWindowInsets
@@ -28,12 +34,14 @@ import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.enums.BuiltInPlaylist
 import it.vfsfitvnm.vimusic.models.Song
 import it.vfsfitvnm.vimusic.models.SongWithContentLength
+import it.vfsfitvnm.vimusic.preferences.DataPreferences
 import it.vfsfitvnm.vimusic.ui.components.LocalMenuState
 import it.vfsfitvnm.vimusic.ui.components.themed.FloatingActionsContainerWithScrollToTop
 import it.vfsfitvnm.vimusic.ui.components.themed.Header
 import it.vfsfitvnm.vimusic.ui.components.themed.InHistoryMediaItemMenu
 import it.vfsfitvnm.vimusic.ui.components.themed.NonQueuedMediaItemMenu
 import it.vfsfitvnm.vimusic.ui.components.themed.SecondaryTextButton
+import it.vfsfitvnm.vimusic.ui.components.themed.ValueSelectorDialog
 import it.vfsfitvnm.vimusic.ui.items.SongItem
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
@@ -43,11 +51,19 @@ import it.vfsfitvnm.vimusic.utils.enqueue
 import it.vfsfitvnm.vimusic.utils.forcePlayAtIndex
 import it.vfsfitvnm.vimusic.utils.forcePlayFromBeginning
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.cancellable
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.transformLatest
+import kotlin.math.min
 
+@kotlin.OptIn(ExperimentalCoroutinesApi::class)
 @ExperimentalFoundationApi
 @ExperimentalAnimationApi
+@OptIn(UnstableApi::class)
 @Composable
 fun BuiltInPlaylistSongs(builtInPlaylist: BuiltInPlaylist) {
     val (colorPalette) = LocalAppearance.current
@@ -65,12 +81,22 @@ fun BuiltInPlaylistSongs(builtInPlaylist: BuiltInPlaylist) {
                 .songsWithContentLength()
                 .flowOn(Dispatchers.IO)
                 .map { songs ->
-                    songs.filter { song ->
-                        song.contentLength?.let {
-                            binder?.cache?.isCached(song.song.id, 0, song.contentLength)
-                        } ?: false
-                    }.map(SongWithContentLength::song)
+                    songs
+                        .filter { binder?.isCached(it) ?: false }
+                        .map(SongWithContentLength::song)
                 }
+
+            BuiltInPlaylist.Top ->
+                snapshotFlow { DataPreferences.topListPeriod to DataPreferences.topListLength }
+                    .distinctUntilChanged().transformLatest { (period, length) ->
+                        emitAll(
+                            if (period.duration != null) Database.trending(
+                                limit = length,
+                                period = period.duration.inWholeMilliseconds
+                            ) else Database.songsByPlayTimeDesc().distinctUntilChanged()
+                                .map { it.subList(0, min(length, it.size)) }.cancellable()
+                        )
+                    }
         }.collect { songs = it }
     }
 
@@ -96,6 +122,7 @@ fun BuiltInPlaylistSongs(builtInPlaylist: BuiltInPlaylist) {
                     title = when (builtInPlaylist) {
                         BuiltInPlaylist.Favorites -> "Favorites"
                         BuiltInPlaylist.Offline -> "Offline"
+                        BuiltInPlaylist.Top -> "My top ${DataPreferences.topListLength}"
                     },
                     modifier = Modifier
                         .padding(bottom = 8.dp)
@@ -112,6 +139,24 @@ fun BuiltInPlaylistSongs(builtInPlaylist: BuiltInPlaylist) {
                         modifier = Modifier
                             .weight(1f)
                     )
+
+                    if (builtInPlaylist == BuiltInPlaylist.Top) {
+                        var dialogShowing by rememberSaveable { mutableStateOf(false) }
+
+                        SecondaryTextButton(
+                            text = DataPreferences.topListPeriod.displayName,
+                            onClick = { dialogShowing = true }
+                        )
+
+                        if (dialogShowing) ValueSelectorDialog(
+                            onDismiss = { dialogShowing = false },
+                            title = "View top ${DataPreferences.topListLength} of ...",
+                            selectedValue = DataPreferences.topListPeriod,
+                            values = DataPreferences.TopListPeriod.entries,
+                            onValueSelected = { DataPreferences.topListPeriod = it },
+                            valueText = { it.displayName }
+                        )
+                    }
                 }
             }
 
@@ -120,37 +165,45 @@ fun BuiltInPlaylistSongs(builtInPlaylist: BuiltInPlaylist) {
                 key = { _, song -> song.id },
                 contentType = { _, song -> song },
             ) { index, song ->
-                SongItem(
-                    song = song,
-                    thumbnailSizeDp = thumbnailSizeDp,
-                    thumbnailSizePx = thumbnailSize,
-                    modifier = Modifier
-                        .combinedClickable(
-                            onLongClick = {
-                                menuState.display {
-                                    when (builtInPlaylist) {
-                                        BuiltInPlaylist.Favorites -> NonQueuedMediaItemMenu(
-                                            mediaItem = song.asMediaItem,
-                                            onDismiss = menuState::hide
-                                        )
+                Row {
+                    SongItem(
+                        modifier = Modifier
+                            .combinedClickable(
+                                onLongClick = {
+                                    menuState.display {
+                                        when (builtInPlaylist) {
+                                            BuiltInPlaylist.Favorites -> NonQueuedMediaItemMenu(
+                                                mediaItem = song.asMediaItem,
+                                                onDismiss = menuState::hide
+                                            )
 
-                                        BuiltInPlaylist.Offline -> InHistoryMediaItemMenu(
-                                            song = song,
-                                            onDismiss = menuState::hide
-                                        )
+                                            BuiltInPlaylist.Offline -> InHistoryMediaItemMenu(
+                                                song = song,
+                                                onDismiss = menuState::hide
+                                            )
+
+                                            BuiltInPlaylist.Top -> NonQueuedMediaItemMenu(
+                                                mediaItem = song.asMediaItem,
+                                                onDismiss = menuState::hide
+                                            )
+                                        }
                                     }
+                                },
+                                onClick = {
+                                    binder?.stopRadio()
+                                    binder?.player?.forcePlayAtIndex(
+                                        songs.map(Song::asMediaItem),
+                                        index
+                                    )
                                 }
-                            },
-                            onClick = {
-                                binder?.stopRadio()
-                                binder?.player?.forcePlayAtIndex(
-                                    songs.map(Song::asMediaItem),
-                                    index
-                                )
-                            }
-                        )
-                        .animateItemPlacement()
-                )
+                            )
+                            .animateItemPlacement(),
+                        song = song,
+                        index = if (builtInPlaylist == BuiltInPlaylist.Top) index else null,
+                        thumbnailSizePx = thumbnailSize,
+                        thumbnailSizeDp = thumbnailSizeDp
+                    )
+                }
             }
         }
 

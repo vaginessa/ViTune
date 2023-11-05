@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -23,33 +22,25 @@ inline fun ItemContainer(
     horizontalAlignment: Alignment.Horizontal = Alignment.Start,
     verticalAlignment: Alignment.Vertical = Alignment.CenterVertically,
     content: @Composable (centeredModifier: Modifier) -> Unit
-) {
-    if (alternative) {
-        Column(
-            horizontalAlignment = horizontalAlignment,
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = modifier
-                .padding(vertical = Dimensions.itemsVerticalPadding, horizontal = 16.dp)
-                .width(thumbnailSizeDp)
-        ) {
-            content(
-                centeredModifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-            )
-        }
-    } else {
-        Row(
-            verticalAlignment = verticalAlignment,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = modifier
-                .padding(vertical = Dimensions.itemsVerticalPadding, horizontal = 16.dp)
-                .fillMaxWidth()
-        ) {
-            content(
-                centeredModifier = Modifier
-                    .align(Alignment.CenterVertically)
-            )
-        }
+) = if (alternative) {
+    Column(
+        horizontalAlignment = horizontalAlignment,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = modifier
+            .padding(vertical = Dimensions.itemsVerticalPadding, horizontal = 16.dp)
+            .width(thumbnailSizeDp)
+    ) {
+        content(Modifier.align(Alignment.CenterHorizontally))
+    }
+} else {
+    Row(
+        verticalAlignment = verticalAlignment,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = modifier
+            .padding(vertical = Dimensions.itemsVerticalPadding, horizontal = 16.dp)
+            .fillMaxWidth()
+    ) {
+        content(Modifier.align(Alignment.CenterVertically))
     }
 }
 
@@ -58,11 +49,9 @@ inline fun ItemInfoContainer(
     modifier: Modifier = Modifier,
     horizontalAlignment: Alignment.Horizontal = Alignment.Start,
     content: @Composable ColumnScope.() -> Unit
-) {
-    Column(
-        horizontalAlignment = horizontalAlignment,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = modifier,
-        content = content
-    )
-}
+) = Column(
+    horizontalAlignment = horizontalAlignment,
+    verticalArrangement = Arrangement.spacedBy(4.dp),
+    modifier = modifier,
+    content = content
+)

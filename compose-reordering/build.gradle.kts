@@ -1,15 +1,14 @@
 plugins {
-    id("com.android.library")
-    kotlin("android")
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.android)
 }
 
 android {
     namespace = "it.vfsfitvnm.compose.reordering"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         minSdk = 21
-        targetSdk = 33
     }
 
     buildTypes {
@@ -19,17 +18,8 @@ android {
         }
     }
 
-    sourceSets.all {
-        kotlin.srcDir("src/$name/kotlin")
-    }
-
     buildFeatures {
         compose = true
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
     }
 
     composeOptions {
@@ -37,9 +27,12 @@ android {
     }
 
     kotlinOptions {
-        freeCompilerArgs += "-Xcontext-receivers"
-        jvmTarget = "1.8"
+        freeCompilerArgs = freeCompilerArgs + listOf("-Xcontext-receivers")
     }
+}
+
+kotlin {
+    jvmToolchain(libs.versions.jvm.get().toInt())
 }
 
 dependencies {

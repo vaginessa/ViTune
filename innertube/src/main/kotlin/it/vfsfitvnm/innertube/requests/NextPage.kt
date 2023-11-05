@@ -12,12 +12,11 @@ import it.vfsfitvnm.innertube.utils.from
 import it.vfsfitvnm.innertube.utils.runCatchingNonCancellable
 
 
-
 suspend fun Innertube.nextPage(body: NextBody): Result<Innertube.NextPage>? =
     runCatchingNonCancellable {
-        val response = client.post(next) {
+        val response = client.post(NEXT) {
             setBody(body)
-            mask("contents.singleColumnMusicWatchNextResultsRenderer.tabbedRenderer.watchNextTabbedResultsRenderer.tabs.tabRenderer.content.musicQueueRenderer.content.playlistPanelRenderer(continuations,contents(automixPreviewVideoRenderer,$playlistPanelVideoRendererMask))")
+            mask("contents.singleColumnMusicWatchNextResultsRenderer.tabbedRenderer.watchNextTabbedResultsRenderer.tabs.tabRenderer.content.musicQueueRenderer.content.playlistPanelRenderer(continuations,contents(automixPreviewVideoRenderer,$PLAYLIST_PANEL_VIDEO_RENDERER_MASK))")
         }.body<NextResponse>()
 
         val tabs = response
@@ -45,14 +44,12 @@ suspend fun Innertube.nextPage(body: NextBody): Result<Innertube.NextPage>? =
                 ?.navigationEndpoint
                 ?.watchPlaylistEndpoint
 
-            if (endpoint != null) {
-                return nextPage(
-                    body.copy(
-                        playlistId = endpoint.playlistId,
-                        params = endpoint.params
-                    )
+            if (endpoint != null) return nextPage(
+                body.copy(
+                    playlistId = endpoint.playlistId,
+                    params = endpoint.params
                 )
-            }
+            )
         }
 
         Innertube.NextPage(
@@ -65,9 +62,9 @@ suspend fun Innertube.nextPage(body: NextBody): Result<Innertube.NextPage>? =
     }
 
 suspend fun Innertube.nextPage(body: ContinuationBody) = runCatchingNonCancellable {
-    val response = client.post(next) {
+    val response = client.post(NEXT) {
         setBody(body)
-        mask("continuationContents.playlistPanelContinuation(continuations,contents.$playlistPanelVideoRendererMask)")
+        mask("continuationContents.playlistPanelContinuation(continuations,contents.$PLAYLIST_PANEL_VIDEO_RENDERER_MASK)")
     }.body<ContinuationResponse>()
 
     response

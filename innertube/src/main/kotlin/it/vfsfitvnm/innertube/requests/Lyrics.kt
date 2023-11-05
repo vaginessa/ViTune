@@ -10,8 +10,8 @@ import it.vfsfitvnm.innertube.models.bodies.BrowseBody
 import it.vfsfitvnm.innertube.models.bodies.NextBody
 import it.vfsfitvnm.innertube.utils.runCatchingNonCancellable
 
-suspend fun Innertube.lyrics(body: NextBody): Result<String?>? = runCatchingNonCancellable {
-    val nextResponse = client.post(next) {
+suspend fun Innertube.lyrics(body: NextBody) = runCatchingNonCancellable {
+    val nextResponse = client.post(NEXT) {
         setBody(body)
         mask("contents.singleColumnMusicWatchNextResultsRenderer.tabbedRenderer.watchNextTabbedResultsRenderer.tabs.tabRenderer(endpoint,title)")
     }.body<NextResponse>()
@@ -29,7 +29,7 @@ suspend fun Innertube.lyrics(body: NextBody): Result<String?>? = runCatchingNonC
         ?.browseId
         ?: return@runCatchingNonCancellable null
 
-    val response = client.post(browse) {
+    val response = client.post(BROWSE) {
         setBody(BrowseBody(browseId = browseId))
         mask("contents.sectionListRenderer.contents.musicDescriptionShelfRenderer.description")
     }.body<BrowseResponse>()

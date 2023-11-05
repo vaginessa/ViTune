@@ -69,7 +69,7 @@ fun ArtistLocalSongs(
             LazyColumn(
                 state = lazyListState,
                 contentPadding = LocalPlayerAwareWindowInsets.current
-                .only(WindowInsetsSides.Vertical + WindowInsetsSides.End).asPaddingValues(),
+                    .only(WindowInsetsSides.Vertical + WindowInsetsSides.End).asPaddingValues(),
                 modifier = Modifier
                     .background(colorPalette.background0)
                     .fillMaxSize()
@@ -99,9 +99,6 @@ fun ArtistLocalSongs(
                         key = { _, song -> song.id }
                     ) { index, song ->
                         SongItem(
-                            song = song,
-                            thumbnailSizeDp = songThumbnailSizeDp,
-                            thumbnailSizePx = songThumbnailSizePx,
                             modifier = Modifier
                                 .combinedClickable(
                                     onLongClick = {
@@ -119,7 +116,10 @@ fun ArtistLocalSongs(
                                             index
                                         )
                                     }
-                                )
+                                ),
+                            song = song,
+                            thumbnailSizePx = songThumbnailSizePx,
+                            thumbnailSizeDp = songThumbnailSizeDp
                         )
                     }
                 } ?: item(key = "loading") {

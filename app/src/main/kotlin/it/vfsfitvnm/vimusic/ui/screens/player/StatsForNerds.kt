@@ -1,6 +1,7 @@
 package it.vfsfitvnm.vimusic.ui.screens.player
 
 import android.text.format.Formatter
+import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -25,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.cache.Cache
 import androidx.media3.datasource.cache.CacheSpan
 import it.vfsfitvnm.innertube.Innertube
@@ -38,13 +40,14 @@ import it.vfsfitvnm.vimusic.ui.styling.onOverlay
 import it.vfsfitvnm.vimusic.ui.styling.overlay
 import it.vfsfitvnm.vimusic.utils.color
 import it.vfsfitvnm.vimusic.utils.medium
-import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.withContext
+import kotlin.math.roundToInt
 
+@OptIn(UnstableApi::class)
 @Composable
 fun StatsForNerds(
     mediaId: String,
@@ -72,27 +75,29 @@ fun StatsForNerds(
         LaunchedEffect(mediaId) {
             Database.format(mediaId).distinctUntilChanged().collectLatest { currentFormat ->
                 if (currentFormat?.itag == null) {
-                    binder.player.currentMediaItem?.takeIf { it.mediaId == mediaId }?.let { mediaItem ->
-                        withContext(Dispatchers.IO) {
-                            delay(2000)
-                            Innertube.player(PlayerBody(videoId = mediaId))?.onSuccess { response ->
-                                response.streamingData?.highestQualityFormat?.let { format ->
-                                    Database.insert(mediaItem)
-                                    Database.insert(
-                                        Format(
-                                            songId = mediaId,
-                                            itag = format.itag,
-                                            mimeType = format.mimeType,
-                                            bitrate = format.bitrate,
-                                            loudnessDb = response.playerConfig?.audioConfig?.normalizedLoudnessDb,
-                                            contentLength = format.contentLength,
-                                            lastModified = format.lastModified
-                                        )
-                                    )
-                                }
+                    binder.player.currentMediaItem?.takeIf { it.mediaId == mediaId }
+                        ?.let { mediaItem ->
+                            withContext(Dispatchers.IO) {
+                                delay(2000)
+                                Innertube.player(PlayerBody(videoId = mediaId))
+                                    ?.onSuccess { response ->
+                                        response.streamingData?.highestQualityFormat?.let { format ->
+                                            Database.insert(mediaItem)
+                                            Database.insert(
+                                                Format(
+                                                    songId = mediaId,
+                                                    itag = format.itag,
+                                                    mimeType = format.mimeType,
+                                                    bitrate = format.bitrate,
+                                                    loudnessDb = response.playerConfig?.audioConfig?.normalizedLoudnessDb,
+                                                    contentLength = format.contentLength,
+                                                    lastModified = format.lastModified
+                                                )
+                                            )
+                                        }
+                                    }
                             }
                         }
-                    }
                 } else {
                     format = currentFormat
                 }

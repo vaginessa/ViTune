@@ -1,9 +1,10 @@
 package it.vfsfitvnm.vimusic.ui.screens.player
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
-import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
@@ -32,20 +35,21 @@ import androidx.media3.common.Player
 import coil.compose.AsyncImage
 import it.vfsfitvnm.vimusic.Database
 import it.vfsfitvnm.vimusic.LocalPlayerServiceBinder
+import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.service.LoginRequiredException
 import it.vfsfitvnm.vimusic.service.PlayableFormatNotFoundException
 import it.vfsfitvnm.vimusic.service.UnplayableException
 import it.vfsfitvnm.vimusic.service.VideoIdMismatchException
+import it.vfsfitvnm.vimusic.service.isLocal
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.ui.styling.px
-import it.vfsfitvnm.vimusic.utils.currentWindow
 import it.vfsfitvnm.vimusic.utils.DisposableListener
+import it.vfsfitvnm.vimusic.utils.currentWindow
 import it.vfsfitvnm.vimusic.utils.thumbnail
 import java.net.UnknownHostException
 import java.nio.channels.UnresolvedAddressException
 
-@ExperimentalAnimationApi
 @Composable
 fun Thumbnail(
     isShowingLyrics: Boolean,
@@ -90,9 +94,14 @@ fun Thumbnail(
     AnimatedContent(
         targetState = window,
         transitionSpec = {
+            if (initialState == targetState) return@AnimatedContent ContentTransform(
+                EnterTransition.None,
+                ExitTransition.None
+            )
+
             val duration = 500
             val slideDirection =
-                if (targetState.firstPeriodIndex > initialState.firstPeriodIndex) AnimatedContentScope.SlideDirection.Left else AnimatedContentScope.SlideDirection.Right
+                if (targetState.firstPeriodIndex > initialState.firstPeriodIndex) AnimatedContentTransitionScope.SlideDirection.Left else AnimatedContentTransitionScope.SlideDirection.Right
 
             ContentTransform(
                 targetContentEnter = slideIntoContainer(
@@ -116,16 +125,19 @@ fun Thumbnail(
                 sizeTransform = SizeTransform(clip = false)
             )
         },
-        contentAlignment = Alignment.Center
-    ) {currentWindow ->
+        contentAlignment = Alignment.Center,
+        label = ""
+    ) { currentWindow ->
         Box(
             modifier = modifier
                 .aspectRatio(1f)
                 .clip(LocalAppearance.current.thumbnailShape)
                 .size(thumbnailSizeDp)
         ) {
-            AsyncImage(
-                model = currentWindow.mediaItem.mediaMetadata.artworkUri.thumbnail(thumbnailSizePx),
+            if (currentWindow.mediaItem.mediaMetadata.artworkUri != null) AsyncImage(
+                model = currentWindow.mediaItem.mediaMetadata.artworkUri.thumbnail(
+                    thumbnailSizePx
+                ),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -136,9 +148,17 @@ fun Thumbnail(
                         )
                     }
                     .fillMaxSize()
+            ) else Icon(
+                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                contentDescription = null,
+                modifier = Modifier
+                    .pointerInput(Unit) {
+                        detectTapGestures(onLongPress = { onShowStatsForNerds(true) })
+                    }
+                    .fillMaxSize()
             )
 
-            Lyrics(
+            if (!currentWindow.mediaItem.isLocal) Lyrics(
                 mediaId = currentWindow.mediaItem.mediaId,
                 isDisplayed = isShowingLyrics && error == null,
                 onDismiss = { onShowLyrics(false) },
@@ -157,14 +177,15 @@ fun Thumbnail(
             PlaybackError(
                 isDisplayed = error != null,
                 messageProvider = {
-                    when (error?.cause?.cause) {
-                        is UnresolvedAddressException, is UnknownHostException -> "A network error has occurred"
-                        is PlayableFormatNotFoundException -> "Couldn't find a playable audio format"
-                        is UnplayableException -> "The original video source of this song has been deleted"
-                        is LoginRequiredException -> "This song cannot be played due to server restrictions"
-                        is VideoIdMismatchException -> "The returned video id doesn't match the requested one"
-                        else -> "An unknown playback error has occurred"
-                    }
+                    if (currentWindow.mediaItem.isLocal) "This local music file does not exist anymore" else
+                        when (error?.cause?.cause) {
+                            is UnresolvedAddressException, is UnknownHostException -> "A network error has occurred"
+                            is PlayableFormatNotFoundException -> "Couldn't find a playable audio format"
+                            is UnplayableException -> "The original video source of this song has been deleted"
+                            is LoginRequiredException -> "This song cannot be played due to server restrictions"
+                            is VideoIdMismatchException -> "The returned video id doesn't match the requested one"
+                            else -> "An unknown playback error has occurred"
+                        }
                 },
                 onDismiss = player::prepare
             )

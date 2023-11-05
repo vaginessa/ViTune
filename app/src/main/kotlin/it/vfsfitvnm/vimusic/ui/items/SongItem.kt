@@ -13,12 +13,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.MediaItem
 import coil.compose.AsyncImage
+import it.vfsfitvnm.innertube.Innertube
+import it.vfsfitvnm.vimusic.models.Song
 import it.vfsfitvnm.vimusic.ui.components.themed.TextPlaceholder
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.ui.styling.shimmer
@@ -26,8 +29,6 @@ import it.vfsfitvnm.vimusic.utils.medium
 import it.vfsfitvnm.vimusic.utils.secondary
 import it.vfsfitvnm.vimusic.utils.semiBold
 import it.vfsfitvnm.vimusic.utils.thumbnail
-import it.vfsfitvnm.innertube.Innertube
-import it.vfsfitvnm.vimusic.models.Song
 
 @Composable
 fun SongItem(
@@ -37,12 +38,12 @@ fun SongItem(
     modifier: Modifier = Modifier
 ) {
     SongItem(
+        modifier = modifier,
         thumbnailUrl = song.thumbnail?.size(thumbnailSizePx),
         title = song.info?.name,
         authors = song.authors?.joinToString("") { it.name ?: "" },
         duration = song.durationText,
         thumbnailSizeDp = thumbnailSizeDp,
-        modifier = modifier,
     )
 }
 
@@ -54,65 +55,83 @@ fun SongItem(
     modifier: Modifier = Modifier,
     onThumbnailContent: (@Composable BoxScope.() -> Unit)? = null,
     trailingContent: (@Composable () -> Unit)? = null
-) {
-    SongItem(
-        thumbnailUrl = song.mediaMetadata.artworkUri.thumbnail(thumbnailSizePx)?.toString(),
-        title = song.mediaMetadata.title.toString(),
-        authors = song.mediaMetadata.artist.toString(),
-        duration = song.mediaMetadata.extras?.getString("durationText"),
-        thumbnailSizeDp = thumbnailSizeDp,
-        onThumbnailContent = onThumbnailContent,
-        trailingContent = trailingContent,
-        modifier = modifier,
-    )
-}
+) = SongItem(
+    modifier = modifier,
+    thumbnailUrl = song.mediaMetadata.artworkUri.thumbnail(thumbnailSizePx)?.toString(),
+    title = song.mediaMetadata.title?.toString(),
+    authors = song.mediaMetadata.artist?.toString(),
+    duration = song.mediaMetadata.extras?.getString("durationText"),
+    thumbnailSizeDp = thumbnailSizeDp,
+    onThumbnailContent = onThumbnailContent,
+    trailingContent = trailingContent,
+)
 
 @Composable
 fun SongItem(
+    modifier: Modifier = Modifier,
     song: Song,
+    index: Int? = null,
     thumbnailSizePx: Int,
     thumbnailSizeDp: Dp,
-    modifier: Modifier = Modifier,
-    onThumbnailContent: (@Composable BoxScope.() -> Unit)? = null,
-    trailingContent: (@Composable () -> Unit)? = null
-) {
-    SongItem(
-        thumbnailUrl = song.thumbnailUrl?.thumbnail(thumbnailSizePx),
-        title = song.title,
-        authors = song.artistsText,
-        duration = song.durationText,
-        thumbnailSizeDp = thumbnailSizeDp,
-        onThumbnailContent = onThumbnailContent,
-        trailingContent = trailingContent,
-        modifier = modifier,
-    )
-}
+    onThumbnailContent: @Composable (BoxScope.() -> Unit)? = null,
+    trailingContent: @Composable (() -> Unit)? = null
+) = SongItem(
+    modifier = modifier,
+    index = index,
+    thumbnailUrl = song.thumbnailUrl?.thumbnail(thumbnailSizePx),
+    title = song.title,
+    authors = song.artistsText,
+    duration = song.durationText,
+    thumbnailSizeDp = thumbnailSizeDp,
+    onThumbnailContent = onThumbnailContent,
+    trailingContent = trailingContent,
+)
 
 @Composable
 fun SongItem(
+    modifier: Modifier = Modifier,
+    index: Int? = null,
     thumbnailUrl: String?,
     title: String?,
     authors: String?,
     duration: String?,
     thumbnailSizeDp: Dp,
-    modifier: Modifier = Modifier,
-    onThumbnailContent: (@Composable BoxScope.() -> Unit)? = null,
-    trailingContent: (@Composable () -> Unit)? = null
+    onThumbnailContent: @Composable (BoxScope.() -> Unit)? = null,
+    trailingContent: @Composable (() -> Unit)? = null
 ) {
+    val (_, typography) = LocalAppearance.current
+
     SongItem(
         title = title,
         authors = authors,
         duration = duration,
         thumbnailSizeDp = thumbnailSizeDp,
         thumbnailContent = {
-            AsyncImage(
-                model = thumbnailUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
+            Box(
                 modifier = Modifier
                     .clip(LocalAppearance.current.thumbnailShape)
                     .fillMaxSize()
-            )
+            ) {
+                AsyncImage(
+                    model = thumbnailUrl,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+
+                if (index != null) {
+                    Box(
+                        modifier = Modifier
+                            .background(color = Color.Black.copy(alpha = 0.75f))
+                            .fillMaxSize()
+                    )
+                    BasicText(
+                        text = "${index + 1}",
+                        style = typography.xs.semiBold.copy(color = Color.White),
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+            }
 
             onThumbnailContent?.invoke(this)
         },
@@ -139,11 +158,9 @@ fun SongItem(
         modifier = modifier
     ) {
         Box(
-            modifier = Modifier
-                .size(thumbnailSizeDp)
-        ) {
-            thumbnailContent()
-        }
+            modifier = Modifier.size(thumbnailSizeDp),
+            content = thumbnailContent
+        )
 
         ItemInfoContainer {
             trailingContent?.let {
@@ -153,8 +170,7 @@ fun SongItem(
                         style = typography.xs.semiBold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier
-                            .weight(1f)
+                        modifier = Modifier.weight(1f)
                     )
 
                     it()
@@ -166,15 +182,13 @@ fun SongItem(
                 overflow = TextOverflow.Ellipsis,
             )
 
-
             Row(verticalAlignment = Alignment.CenterVertically) {
                 BasicText(
                     text = authors ?: "",
                     style = typography.xs.semiBold.secondary,
                     maxLines = 1,
                     overflow = TextOverflow.Clip,
-                    modifier = Modifier
-                        .weight(1f)
+                    modifier = Modifier.weight(1f)
                 )
 
                 duration?.let {
@@ -183,8 +197,7 @@ fun SongItem(
                         style = typography.xxs.secondary.medium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier
-                            .padding(top = 4.dp)
+                        modifier = Modifier.padding(top = 4.dp)
                     )
                 }
             }
@@ -197,11 +210,11 @@ fun SongItemPlaceholder(
     thumbnailSizeDp: Dp,
     modifier: Modifier = Modifier
 ) {
-    val (colorPalette, _, thumbnailShape) = LocalAppearance.current
+    val (colorPalette, _, _, thumbnailShape) = LocalAppearance.current
 
     ItemContainer(
         alternative = false,
-        thumbnailSizeDp =thumbnailSizeDp,
+        thumbnailSizeDp = thumbnailSizeDp,
         modifier = modifier
     ) {
         Spacer(

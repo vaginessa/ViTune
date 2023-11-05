@@ -75,8 +75,7 @@ import it.vfsfitvnm.vimusic.utils.secondary
 import it.vfsfitvnm.vimusic.utils.semiBold
 import kotlinx.coroutines.flow.distinctUntilChanged
 
-@ExperimentalFoundationApi
-@ExperimentalAnimationApi
+@OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
 @Composable
 fun QuickPicks(
     onAlbumClick: (String) -> Unit,
@@ -94,10 +93,10 @@ fun QuickPicks(
     var relatedPageResult by persist<Result<Innertube.RelatedPage?>?>(tag = "home/relatedPageResult")
 
     LaunchedEffect(Unit) {
-        Database.trending().distinctUntilChanged().collect { song ->
-            if ((song == null && relatedPageResult == null) || trending?.id != song?.id) {
-                relatedPageResult =
-                    Innertube.relatedPage(NextBody(videoId = (song?.id ?: "J7p4bzqLvCw")))
+        Database.trending().distinctUntilChanged().collect { songs ->
+            val song = songs.firstOrNull()
+            if (relatedPageResult == null || trending?.id != song?.id) {
+                relatedPageResult = Innertube.relatedPage(NextBody(videoId = (song?.id ?: "J7p4bzqLvCw")))
             }
             trending = song
         }
@@ -105,11 +104,11 @@ fun QuickPicks(
 
     val songThumbnailSizeDp = Dimensions.thumbnails.song
     val songThumbnailSizePx = songThumbnailSizeDp.px
-    val albumThumbnailSizeDp = 108.dp
+    val albumThumbnailSizeDp = Dimensions.thumbnails.album
     val albumThumbnailSizePx = albumThumbnailSizeDp.px
-    val artistThumbnailSizeDp = 92.dp
+    val artistThumbnailSizeDp = Dimensions.thumbnails.artist
     val artistThumbnailSizePx = artistThumbnailSizeDp.px
-    val playlistThumbnailSizeDp = 108.dp
+    val playlistThumbnailSizeDp = Dimensions.thumbnails.playlist
     val playlistThumbnailSizePx = playlistThumbnailSizeDp.px
 
     val scrollState = rememberScrollState()
@@ -170,18 +169,6 @@ fun QuickPicks(
                     trending?.let { song ->
                         item {
                             SongItem(
-                                song = song,
-                                thumbnailSizePx = songThumbnailSizePx,
-                                thumbnailSizeDp = songThumbnailSizeDp,
-                                trailingContent = {
-                                    Image(
-                                        painter = painterResource(R.drawable.star),
-                                        contentDescription = null,
-                                        colorFilter = ColorFilter.tint(colorPalette.accent),
-                                        modifier = Modifier
-                                            .size(16.dp)
-                                    )
-                                },
                                 modifier = Modifier
                                     .combinedClickable(
                                         onLongClick = {
@@ -207,8 +194,19 @@ fun QuickPicks(
                                         }
                                     )
                                     .animateItemPlacement()
-                                    .width(itemInHorizontalGridWidth)
-                            )
+                                    .width(itemInHorizontalGridWidth),
+                                song = song,
+                                thumbnailSizePx = songThumbnailSizePx,
+                                thumbnailSizeDp = songThumbnailSizeDp
+                            ) {
+                                Image(
+                                    painter = painterResource(R.drawable.star),
+                                    contentDescription = null,
+                                    colorFilter = ColorFilter.tint(colorPalette.accent),
+                                    modifier = Modifier
+                                        .size(16.dp)
+                                )
+                            }
                         }
                     }
 

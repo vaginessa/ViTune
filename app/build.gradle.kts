@@ -1,18 +1,19 @@
 plugins {
-    id("com.android.application")
-    kotlin("android")
-    kotlin("kapt")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.ksp)
 }
 
 android {
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "it.vfsfitvnm.vimusic"
         minSdk = 21
-        targetSdk = 33
-        versionCode = 20
-        versionName = "0.5.4"
+        targetSdk = 34
+        versionCode = 21
+        versionName = "0.5.5"
+        multiDexEnabled = true
     }
 
     splits {
@@ -27,30 +28,27 @@ android {
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
-            manifestPlaceholders["appName"] = "Debug"
+            versionNameSuffix = "-DEBUG"
+            manifestPlaceholders["appName"] = "ViMusic (Debug)"
         }
 
         release {
+            versionNameSuffix = "-RELEASE"
             isMinifyEnabled = true
             isShrinkResources = true
             manifestPlaceholders["appName"] = "ViMusic"
-            signingConfig = signingConfigs.getByName("debug")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            buildConfigField("String", "RELEASE_HACK", "\"AndroidWhyTfDidYouMakeMeDoThis\"")
         }
-    }
-
-    sourceSets.all {
-        kotlin.srcDir("src/$name/kotlin")
     }
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
     }
 
     composeOptions {
@@ -58,15 +56,16 @@ android {
     }
 
     kotlinOptions {
-        freeCompilerArgs += "-Xcontext-receivers"
-        jvmTarget = "1.8"
+        freeCompilerArgs = freeCompilerArgs + listOf("-Xcontext-receivers")
     }
 }
 
-kapt {
-    arguments {
-        arg("room.schemaLocation", "$projectDir/schemas")
-    }
+kotlin {
+    jvmToolchain(libs.versions.jvm.get().toInt())
+}
+
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 dependencies {
@@ -81,16 +80,20 @@ dependencies {
     implementation(libs.compose.ripple)
     implementation(libs.compose.shimmer)
     implementation(libs.compose.coil)
+    implementation(libs.compose.material3)
 
     implementation(libs.palette)
 
     implementation(libs.exoplayer)
 
     implementation(libs.room)
-    kapt(libs.room.compiler)
+    ksp(libs.room.compiler)
 
     implementation(projects.innertube)
     implementation(projects.kugou)
+    implementation(projects.lrclib)
+    implementation(projects.core.data)
+    implementation(projects.core.ui)
 
     coreLibraryDesugaring(libs.desugaring)
 }

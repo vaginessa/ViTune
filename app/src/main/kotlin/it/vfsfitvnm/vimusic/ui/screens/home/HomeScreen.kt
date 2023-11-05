@@ -1,10 +1,8 @@
 package it.vfsfitvnm.vimusic.ui.screens.home
 
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
-import androidx.compose.ui.platform.LocalContext
 import it.vfsfitvnm.compose.persist.PersistMapCleanup
 import it.vfsfitvnm.compose.routing.RouteHandler
 import it.vfsfitvnm.compose.routing.defaultStacking
@@ -16,15 +14,19 @@ import it.vfsfitvnm.compose.routing.isUnstacking
 import it.vfsfitvnm.vimusic.Database
 import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.models.SearchQuery
+import it.vfsfitvnm.vimusic.models.toUiMood
+import it.vfsfitvnm.vimusic.preferences.DataPreferences
+import it.vfsfitvnm.vimusic.preferences.UIStatePreferences
 import it.vfsfitvnm.vimusic.query
 import it.vfsfitvnm.vimusic.ui.components.themed.Scaffold
+import it.vfsfitvnm.vimusic.ui.screens.GlobalRoutes
 import it.vfsfitvnm.vimusic.ui.screens.albumRoute
 import it.vfsfitvnm.vimusic.ui.screens.artistRoute
 import it.vfsfitvnm.vimusic.ui.screens.builtInPlaylistRoute
 import it.vfsfitvnm.vimusic.ui.screens.builtinplaylist.BuiltInPlaylistScreen
-import it.vfsfitvnm.vimusic.ui.screens.globalRoutes
 import it.vfsfitvnm.vimusic.ui.screens.localPlaylistRoute
 import it.vfsfitvnm.vimusic.ui.screens.localplaylist.LocalPlaylistScreen
+import it.vfsfitvnm.vimusic.ui.screens.moodRoute
 import it.vfsfitvnm.vimusic.ui.screens.playlistRoute
 import it.vfsfitvnm.vimusic.ui.screens.search.SearchScreen
 import it.vfsfitvnm.vimusic.ui.screens.searchResultRoute
@@ -32,13 +34,8 @@ import it.vfsfitvnm.vimusic.ui.screens.searchRoute
 import it.vfsfitvnm.vimusic.ui.screens.searchresult.SearchResultScreen
 import it.vfsfitvnm.vimusic.ui.screens.settings.SettingsScreen
 import it.vfsfitvnm.vimusic.ui.screens.settingsRoute
-import it.vfsfitvnm.vimusic.utils.homeScreenTabIndexKey
-import it.vfsfitvnm.vimusic.utils.pauseSearchHistoryKey
-import it.vfsfitvnm.vimusic.utils.preferences
-import it.vfsfitvnm.vimusic.utils.rememberPreference
 
-@ExperimentalFoundationApi
-@ExperimentalAnimationApi
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun HomeScreen(onPlaylistUrl: (String) -> Unit) {
     val saveableStateHolder = rememberSaveableStateHolder()
@@ -61,7 +58,7 @@ fun HomeScreen(onPlaylistUrl: (String) -> Unit) {
             }
         }
     ) {
-        globalRoutes()
+        GlobalRoutes()
 
         settingsRoute {
             SettingsScreen()
@@ -82,22 +79,18 @@ fun HomeScreen(onPlaylistUrl: (String) -> Unit) {
         searchResultRoute { query ->
             SearchResultScreen(
                 query = query,
-                onSearchAgain = {
-                    searchRoute(query)
-                }
+                onSearchAgain = { searchRoute(query) }
             )
         }
 
         searchRoute { initialTextInput ->
-            val context = LocalContext.current
-
             SearchScreen(
                 initialTextInput = initialTextInput,
                 onSearch = { query ->
                     pop()
                     searchResultRoute(query)
 
-                    if (!context.preferences.getBoolean(pauseSearchHistoryKey, false)) {
+                    if (!DataPreferences.pauseSearchHistory) {
                         query {
                             Database.insert(SearchQuery(query = query))
                         }
@@ -108,51 +101,59 @@ fun HomeScreen(onPlaylistUrl: (String) -> Unit) {
         }
 
         host {
-            val (tabIndex, onTabChanged) = rememberPreference(
-                homeScreenTabIndexKey,
-                defaultValue = 0
-            )
-
             Scaffold(
                 topIconButtonId = R.drawable.equalizer,
                 onTopIconButtonClick = { settingsRoute() },
-                tabIndex = tabIndex,
-                onTabChanged = onTabChanged,
-                tabColumnContent = { Item ->
-                    Item(0, "Quick picks", R.drawable.sparkles)
-                    Item(1, "Songs", R.drawable.musical_notes)
-                    Item(2, "Playlists", R.drawable.playlist)
-                    Item(3, "Artists", R.drawable.person)
-                    Item(4, "Albums", R.drawable.disc)
+                tabIndex = UIStatePreferences.homeScreenTabIndex,
+                onTabChanged = { UIStatePreferences.homeScreenTabIndex = it },
+                tabColumnContent = { item ->
+                    item(0, "Quick picks", R.drawable.sparkles)
+                    item(1, "Discover", R.drawable.globe)
+                    item(2, "Songs", R.drawable.musical_notes)
+                    item(3, "Playlists", R.drawable.playlist)
+                    item(4, "Artists", R.drawable.person)
+                    item(5, "Albums", R.drawable.disc)
+                    item(6, "Local", R.drawable.download)
                 }
             ) { currentTabIndex ->
                 saveableStateHolder.SaveableStateProvider(key = currentTabIndex) {
+                    val onSearchClick = { searchRoute("") }
                     when (currentTabIndex) {
                         0 -> QuickPicks(
                             onAlbumClick = { albumRoute(it) },
                             onArtistClick = { artistRoute(it) },
                             onPlaylistClick = { playlistRoute(it) },
-                            onSearchClick = { searchRoute("") }
+                            onSearchClick = onSearchClick
                         )
 
-                        1 -> HomeSongs(
-                            onSearchClick = { searchRoute("") }
+                        1 -> HomeDiscovery(
+                            onMoodClick = { mood -> moodRoute(mood.toUiMood()) },
+                            onNewReleaseAlbumClick = { albumRoute(it) },
+                            onSearchClick = onSearchClick
                         )
 
-                        2 -> HomePlaylists(
+                        2 -> HomeSongs(
+                            onSearchClick = onSearchClick
+                        )
+
+                        3 -> HomePlaylists(
                             onBuiltInPlaylist = { builtInPlaylistRoute(it) },
                             onPlaylistClick = { localPlaylistRoute(it.id) },
-                            onSearchClick = { searchRoute("") }
+                            onSearchClick = onSearchClick
                         )
 
-                        3 -> HomeArtistList(
+                        4 -> HomeArtistList(
                             onArtistClick = { artistRoute(it.id) },
-                            onSearchClick = { searchRoute("") }
+                            onSearchClick = onSearchClick
                         )
 
-                        4 -> HomeAlbums(
+                        5 -> HomeAlbums(
                             onAlbumClick = { albumRoute(it.id) },
-                            onSearchClick = { searchRoute("") }
+                            onSearchClick = onSearchClick
+                        )
+
+                        6 -> HomeLocalSongs(
+                            onSearchClick = onSearchClick
                         )
                     }
                 }

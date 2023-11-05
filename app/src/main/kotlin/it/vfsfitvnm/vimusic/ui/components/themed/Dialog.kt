@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -24,6 +25,8 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -32,7 +35,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -162,6 +164,38 @@ fun TextFieldDialog(
 }
 
 @Composable
+fun <T> NumberFieldDialog(
+    modifier: Modifier = Modifier,
+    onDismiss: () -> Unit,
+    onDone: (T) -> Unit,
+    cancelText: String = "Cancel",
+    doneText: String = "Done",
+    initialValue: T,
+    defaultValue: T,
+    onCancel: () -> Unit = onDismiss,
+    convert: (String) -> T?,
+    range: ClosedRange<T>
+) where T : Number, T : Comparable<T> {
+    TextFieldDialog(
+        hintText = "",
+        onDismiss = onDismiss,
+        onDone = { onDone((convert(it) ?: defaultValue).coerceIn(range)) },
+        modifier = modifier,
+        cancelText = cancelText,
+        doneText = doneText,
+        initialTextInput = initialValue.toString(),
+        onCancel = onCancel,
+        isTextInputValid = { true } // we handle invalid input ourselves
+    )
+}
+
+fun <T : Comparable<T>> T.coerceIn(range: ClosedRange<T>) = when {
+    this < range.start -> range.start
+    this > range.endInclusive -> range.endInclusive
+    else -> this
+}
+
+@Composable
 fun ConfirmationDialog(
     text: String,
     onDismiss: () -> Unit,
@@ -206,7 +240,6 @@ fun ConfirmationDialog(
     }
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 inline fun DefaultDialog(
     noinline onDismiss: () -> Unit,
@@ -244,6 +277,159 @@ inline fun <T> ValueSelectorDialog(
     modifier: Modifier = Modifier,
     crossinline valueText: (T) -> String = { it.toString() }
 ) {
+    val (colorPalette) = LocalAppearance.current
+
+    Dialog(onDismissRequest = onDismiss) {
+        ValueSelectorDialogBody(
+            onDismiss = onDismiss,
+            title = title,
+            selectedValue = selectedValue,
+            values = values,
+            onValueSelected = onValueSelected,
+            modifier = modifier
+                .padding(all = 48.dp)
+                .background(color = colorPalette.background1, shape = RoundedCornerShape(8.dp))
+                .padding(vertical = 16.dp),
+            valueText = valueText
+        )
+    }
+}
+
+@Composable
+inline fun <T> ValueSelectorDialogBody(
+    noinline onDismiss: () -> Unit,
+    title: String,
+    selectedValue: T?,
+    values: List<T>,
+    crossinline onValueSelected: (T) -> Unit,
+    modifier: Modifier = Modifier,
+    crossinline valueText: (T) -> String = { it.toString() }
+) {
+    val (colorPalette, typography) = LocalAppearance.current
+
+    Column(modifier = modifier) {
+        BasicText(
+            text = title,
+            style = typography.s.semiBold,
+            modifier = Modifier.padding(vertical = 8.dp, horizontal = 24.dp)
+        )
+
+        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+            values.forEach { value ->
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier
+                        .clickable(
+                            onClick = {
+                                onDismiss()
+                                onValueSelected(value)
+                            }
+                        )
+                        .padding(vertical = 12.dp, horizontal = 24.dp)
+                        .fillMaxWidth()
+                ) {
+                    if (selectedValue == value) {
+                        Canvas(
+                            modifier = Modifier
+                                .size(18.dp)
+                                .background(
+                                    color = colorPalette.accent,
+                                    shape = CircleShape
+                                )
+                        ) {
+                            drawCircle(
+                                color = colorPalette.onAccent,
+                                radius = 4.dp.toPx(),
+                                center = size.center,
+                                shadow = Shadow(
+                                    color = Color.Black.copy(alpha = 0.4f),
+                                    blurRadius = 4.dp.toPx(),
+                                    offset = Offset(x = 0f, y = 1.dp.toPx())
+                                )
+                            )
+                        }
+                    } else {
+                        Spacer(
+                            modifier = Modifier
+                                .size(18.dp)
+                                .border(
+                                    width = 1.dp,
+                                    color = colorPalette.textDisabled,
+                                    shape = CircleShape
+                                )
+                        )
+                    }
+
+                    BasicText(
+                        text = valueText(value),
+                        style = typography.xs.medium
+                    )
+                }
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.End)
+                .padding(end = 24.dp)
+        ) {
+            DialogTextButton(
+                text = "Cancel",
+                onClick = onDismiss,
+                modifier = Modifier
+            )
+        }
+    }
+}
+
+@Composable
+inline fun SliderDialog(
+    noinline onDismiss: () -> Unit,
+    title: String,
+    initialValue: Float,
+    crossinline onSlide: (Float) -> Unit,
+    crossinline onSlideCompleted: (Float) -> Unit,
+    modifier: Modifier = Modifier,
+    crossinline toDisplay: (Float) -> String = { it.toString() },
+    min: Float,
+    max: Float,
+    steps: Int = 0,
+    crossinline content: @Composable () -> Unit = { }
+) {
+    var state by rememberSaveable { mutableStateOf(initialValue) }
+
+    SliderDialog(
+        onDismiss = onDismiss,
+        title = title,
+        state = state,
+        setState = { state = it },
+        onSlide = onSlide,
+        onSlideCompleted = onSlideCompleted,
+        modifier = modifier,
+        toDisplay = toDisplay,
+        min = min,
+        max = max,
+        steps = steps,
+        content = content
+    )
+}
+
+@Composable
+inline fun SliderDialog(
+    noinline onDismiss: () -> Unit,
+    title: String,
+    state: Float,
+    crossinline setState: (Float) -> Unit,
+    crossinline onSlide: (Float) -> Unit,
+    crossinline onSlideCompleted: (Float) -> Unit,
+    modifier: Modifier = Modifier,
+    crossinline toDisplay: (Float) -> String = { it.toString() },
+    min: Float,
+    max: Float,
+    steps: Int = 0,
+    crossinline content: @Composable () -> Unit = { }
+) {
     val (colorPalette, typography) = LocalAppearance.current
 
     Dialog(onDismissRequest = onDismiss) {
@@ -260,63 +446,35 @@ inline fun <T> ValueSelectorDialog(
                     .padding(vertical = 8.dp, horizontal = 24.dp)
             )
 
-            Column(
+            Slider(
+                value = state,
+                onValueChange = {
+                    setState(it)
+                    onSlide(it)
+                },
+                onValueChangeFinished = { onSlideCompleted(state) },
                 modifier = Modifier
-                    .verticalScroll(rememberScrollState())
-            ) {
-                values.forEach { value ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        modifier = Modifier
-                            .clickable(
-                                onClick = {
-                                    onDismiss()
-                                    onValueSelected(value)
-                                }
-                            )
-                            .padding(vertical = 12.dp, horizontal = 24.dp)
-                            .fillMaxWidth()
-                    ) {
-                        if (selectedValue == value) {
-                            Canvas(
-                                modifier = Modifier
-                                    .size(18.dp)
-                                    .background(
-                                        color = colorPalette.accent,
-                                        shape = CircleShape
-                                    )
-                            ) {
-                                drawCircle(
-                                    color = colorPalette.onAccent,
-                                    radius = 4.dp.toPx(),
-                                    center = size.center,
-                                    shadow = Shadow(
-                                        color = Color.Black.copy(alpha = 0.4f),
-                                        blurRadius = 4.dp.toPx(),
-                                        offset = Offset(x = 0f, y = 1.dp.toPx())
-                                    )
-                                )
-                            }
-                        } else {
-                            Spacer(
-                                modifier = Modifier
-                                    .size(18.dp)
-                                    .border(
-                                        width = 1.dp,
-                                        color = colorPalette.textDisabled,
-                                        shape = CircleShape
-                                    )
-                            )
-                        }
+                    .height(36.dp)
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                colors = SliderDefaults.colors(
+                    thumbColor = colorPalette.onAccent,
+                    activeTrackColor = colorPalette.accent,
+                    inactiveTrackColor = colorPalette.text.copy(alpha = 0.75f)
+                ),
+                valueRange = min..max,
+                steps = steps
+            )
 
-                        BasicText(
-                            text = valueText(value),
-                            style = typography.xs.medium
-                        )
-                    }
-                }
-            }
+            BasicText(
+                text = toDisplay(state),
+                style = typography.s.semiBold,
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(vertical = 8.dp)
+            )
+
+            content()
 
             Box(
                 modifier = Modifier

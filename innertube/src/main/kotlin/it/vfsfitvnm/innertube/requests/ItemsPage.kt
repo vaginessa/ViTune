@@ -19,7 +19,7 @@ suspend fun <T : Innertube.Item> Innertube.itemsPage(
     fromMusicResponsiveListItemRenderer: (MusicResponsiveListItemRenderer) -> T? = { null },
     fromMusicTwoRowItemRenderer: (MusicTwoRowItemRenderer) -> T? = { null },
 ) = runCatchingNonCancellable {
-    val response = client.post(browse) {
+    val response = client.post(BROWSE) {
         setBody(body)
 //        mask("contents.singleColumnBrowseResultsRenderer.tabs.tabRenderer.content.sectionListRenderer.contents(musicPlaylistShelfRenderer(continuations,contents.$musicResponsiveListItemRendererMask),gridRenderer(continuations,items.$musicTwoRowItemRendererMask))")
     }.body<BrowseResponse>()
@@ -50,7 +50,7 @@ suspend fun <T : Innertube.Item> Innertube.itemsPage(
     fromMusicResponsiveListItemRenderer: (MusicResponsiveListItemRenderer) -> T? = { null },
     fromMusicTwoRowItemRenderer: (MusicTwoRowItemRenderer) -> T? = { null },
 ) = runCatchingNonCancellable {
-    val response = client.post(browse) {
+    val response = client.post(BROWSE) {
         setBody(body)
 //        mask("contents.singleColumnBrowseResultsRenderer.tabs.tabRenderer.content.sectionListRenderer.contents(musicPlaylistShelfRenderer(continuations,contents.$musicResponsiveListItemRendererMask),gridRenderer(continuations,items.$musicTwoRowItemRendererMask))")
     }.body<ContinuationResponse>()
@@ -70,28 +70,24 @@ private fun <T : Innertube.Item> itemsPageFromMusicShelRendererOrGridRenderer(
     gridRenderer: GridRenderer?,
     fromMusicResponsiveListItemRenderer: (MusicResponsiveListItemRenderer) -> T?,
     fromMusicTwoRowItemRenderer: (MusicTwoRowItemRenderer) -> T?,
-): Innertube.ItemsPage<T>? {
-    return if (musicShelfRenderer != null) {
-        Innertube.ItemsPage(
-            continuation = musicShelfRenderer
-                .continuations
-                ?.firstOrNull()
-                ?.nextContinuationData
-                ?.continuation,
-            items = musicShelfRenderer
-                .contents
-                ?.mapNotNull(MusicShelfRenderer.Content::musicResponsiveListItemRenderer)
-                ?.mapNotNull(fromMusicResponsiveListItemRenderer)
-        )
-    } else if (gridRenderer != null) {
-        Innertube.ItemsPage(
-            continuation = null,
-            items = gridRenderer
-                .items
-                ?.mapNotNull(GridRenderer.Item::musicTwoRowItemRenderer)
-                ?.mapNotNull(fromMusicTwoRowItemRenderer)
-        )
-    } else {
-        null
-    }
+) = when {
+    musicShelfRenderer != null -> Innertube.ItemsPage(
+        continuation = musicShelfRenderer
+            .continuations
+            ?.firstOrNull()
+            ?.nextContinuationData
+            ?.continuation,
+        items = musicShelfRenderer
+            .contents
+            ?.mapNotNull(MusicShelfRenderer.Content::musicResponsiveListItemRenderer)
+            ?.mapNotNull(fromMusicResponsiveListItemRenderer)
+    )
+    gridRenderer != null -> Innertube.ItemsPage(
+        continuation = null,
+        items = gridRenderer
+            .items
+            ?.mapNotNull(GridRenderer.Item::musicTwoRowItemRenderer)
+            ?.mapNotNull(fromMusicTwoRowItemRenderer)
+    )
+    else -> null
 }

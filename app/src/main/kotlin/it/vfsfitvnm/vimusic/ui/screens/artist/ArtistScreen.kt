@@ -15,21 +15,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import com.valentinilk.shimmer.shimmer
 import it.vfsfitvnm.compose.persist.PersistMapCleanup
 import it.vfsfitvnm.compose.persist.persist
+import it.vfsfitvnm.compose.routing.RouteHandler
 import it.vfsfitvnm.innertube.Innertube
 import it.vfsfitvnm.innertube.models.bodies.BrowseBody
 import it.vfsfitvnm.innertube.models.bodies.ContinuationBody
 import it.vfsfitvnm.innertube.requests.artistPage
 import it.vfsfitvnm.innertube.requests.itemsPage
 import it.vfsfitvnm.innertube.utils.from
-import it.vfsfitvnm.compose.routing.RouteHandler
 import it.vfsfitvnm.vimusic.Database
 import it.vfsfitvnm.vimusic.LocalPlayerServiceBinder
 import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.models.Artist
+import it.vfsfitvnm.vimusic.preferences.UIStatePreferences
 import it.vfsfitvnm.vimusic.query
 import it.vfsfitvnm.vimusic.ui.components.LocalMenuState
 import it.vfsfitvnm.vimusic.ui.components.themed.Header
@@ -42,29 +42,24 @@ import it.vfsfitvnm.vimusic.ui.items.AlbumItem
 import it.vfsfitvnm.vimusic.ui.items.AlbumItemPlaceholder
 import it.vfsfitvnm.vimusic.ui.items.SongItem
 import it.vfsfitvnm.vimusic.ui.items.SongItemPlaceholder
+import it.vfsfitvnm.vimusic.ui.screens.GlobalRoutes
 import it.vfsfitvnm.vimusic.ui.screens.albumRoute
-import it.vfsfitvnm.vimusic.ui.screens.globalRoutes
 import it.vfsfitvnm.vimusic.ui.screens.searchresult.ItemsPage
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.ui.styling.px
-import it.vfsfitvnm.vimusic.utils.artistScreenTabIndexKey
 import it.vfsfitvnm.vimusic.utils.asMediaItem
 import it.vfsfitvnm.vimusic.utils.forcePlay
-import it.vfsfitvnm.vimusic.utils.rememberPreference
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
-@ExperimentalFoundationApi
-@ExperimentalAnimationApi
+@OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
 @Composable
 fun ArtistScreen(browseId: String) {
     val saveableStateHolder = rememberSaveableStateHolder()
-
-    var tabIndex by rememberPreference(artistScreenTabIndexKey, defaultValue = 0)
 
     PersistMapCleanup(tagPrefix = "artist/$browseId/")
 
@@ -75,7 +70,7 @@ fun ArtistScreen(browseId: String) {
     LaunchedEffect(Unit) {
         Database
             .artist(browseId)
-            .combine(snapshotFlow { tabIndex }.map { it != 4 }) { artist, mustFetch -> artist to mustFetch }
+            .combine(snapshotFlow { UIStatePreferences.artistScreenTabIndex }.map { it != 4 }) { artist, mustFetch -> artist to mustFetch }
             .distinctUntilChanged()
             .collect { (currentArtist, mustFetch) ->
                 artist = currentArtist
@@ -102,7 +97,7 @@ fun ArtistScreen(browseId: String) {
     }
 
     RouteHandler(listenToGlobalEmitter = true) {
-        globalRoutes()
+        GlobalRoutes()
 
         host {
             val thumbnailContent =
@@ -173,14 +168,14 @@ fun ArtistScreen(browseId: String) {
             Scaffold(
                 topIconButtonId = R.drawable.chevron_back,
                 onTopIconButtonClick = pop,
-                tabIndex = tabIndex,
-                onTabChanged = { tabIndex = it },
-                tabColumnContent = { Item ->
-                    Item(0, "Overview", R.drawable.sparkles)
-                    Item(1, "Songs", R.drawable.musical_notes)
-                    Item(2, "Albums", R.drawable.disc)
-                    Item(3, "Singles", R.drawable.disc)
-                    Item(4, "Library", R.drawable.library)
+                tabIndex = UIStatePreferences.artistScreenTabIndex,
+                onTabChanged = { UIStatePreferences.artistScreenTabIndex = it },
+                tabColumnContent = { item ->
+                    item(0, "Overview", R.drawable.sparkles)
+                    item(1, "Songs", R.drawable.musical_notes)
+                    item(2, "Albums", R.drawable.disc)
+                    item(3, "Singles", R.drawable.disc)
+                    item(4, "Library", R.drawable.library)
                 },
             ) { currentTabIndex ->
                 saveableStateHolder.SaveableStateProvider(key = currentTabIndex) {
@@ -190,9 +185,9 @@ fun ArtistScreen(browseId: String) {
                             thumbnailContent = thumbnailContent,
                             headerContent = headerContent,
                             onAlbumClick = { albumRoute(it) },
-                            onViewAllSongsClick = { tabIndex = 1 },
-                            onViewAllAlbumsClick = { tabIndex = 2 },
-                            onViewAllSinglesClick = { tabIndex = 3 },
+                            onViewAllSongsClick = { UIStatePreferences.artistScreenTabIndex = 1 },
+                            onViewAllAlbumsClick = { UIStatePreferences.artistScreenTabIndex = 2 },
+                            onViewAllSinglesClick = { UIStatePreferences.artistScreenTabIndex = 3 },
                         )
 
                         1 -> {
@@ -261,7 +256,7 @@ fun ArtistScreen(browseId: String) {
                         }
 
                         2 -> {
-                            val thumbnailSizeDp = 108.dp
+                            val thumbnailSizeDp = Dimensions.thumbnails.album
                             val thumbnailSizePx = thumbnailSizeDp.px
 
                             ItemsPage(
@@ -311,7 +306,7 @@ fun ArtistScreen(browseId: String) {
                         }
 
                         3 -> {
-                            val thumbnailSizeDp = 108.dp
+                            val thumbnailSizeDp = Dimensions.thumbnails.album
                             val thumbnailSizePx = thumbnailSizeDp.px
 
                             ItemsPage(

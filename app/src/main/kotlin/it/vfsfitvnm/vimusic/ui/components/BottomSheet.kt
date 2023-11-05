@@ -105,7 +105,7 @@ class BottomSheetState(
     private val onAnchorChanged: (Int) -> Unit,
     val collapsedBound: Dp,
 ) : DraggableState by draggableState {
-    val dismissedBound: Dp
+    private val dismissedBound: Dp
         get() = animatable.lowerBound!!
 
     val expandedBound: Dp
@@ -197,6 +197,7 @@ class BottomSheetState(
                         collapse()
                     }
                 }
+
                 in l1..l2 -> collapse()
                 in l2..l3 -> expand()
                 else -> Unit
@@ -205,7 +206,7 @@ class BottomSheetState(
     }
 
     val preUpPostDownNestedScrollConnection
-        get() =  object : NestedScrollConnection {
+        get() = object : NestedScrollConnection {
             var isTopReached = false
 
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {

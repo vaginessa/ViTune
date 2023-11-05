@@ -22,16 +22,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import it.vfsfitvnm.compose.persist.persist
-import it.vfsfitvnm.innertube.Innertube
-import it.vfsfitvnm.innertube.models.bodies.BrowseBody
-import it.vfsfitvnm.innertube.requests.playlistPage
 import it.vfsfitvnm.compose.reordering.ReorderingLazyColumn
 import it.vfsfitvnm.compose.reordering.animateItemPlacement
 import it.vfsfitvnm.compose.reordering.draggedItem
 import it.vfsfitvnm.compose.reordering.rememberReorderingState
 import it.vfsfitvnm.compose.reordering.reorder
+import it.vfsfitvnm.innertube.Innertube
+import it.vfsfitvnm.innertube.models.bodies.BrowseBody
+import it.vfsfitvnm.innertube.requests.playlistPage
 import it.vfsfitvnm.vimusic.Database
 import it.vfsfitvnm.vimusic.LocalPlayerAwareWindowInsets
 import it.vfsfitvnm.vimusic.LocalPlayerServiceBinder
@@ -61,6 +63,8 @@ import it.vfsfitvnm.vimusic.utils.completed
 import it.vfsfitvnm.vimusic.utils.enqueue
 import it.vfsfitvnm.vimusic.utils.forcePlayAtIndex
 import it.vfsfitvnm.vimusic.utils.forcePlayFromBeginning
+import it.vfsfitvnm.vimusic.utils.launchYouTubeMusic
+import it.vfsfitvnm.vimusic.utils.toast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.runBlocking
@@ -76,6 +80,8 @@ fun LocalPlaylistSongs(
     val (colorPalette) = LocalAppearance.current
     val binder = LocalPlayerServiceBinder.current
     val menuState = LocalMenuState.current
+    val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
 
     var playlistWithSongs by persist<PlaylistWithSongs?>("localPlaylist/$playlistId/playlistWithSongs")
 
@@ -185,7 +191,11 @@ fun LocalPlaylistSongs(
                                                 transaction {
                                                     runBlocking(Dispatchers.IO) {
                                                         withContext(Dispatchers.IO) {
-                                                            Innertube.playlistPage(BrowseBody(browseId = browseId))
+                                                            Innertube.playlistPage(
+                                                                BrowseBody(
+                                                                    browseId = browseId
+                                                                )
+                                                            )
                                                                 ?.completed()
                                                         }
                                                     }?.getOrNull()?.let { remotePlaylist ->
@@ -206,6 +216,30 @@ fun LocalPlaylistSongs(
                                                 }
                                             }
                                         )
+
+                                        playlistWithSongs?.songs?.firstOrNull()?.id?.let { firstSongId ->
+                                            MenuEntry(
+                                                icon = R.drawable.play,
+                                                text = "Watch playlist on YouTube",
+                                                onClick = {
+                                                    menuState.hide()
+                                                    binder?.player?.pause()
+                                                    uriHandler.openUri("https://youtube.com/watch?v=${firstSongId}&list=${playlistWithSongs?.playlist?.browseId?.drop(2)}")
+                                                }
+                                            )
+
+
+                                            MenuEntry(
+                                                icon = R.drawable.musical_notes,
+                                                text = "Open in YouTube Music",
+                                                onClick = {
+                                                    menuState.hide()
+                                                    binder?.player?.pause()
+                                                    if (!launchYouTubeMusic(context, "watch?v=${firstSongId}&list=${playlistWithSongs?.playlist?.browseId?.drop(2)}"))
+                                                        context.toast("YouTube Music is not installed on your device!")
+                                                }
+                                            )
+                                        }
                                     }
 
                                     MenuEntry(
@@ -238,20 +272,6 @@ fun LocalPlaylistSongs(
                 contentType = { _, song -> song },
             ) { index, song ->
                 SongItem(
-                    song = song,
-                    thumbnailSizePx = thumbnailSizePx,
-                    thumbnailSizeDp = thumbnailSizeDp,
-                    trailingContent = {
-                        IconButton(
-                            icon = R.drawable.reorder,
-                            color = colorPalette.textDisabled,
-                            indication = rippleIndication,
-                            onClick = {},
-                            modifier = Modifier
-                                .reorder(reorderingState = reorderingState, index = index)
-                                .size(18.dp)
-                        )
-                    },
                     modifier = Modifier
                         .combinedClickable(
                             onLongClick = {
@@ -274,8 +294,21 @@ fun LocalPlaylistSongs(
                             }
                         )
                         .animateItemPlacement(reorderingState = reorderingState)
-                        .draggedItem(reorderingState = reorderingState, index = index)
-                )
+                        .draggedItem(reorderingState = reorderingState, index = index),
+                    song = song,
+                    thumbnailSizePx = thumbnailSizePx,
+                    thumbnailSizeDp = thumbnailSizeDp
+                ) {
+                    IconButton(
+                        icon = R.drawable.reorder,
+                        color = colorPalette.textDisabled,
+                        indication = rippleIndication,
+                        onClick = {},
+                        modifier = Modifier
+                            .reorder(reorderingState = reorderingState, index = index)
+                            .size(18.dp)
+                    )
+                }
             }
         }
 

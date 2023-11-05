@@ -12,7 +12,7 @@ private fun Modifier.reorder(
     reorderingState: ReorderingState,
     index: Int,
     detectDragGestures: DetectDragGestures,
-): Modifier = pointerInput(reorderingState) {
+) = this.pointerInput(reorderingState) {
     with(detectDragGestures) {
         detectDragGestures(
             onDragStart = { reorderingState.onDragStart(index) },
@@ -26,19 +26,10 @@ private fun Modifier.reorder(
 fun Modifier.reorder(
     reorderingState: ReorderingState,
     index: Int,
-): Modifier = reorder(
+) = this.reorder(
     reorderingState = reorderingState,
     index = index,
     detectDragGestures = PointerInputScope::detectDragGestures,
-)
-
-fun Modifier.reorderAfterLongPress(
-    reorderingState: ReorderingState,
-    index: Int
-): Modifier = reorder(
-    reorderingState = reorderingState,
-    index = index,
-    detectDragGestures = PointerInputScope::detectDragGesturesAfterLongPress,
 )
 
 private fun interface DetectDragGestures {

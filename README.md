@@ -21,8 +21,10 @@
 - Background playback
 - Cache audio chunks for offline playback
 - Search for songs, albums, artists videos and playlists
+- Discover new songs by mood/genre
 - Bookmark artists and albums
 - Import playlists
+- Import local music
 - Fetch, display and edit songs lyrics or synchronized lyrics
 - Local playlist management
 - Reorder songs in playlist or queue

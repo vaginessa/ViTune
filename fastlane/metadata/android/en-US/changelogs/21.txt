@@ -1,0 +1,20 @@
+* Android 14 is now officially supported
+* Improved the look of the player and added more animations
+* Added Discover tab in the home screen for even easier song browsing
+* Added support for local music
+* Added My top x playlist (a personal trending playlist)
+* Added more levels of thumbnail roundness
+* Added song-level volume boosting
+* Added a playback speed slider
+* Added customizability for Skip silence and Loudness normalization
+* Added Bass boost
+* Added more info about service lifetime issues
+* Added troubleshooting options
+* Added more appearance preferences
+* Added a search bar for the Songs tab
+* Added functionality to add all songs in queue to a new/existing playlist
+* Added synchronized lyrics provided by lrclib.net for even more songs supported by synchronized lyrics
+* Added more helpful error messages
+* Fixed a few minor inconsistencies with the player and screen rotations
+* Fixed a couple of crashes
+* Performance improvements

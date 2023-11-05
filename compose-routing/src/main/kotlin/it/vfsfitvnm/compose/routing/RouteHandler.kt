@@ -2,10 +2,7 @@ package it.vfsfitvnm.compose.routing
 
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedContentScope
-import androidx.compose.animation.ContentTransform
-import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.*
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -15,13 +12,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 
-@ExperimentalAnimationApi
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun RouteHandler(
     modifier: Modifier = Modifier,
     listenToGlobalEmitter: Boolean = false,
     handleBackPress: Boolean = true,
-    transitionSpec: AnimatedContentScope<RouteHandlerScope>.() -> ContentTransform = {
+    transitionSpec: AnimatedContentTransitionScope<RouteHandlerScope>.() -> ContentTransform = {
         when {
             isStacking -> defaultStacking
             isStill -> defaultStill
@@ -53,7 +50,7 @@ fun RouteHandler(
     modifier: Modifier = Modifier,
     listenToGlobalEmitter: Boolean = false,
     handleBackPress: Boolean = true,
-    transitionSpec: AnimatedContentScope<RouteHandlerScope>.() -> ContentTransform = {
+    transitionSpec: AnimatedContentTransitionScope<RouteHandlerScope>.() -> ContentTransform = {
         when {
             isStacking -> defaultStacking
             isStill -> defaultStill
@@ -65,7 +62,7 @@ fun RouteHandler(
     val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
     val parameters = rememberSaveable {
-        arrayOfNulls<Any?>(2)
+        arrayOfNulls<Any?>(3)
     }
 
     val scope = remember(route) {

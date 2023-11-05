@@ -1,7 +1,5 @@
 package it.vfsfitvnm.vimusic.service
 
-import android.media.MediaDescription as BrowserMediaDescription
-import android.media.browse.MediaBrowser.MediaItem as BrowserMediaItem
 import android.content.ComponentName
 import android.content.ContentResolver
 import android.content.Context
@@ -13,10 +11,10 @@ import android.os.IBinder
 import android.os.Process
 import android.service.media.MediaBrowserService
 import androidx.annotation.DrawableRes
+import androidx.annotation.OptIn
 import androidx.core.net.toUri
 import androidx.core.os.bundleOf
-import androidx.media3.common.Player
-import androidx.media3.datasource.cache.Cache
+import androidx.media3.common.util.UnstableApi
 import it.vfsfitvnm.vimusic.Database
 import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.models.Album
@@ -34,6 +32,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import android.media.MediaDescription as BrowserMediaDescription
+import android.media.browse.MediaBrowser.MediaItem as BrowserMediaItem
 
 class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
@@ -42,18 +42,15 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
     private var bound = false
 
     override fun onDestroy() {
-        if (bound) {
-            unbindService(this)
-        }
+        if (bound) unbindService(this)
         super.onDestroy()
     }
 
     override fun onServiceConnected(className: ComponentName, service: IBinder) {
-        if (service is PlayerService.Binder) {
-            bound = true
-            sessionToken = service.mediaSession.sessionToken
-            service.mediaSession.setCallback(SessionCallback(service.player, service.cache))
-        }
+        if (service !is PlayerService.Binder) return
+        bound = true
+        sessionToken = service.mediaSession.sessionToken
+        service.mediaSession.setCallback(SessionCallback(service))
     }
 
     override fun onServiceDisconnected(name: ComponentName) = Unit
@@ -62,62 +59,58 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
         clientPackageName: String,
         clientUid: Int,
         rootHints: Bundle?
-    ): BrowserRoot? {
-        return if (clientUid == Process.myUid()
-            || clientUid == Process.SYSTEM_UID
-            || clientPackageName == "com.google.android.projection.gearhead"
-        ) {
-            bindService(intent<PlayerService>(), this, Context.BIND_AUTO_CREATE)
-            BrowserRoot(
-                MediaId.root,
-                bundleOf("android.media.browse.CONTENT_STYLE_BROWSABLE_HINT" to 1)
-            )
-        } else {
-            null
-        }
-    }
+    ) = if (clientUid == Process.myUid() || clientUid == Process.SYSTEM_UID
+        || clientPackageName == "com.google.android.projection.gearhead"
+    ) {
+        bindService(intent<PlayerService>(), this, Context.BIND_AUTO_CREATE)
+        BrowserRoot(
+            MediaId.ROOT,
+            bundleOf("android.media.browse.CONTENT_STYLE_BROWSABLE_HINT" to 1)
+        )
+    } else null
 
-    override fun onLoadChildren(parentId: String, result: Result<MutableList<BrowserMediaItem>>) {
-        runBlocking(Dispatchers.IO) {
-            result.sendResult(
-                when (parentId) {
-                    MediaId.root -> mutableListOf(
-                        songsBrowserMediaItem,
-                        playlistsBrowserMediaItem,
-                        albumsBrowserMediaItem
-                    )
+    override fun onLoadChildren(
+        parentId: String,
+        result: Result<MutableList<BrowserMediaItem>>
+    ) = runBlocking(Dispatchers.IO) {
+        result.sendResult(
+            when (parentId) {
+                MediaId.ROOT -> mutableListOf(
+                    songsBrowserMediaItem,
+                    playlistsBrowserMediaItem,
+                    albumsBrowserMediaItem
+                )
 
-                    MediaId.songs -> Database
-                        .songsByPlayTimeDesc()
-                        .first()
-                        .take(30)
-                        .also { lastSongs = it }
-                        .map { it.asBrowserMediaItem }
-                        .toMutableList()
-                        .apply {
-                            if (isNotEmpty()) add(0, shuffleBrowserMediaItem)
-                        }
+                MediaId.SONGS -> Database
+                    .songsByPlayTimeDesc()
+                    .first()
+                    .take(30)
+                    .also { lastSongs = it }
+                    .map { it.asBrowserMediaItem }
+                    .toMutableList()
+                    .apply {
+                        if (isNotEmpty()) add(0, shuffleBrowserMediaItem)
+                    }
 
-                    MediaId.playlists -> Database
-                        .playlistPreviewsByDateAddedDesc()
-                        .first()
-                        .map { it.asBrowserMediaItem }
-                        .toMutableList()
-                        .apply {
-                            add(0, favoritesBrowserMediaItem)
-                            add(1, offlineBrowserMediaItem)
-                        }
+                MediaId.PLAYLISTS -> Database
+                    .playlistPreviewsByDateAddedDesc()
+                    .first()
+                    .map { it.asBrowserMediaItem }
+                    .toMutableList()
+                    .apply {
+                        add(0, favoritesBrowserMediaItem)
+                        add(1, offlineBrowserMediaItem)
+                    }
 
-                    MediaId.albums -> Database
-                        .albumsByRowIdDesc()
-                        .first()
-                        .map { it.asBrowserMediaItem }
-                        .toMutableList()
+                MediaId.ALBUMS -> Database
+                    .albumsByRowIdDesc()
+                    .first()
+                    .map { it.asBrowserMediaItem }
+                    .toMutableList()
 
-                    else -> mutableListOf()
-                }
-            )
-        }
+                else -> mutableListOf()
+            }
+        )
     }
 
     private fun uriFor(@DrawableRes id: Int) = Uri.Builder()
@@ -130,7 +123,7 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
     private val shuffleBrowserMediaItem
         inline get() = BrowserMediaItem(
             BrowserMediaDescription.Builder()
-                .setMediaId(MediaId.shuffle)
+                .setMediaId(MediaId.SHUFFLE)
                 .setTitle("Shuffle")
                 .setIconUri(uriFor(R.drawable.shuffle))
                 .build(),
@@ -140,7 +133,7 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
     private val songsBrowserMediaItem
         inline get() = BrowserMediaItem(
             BrowserMediaDescription.Builder()
-                .setMediaId(MediaId.songs)
+                .setMediaId(MediaId.SONGS)
                 .setTitle("Songs")
                 .setIconUri(uriFor(R.drawable.musical_notes))
                 .build(),
@@ -151,7 +144,7 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
     private val playlistsBrowserMediaItem
         inline get() = BrowserMediaItem(
             BrowserMediaDescription.Builder()
-                .setMediaId(MediaId.playlists)
+                .setMediaId(MediaId.PLAYLISTS)
                 .setTitle("Playlists")
                 .setIconUri(uriFor(R.drawable.playlist))
                 .build(),
@@ -161,7 +154,7 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
     private val albumsBrowserMediaItem
         inline get() = BrowserMediaItem(
             BrowserMediaDescription.Builder()
-                .setMediaId(MediaId.albums)
+                .setMediaId(MediaId.ALBUMS)
                 .setTitle("Albums")
                 .setIconUri(uriFor(R.drawable.disc))
                 .build(),
@@ -171,7 +164,7 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
     private val favoritesBrowserMediaItem
         inline get() = BrowserMediaItem(
             BrowserMediaDescription.Builder()
-                .setMediaId(MediaId.favorites)
+                .setMediaId(MediaId.FAVORITES)
                 .setTitle("Favorites")
                 .setIconUri(uriFor(R.drawable.heart))
                 .build(),
@@ -181,7 +174,7 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
     private val offlineBrowserMediaItem
         inline get() = BrowserMediaItem(
             BrowserMediaDescription.Builder()
-                .setMediaId(MediaId.offline)
+                .setMediaId(MediaId.OFFLINE)
                 .setTitle("Offline")
                 .setIconUri(uriFor(R.drawable.airplane))
                 .build(),
@@ -221,8 +214,10 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
             BrowserMediaItem.FLAG_PLAYABLE
         )
 
-    private inner class SessionCallback(private val player: Player, private val cache: Cache) :
+    private inner class SessionCallback(private val binder: PlayerService.Binder) :
         MediaSession.Callback() {
+        private val player = binder.player
+
         override fun onPlay() = player.play()
         override fun onPause() = player.pause()
         override fun onSkipToPrevious() = player.forceSeekToPrevious()
@@ -230,38 +225,35 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
         override fun onSeekTo(pos: Long) = player.seekTo(pos)
         override fun onSkipToQueueItem(id: Long) = player.seekToDefaultPosition(id.toInt())
 
+        @OptIn(UnstableApi::class)
         override fun onPlayFromMediaId(mediaId: String?, extras: Bundle?) {
             val data = mediaId?.split('/') ?: return
             var index = 0
 
             coroutineScope.launch {
                 val mediaItems = when (data.getOrNull(0)) {
-                    MediaId.shuffle -> lastSongs
+                    MediaId.SHUFFLE -> lastSongs
 
-                    MediaId.songs ->  data
+                    MediaId.SONGS -> data
                         .getOrNull(1)
                         ?.let { songId ->
                             index = lastSongs.indexOfFirst { it.id == songId }
                             lastSongs
                         }
 
-                    MediaId.favorites -> Database
+                    MediaId.FAVORITES -> Database
                         .favorites()
                         .first()
                         .shuffled()
 
-                    MediaId.offline -> Database
+                    MediaId.OFFLINE -> Database
                         .songsWithContentLength()
                         .first()
-                        .filter { song ->
-                            song.contentLength?.let {
-                                cache.isCached(song.song.id, 0, it)
-                            } ?: false
-                        }
+                        .filter { binder.isCached(it) }
                         .map(SongWithContentLength::song)
                         .shuffled()
 
-                    MediaId.playlists -> data
+                    MediaId.PLAYLISTS -> data
                         .getOrNull(1)
                         ?.toLongOrNull()
                         ?.let(Database::playlistWithSongs)
@@ -269,7 +261,7 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
                         ?.songs
                         ?.shuffled()
 
-                    MediaId.albums -> data
+                    MediaId.ALBUMS -> data
                         .getOrNull(1)
                         ?.let(Database::albumSongs)
                         ?.first()
@@ -285,14 +277,14 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
     }
 
     private object MediaId {
-        const val root = "root"
-        const val songs = "songs"
-        const val playlists = "playlists"
-        const val albums = "albums"
+        const val ROOT = "root"
+        const val SONGS = "songs"
+        const val PLAYLISTS = "playlists"
+        const val ALBUMS = "albums"
 
-        const val favorites = "favorites"
-        const val offline = "offline"
-        const val shuffle = "shuffle"
+        const val FAVORITES = "favorites"
+        const val OFFLINE = "offline"
+        const val SHUFFLE = "shuffle"
 
         fun forSong(id: String) = "songs/$id"
         fun forPlaylist(id: Long) = "playlists/$id"

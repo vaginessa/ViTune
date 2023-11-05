@@ -20,12 +20,11 @@ import it.vfsfitvnm.compose.persist.PersistMapCleanup
 import it.vfsfitvnm.compose.routing.RouteHandler
 import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.ui.components.themed.Scaffold
-import it.vfsfitvnm.vimusic.ui.screens.globalRoutes
+import it.vfsfitvnm.vimusic.ui.screens.GlobalRoutes
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.utils.secondary
 
-@ExperimentalFoundationApi
-@ExperimentalAnimationApi
+@OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
 @Composable
 fun SearchScreen(
     initialTextInput: String,
@@ -53,7 +52,7 @@ fun SearchScreen(
     PersistMapCleanup(tagPrefix = "search/")
 
     RouteHandler(listenToGlobalEmitter = true) {
-        globalRoutes()
+        GlobalRoutes()
 
         host {
             val decorationBox: @Composable (@Composable () -> Unit) -> Unit = { innerTextField ->
@@ -81,9 +80,9 @@ fun SearchScreen(
                 onTopIconButtonClick = pop,
                 tabIndex = tabIndex,
                 onTabChanged = onTabChanged,
-                tabColumnContent = { Item ->
-                    Item(0, "Online", R.drawable.globe)
-                    Item(1, "Library", R.drawable.library)
+                tabColumnContent = { item ->
+                    item(0, "Online", R.drawable.globe)
+                    item(1, "Library", R.drawable.library)
                 }
             ) { currentTabIndex ->
                 saveableStateHolder.SaveableStateProvider(currentTabIndex) {

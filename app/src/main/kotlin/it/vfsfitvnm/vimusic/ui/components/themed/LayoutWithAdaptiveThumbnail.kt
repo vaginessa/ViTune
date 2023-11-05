@@ -42,7 +42,7 @@ fun adaptiveThumbnailContent(
     url: String?,
     shape: Shape? = null
 ): @Composable () -> Unit = {
-    val (colorPalette, _, thumbnailShape) = LocalAppearance.current
+    val (colorPalette, _, _, thumbnailShape) = LocalAppearance.current
 
     BoxWithConstraints(contentAlignment = Alignment.Center) {
         val thumbnailSizeDp = if (isLandscape) (maxHeight - 128.dp) else (maxWidth - 64.dp)

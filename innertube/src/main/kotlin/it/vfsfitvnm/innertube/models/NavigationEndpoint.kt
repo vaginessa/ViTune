@@ -67,16 +67,10 @@ data class NavigationEndpoint(
             val playlistSetVideoId: String? = null,
             val watchEndpointMusicSupportedConfigs: WatchEndpointMusicSupportedConfigs? = null,
         ) : Endpoint() {
-            val type: String?
-                get() = watchEndpointMusicSupportedConfigs
-                    ?.watchEndpointMusicConfig
-                    ?.musicVideoType
-
             @Serializable
             data class WatchEndpointMusicSupportedConfigs(
                 val watchEndpointMusicConfig: WatchEndpointMusicConfig?
             ) {
-
                 @Serializable
                 data class WatchEndpointMusicConfig(
                     val musicVideoType: String?

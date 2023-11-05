@@ -7,18 +7,18 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 
-fun Modifier.verticalFadingEdge() =
-    graphicsLayer(alpha = 0.99f)
-        .drawWithContent {
-            drawContent()
-            drawRect(
-                brush = Brush.verticalGradient(
-                    listOf(
-                        Color.Transparent,
-                        Color.Black, Color.Black, Color.Black,
-                        Color.Transparent
-                    )
-                ),
-                blendMode = BlendMode.DstIn
-            )
-        }
+fun Modifier.verticalFadingEdge() = this
+    .graphicsLayer(alpha = 0.99f)
+    .drawWithContent {
+        drawContent()
+        drawRect(
+            brush = Brush.verticalGradient(
+                listOf(
+                    Color.Transparent,
+                    Color.Black, Color.Black, Color.Black,
+                    Color.Transparent
+                )
+            ),
+            blendMode = BlendMode.DstIn
+        )
+    }

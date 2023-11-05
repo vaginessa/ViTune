@@ -1,11 +1,8 @@
 package it.vfsfitvnm.vimusic.ui.screens.player
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedContentScope
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.fadeIn
@@ -15,10 +12,12 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
@@ -29,15 +28,18 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,15 +60,27 @@ import it.vfsfitvnm.compose.reordering.animateItemPlacement
 import it.vfsfitvnm.compose.reordering.draggedItem
 import it.vfsfitvnm.compose.reordering.rememberReorderingState
 import it.vfsfitvnm.compose.reordering.reorder
+import it.vfsfitvnm.vimusic.Database
 import it.vfsfitvnm.vimusic.LocalPlayerServiceBinder
 import it.vfsfitvnm.vimusic.R
+import it.vfsfitvnm.vimusic.enums.PlaylistSortBy
+import it.vfsfitvnm.vimusic.enums.SortOrder
+import it.vfsfitvnm.vimusic.models.Playlist
+import it.vfsfitvnm.vimusic.models.SongPlaylistMap
+import it.vfsfitvnm.vimusic.preferences.PlayerPreferences
+import it.vfsfitvnm.vimusic.transaction
 import it.vfsfitvnm.vimusic.ui.components.BottomSheet
 import it.vfsfitvnm.vimusic.ui.components.BottomSheetState
 import it.vfsfitvnm.vimusic.ui.components.LocalMenuState
 import it.vfsfitvnm.vimusic.ui.components.MusicBars
 import it.vfsfitvnm.vimusic.ui.components.themed.FloatingActionsContainerWithScrollToTop
 import it.vfsfitvnm.vimusic.ui.components.themed.IconButton
+import it.vfsfitvnm.vimusic.ui.components.themed.Menu
+import it.vfsfitvnm.vimusic.ui.components.themed.MenuEntry
 import it.vfsfitvnm.vimusic.ui.components.themed.QueuedMediaItemMenu
+import it.vfsfitvnm.vimusic.ui.components.themed.SecondaryTextButton
+import it.vfsfitvnm.vimusic.ui.components.themed.TextFieldDialog
+import it.vfsfitvnm.vimusic.ui.components.themed.TextToggle
 import it.vfsfitvnm.vimusic.ui.items.SongItem
 import it.vfsfitvnm.vimusic.ui.items.SongItemPlaceholder
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
@@ -75,12 +89,13 @@ import it.vfsfitvnm.vimusic.ui.styling.onOverlay
 import it.vfsfitvnm.vimusic.ui.styling.px
 import it.vfsfitvnm.vimusic.utils.DisposableListener
 import it.vfsfitvnm.vimusic.utils.medium
-import it.vfsfitvnm.vimusic.utils.queueLoopEnabledKey
-import it.vfsfitvnm.vimusic.utils.rememberPreference
+import it.vfsfitvnm.vimusic.utils.onFirst
+import it.vfsfitvnm.vimusic.utils.semiBold
 import it.vfsfitvnm.vimusic.utils.shouldBePlaying
 import it.vfsfitvnm.vimusic.utils.shuffleQueue
 import it.vfsfitvnm.vimusic.utils.smoothScrollToTop
 import it.vfsfitvnm.vimusic.utils.windows
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @ExperimentalFoundationApi
@@ -90,9 +105,10 @@ fun Queue(
     backgroundColorProvider: () -> Color,
     layoutState: BottomSheetState,
     modifier: Modifier = Modifier,
-    content: @Composable BoxScope.() -> Unit,
+    beforeContent: @Composable RowScope.() -> Unit,
+    afterContent: @Composable RowScope.() -> Unit,
 ) {
-    val (colorPalette, typography, thumbnailShape) = LocalAppearance.current
+    val (colorPalette, typography, _, thumbnailShape) = LocalAppearance.current
 
     val windowInsets = WindowInsets.systemBars
 
@@ -103,34 +119,34 @@ fun Queue(
         state = layoutState,
         modifier = modifier,
         collapsedContent = {
-            Box(
+            Row(
                 modifier = Modifier
                     .drawBehind { drawRect(backgroundColorProvider()) }
                     .fillMaxSize()
-                    .padding(horizontalBottomPaddingValues)
+                    .padding(horizontalBottomPaddingValues),
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                Spacer(modifier = Modifier.width(16.dp))
+                beforeContent()
+                Spacer(modifier = Modifier.weight(1f))
                 Image(
                     painter = painterResource(R.drawable.playlist),
                     contentDescription = null,
                     colorFilter = ColorFilter.tint(colorPalette.text),
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .size(18.dp)
+                    modifier = Modifier.size(18.dp)
                 )
-
-                content()
+                Spacer(modifier = Modifier.weight(1f))
+                afterContent()
+                Spacer(modifier = Modifier.width(16.dp))
             }
         }
     ) {
         val binder = LocalPlayerServiceBinder.current
+        val menuState = LocalMenuState.current
 
         binder?.player ?: return@BottomSheet
 
         val player = binder.player
-
-        var queueLoopEnabled by rememberPreference(queueLoopEnabledKey, defaultValue = true)
-
-        val menuState = LocalMenuState.current
 
         val thumbnailSizeDp = Dimensions.thumbnails.song
         val thumbnailSizePx = thumbnailSizeDp.px
@@ -320,7 +336,6 @@ fun Queue(
                 )
             }
 
-
             Box(
                 modifier = Modifier
                     .clickable(onClick = layoutState::collapseSoft)
@@ -334,12 +349,96 @@ fun Queue(
                     text = "${windows.size} songs",
                     style = typography.xxs.medium,
                     modifier = Modifier
-                        .background(
-                            color = colorPalette.background1,
-                            shape = RoundedCornerShape(16.dp)
-                        )
+                        .clip(RoundedCornerShape(16.dp))
+                        .clickable {
+                            fun addToPlaylist(playlist: Playlist, index: Int) = transaction {
+                                val playlistId = Database
+                                    .insert(playlist)
+                                    .takeIf { it != -1L } ?: playlist.id
+
+                                windows.forEachIndexed { i, it ->
+                                    val mediaItem = it.mediaItem
+                                    Database.insert(mediaItem)
+                                    Database.insert(
+                                        SongPlaylistMap(
+                                            songId = mediaItem.mediaId,
+                                            playlistId = playlistId,
+                                            position = index + i
+                                        )
+                                    )
+                                }
+                            }
+
+                            menuState.display {
+                                var isCreatingNewPlaylist by rememberSaveable { mutableStateOf(false) }
+
+                                val playlistPreviews by remember {
+                                    Database
+                                        .playlistPreviews(
+                                            PlaylistSortBy.DateAdded,
+                                            SortOrder.Descending
+                                        )
+                                        .onFirst {
+                                            isCreatingNewPlaylist = it.isEmpty()
+                                        }
+                                }.collectAsState(initial = null, context = Dispatchers.IO)
+
+                                if (isCreatingNewPlaylist) TextFieldDialog(
+                                    hintText = "Enter the playlist name",
+                                    onDismiss = { isCreatingNewPlaylist = false },
+                                    onDone = { text ->
+                                        menuState.hide()
+                                        addToPlaylist(Playlist(name = text), 0)
+                                    }
+                                )
+
+                                BackHandler { menuState.hide() }
+
+                                Menu {
+                                    Row(
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier
+                                            .padding(horizontal = 24.dp, vertical = 8.dp)
+                                            .fillMaxWidth()
+                                    ) {
+                                        BasicText(
+                                            text = "Add queue to playlist",
+                                            style = typography.m.semiBold
+                                        )
+
+                                        Spacer(modifier = Modifier.weight(1f))
+
+                                        SecondaryTextButton(
+                                            text = "New playlist",
+                                            onClick = { isCreatingNewPlaylist = true },
+                                            alternative = true
+                                        )
+                                    }
+
+                                    if (playlistPreviews?.isEmpty() == true)
+                                        Spacer(modifier = Modifier.height(160.dp))
+
+                                    playlistPreviews?.forEach { playlistPreview ->
+                                        MenuEntry(
+                                            icon = R.drawable.playlist,
+                                            text = playlistPreview.playlist.name,
+                                            secondaryText = "${playlistPreview.songCount} songs",
+                                            onClick = {
+                                                menuState.hide()
+                                                addToPlaylist(
+                                                    playlistPreview.playlist,
+                                                    playlistPreview.songCount
+                                                )
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        .background(colorPalette.background1)
                         .align(Alignment.CenterStart)
-                        .padding(all = 8.dp)
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
                 )
 
                 Image(
@@ -351,37 +450,14 @@ fun Queue(
                         .size(18.dp)
                 )
 
-                Row(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(16.dp))
-                        .clickable { queueLoopEnabled = !queueLoopEnabled }
-                        .background(colorPalette.background1)
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .align(Alignment.CenterEnd)
-                        .animateContentSize()
-                ) {
-                    BasicText(
-                        text = "Queue loop ",
-                        style = typography.xxs.medium,
-                    )
-
-                    AnimatedContent(
-                        targetState = queueLoopEnabled,
-                        transitionSpec = {
-                            val slideDirection = if (targetState) AnimatedContentScope.SlideDirection.Up else AnimatedContentScope.SlideDirection.Down
-
-                            ContentTransform(
-                                targetContentEnter = slideIntoContainer(slideDirection) + fadeIn(),
-                                initialContentExit = slideOutOfContainer(slideDirection) + fadeOut(),
-                            )
-                        }
-                    ) {
-                        BasicText(
-                            text = if (it) "on" else "off",
-                            style = typography.xxs.medium,
-                        )
-                    }
-                }
+                TextToggle(
+                    modifier = Modifier.align(Alignment.CenterEnd),
+                    state = PlayerPreferences.queueLoopEnabled,
+                    toggleState = {
+                        PlayerPreferences.queueLoopEnabled = !PlayerPreferences.queueLoopEnabled
+                    },
+                    name = "Queue loop"
+                )
             }
         }
     }

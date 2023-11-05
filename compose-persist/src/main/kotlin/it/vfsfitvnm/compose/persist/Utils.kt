@@ -12,5 +12,9 @@ internal inline fun <reified T> Context.findOwner(): T? {
         if (context is T) return context
         context = context.baseContext
     }
-    return null
+    return findApplicationOwner()
+}
+
+internal inline fun <reified T> Context.findApplicationOwner(): T? {
+    return if (this is T) this else applicationContext as? T
 }

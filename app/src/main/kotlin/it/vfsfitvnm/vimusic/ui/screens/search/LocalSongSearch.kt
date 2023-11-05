@@ -108,9 +108,6 @@ fun LocalSongSearch(
                 key = Song::id,
             ) { song ->
                 SongItem(
-                    song = song,
-                    thumbnailSizePx = thumbnailSizePx,
-                    thumbnailSizeDp = thumbnailSizeDp,
                     modifier = Modifier
                         .combinedClickable(
                             onLongClick = {
@@ -130,7 +127,10 @@ fun LocalSongSearch(
                                 )
                             }
                         )
-                        .animateItemPlacement()
+                        .animateItemPlacement(),
+                    song = song,
+                    thumbnailSizePx = thumbnailSizePx,
+                    thumbnailSizeDp = thumbnailSizeDp
                 )
             }
         }

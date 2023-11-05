@@ -6,7 +6,10 @@ import androidx.media3.common.Player
 import androidx.media3.common.Timeline
 
 val Player.currentWindow: Timeline.Window?
-    get() = if (mediaItemCount == 0) null else currentTimeline.getWindow(currentMediaItemIndex, Timeline.Window())
+    get() = if (mediaItemCount == 0) null else currentTimeline.getWindow(
+        currentMediaItemIndex,
+        Timeline.Window()
+    )
 
 val Timeline.mediaItems: List<MediaItem>
     get() = List(windowCount) {
@@ -24,16 +27,23 @@ val Player.shouldBePlaying: Boolean
 fun Player.seamlessPlay(mediaItem: MediaItem) {
     if (mediaItem.mediaId == currentMediaItem?.mediaId) {
         if (currentMediaItemIndex > 0) removeMediaItems(0, currentMediaItemIndex)
-        if (currentMediaItemIndex < mediaItemCount - 1) removeMediaItems(currentMediaItemIndex + 1, mediaItemCount)
+        if (currentMediaItemIndex < mediaItemCount - 1) removeMediaItems(
+            currentMediaItemIndex + 1,
+            mediaItemCount
+        )
     } else {
         forcePlay(mediaItem)
     }
 }
 
 fun Player.shuffleQueue() {
-    val mediaItems = currentTimeline.mediaItems.toMutableList().apply { removeAt(currentMediaItemIndex) }
+    val mediaItems =
+        currentTimeline.mediaItems.toMutableList().apply { removeAt(currentMediaItemIndex) }
     if (currentMediaItemIndex > 0) removeMediaItems(0, currentMediaItemIndex)
-    if (currentMediaItemIndex < mediaItemCount - 1) removeMediaItems(currentMediaItemIndex + 1, mediaItemCount)
+    if (currentMediaItemIndex < mediaItemCount - 1) removeMediaItems(
+        currentMediaItemIndex + 1,
+        mediaItemCount
+    )
     addMediaItems(mediaItems.shuffled())
 }
 

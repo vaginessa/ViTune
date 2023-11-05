@@ -1,7 +1,6 @@
 package it.vfsfitvnm.vimusic.ui.screens.settings
 
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,8 +8,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,17 +26,17 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
 import it.vfsfitvnm.compose.routing.RouteHandler
 import it.vfsfitvnm.vimusic.R
+import it.vfsfitvnm.vimusic.ui.components.themed.NumberFieldDialog
 import it.vfsfitvnm.vimusic.ui.components.themed.Scaffold
 import it.vfsfitvnm.vimusic.ui.components.themed.Switch
 import it.vfsfitvnm.vimusic.ui.components.themed.ValueSelectorDialog
-import it.vfsfitvnm.vimusic.ui.screens.globalRoutes
+import it.vfsfitvnm.vimusic.ui.screens.GlobalRoutes
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.utils.color
 import it.vfsfitvnm.vimusic.utils.secondary
 import it.vfsfitvnm.vimusic.utils.semiBold
 
-@ExperimentalFoundationApi
-@ExperimentalAnimationApi
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun SettingsScreen() {
     val saveableStateHolder = rememberSaveableStateHolder()
@@ -44,7 +46,7 @@ fun SettingsScreen() {
     }
 
     RouteHandler(listenToGlobalEmitter = true) {
-        globalRoutes()
+        GlobalRoutes()
 
         host {
             Scaffold(
@@ -52,13 +54,13 @@ fun SettingsScreen() {
                 onTopIconButtonClick = pop,
                 tabIndex = tabIndex,
                 onTabChanged = onTabChanged,
-                tabColumnContent = { Item ->
-                    Item(0, "Appearance", R.drawable.color_palette)
-                    Item(1, "Player", R.drawable.play)
-                    Item(2, "Cache", R.drawable.server)
-                    Item(3, "Database", R.drawable.server)
-                    Item(4, "Other", R.drawable.shapes)
-                    Item(5, "About", R.drawable.information)
+                tabColumnContent = { item ->
+                    item(0, "Appearance", R.drawable.color_palette)
+                    item(1, "Player", R.drawable.play)
+                    item(2, "Cache", R.drawable.server)
+                    item(3, "Database", R.drawable.server)
+                    item(4, "Other", R.drawable.shapes)
+                    item(5, "About", R.drawable.information)
                 }
             ) { currentTabIndex ->
                 saveableStateHolder.SaveableStateProvider(currentTabIndex) {
@@ -113,54 +115,135 @@ inline fun <T> ValueSelectorSettingsEntry(
         mutableStateOf(false)
     }
 
-    if (isShowingDialog) {
-        ValueSelectorDialog(
-            onDismiss = { isShowingDialog = false },
-            title = title,
-            selectedValue = selectedValue,
-            values = values,
-            onValueSelected = onValueSelected,
-            valueText = valueText
-        )
-    }
+    if (isShowingDialog) ValueSelectorDialog(
+        onDismiss = { isShowingDialog = false },
+        title = title,
+        selectedValue = selectedValue,
+        values = values,
+        onValueSelected = onValueSelected,
+        valueText = valueText
+    )
 
     SettingsEntry(
+        modifier = modifier,
         title = title,
         text = valueText(selectedValue),
-        modifier = modifier,
-        isEnabled = isEnabled,
         onClick = { isShowingDialog = true },
+        isEnabled = isEnabled,
         trailingContent = trailingContent
     )
 }
 
 @Composable
 fun SwitchSettingEntry(
+    modifier: Modifier = Modifier,
     title: String,
-    text: String,
+    text: String? = null,
     isChecked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
+    isEnabled: Boolean = true
+) = SettingsEntry(
+    modifier = modifier,
+    title = title,
+    text = text,
+    onClick = { onCheckedChange(!isChecked) },
+    isEnabled = isEnabled
+) { Switch(isChecked = isChecked) }
+
+@Composable
+fun SliderSettingEntry(
     modifier: Modifier = Modifier,
+    title: String,
+    text: String,
+    initialValue: Float,
+    onSlide: (Float) -> Unit = { },
+    onSlideCompleted: (Float) -> Unit = { },
+    toDisplay: (Float) -> String = { it.toString() },
+    min: Float,
+    max: Float,
+    steps: Int = 0,
     isEnabled: Boolean = true
 ) {
+    val (colorPalette) = LocalAppearance.current
+
+    var state by rememberSaveable { mutableStateOf(initialValue) }
+
+    Column {
+        SettingsEntry(
+            modifier = modifier,
+            title = title,
+            text = "$text (${toDisplay(state)})",
+            onClick = {},
+            isEnabled = isEnabled
+        )
+
+        Slider(
+            value = state,
+            onValueChange = {
+                state = it
+                onSlide(it)
+            },
+            onValueChangeFinished = { onSlideCompleted(state) },
+            modifier = Modifier
+                .offset(y = (-16).dp)
+                .height(36.dp)
+                .padding(start = 16.dp, end = 32.dp)
+                .fillMaxWidth(),
+            colors = SliderDefaults.colors(
+                thumbColor = colorPalette.onAccent,
+                activeTrackColor = colorPalette.accent,
+                inactiveTrackColor = colorPalette.text.copy(alpha = 0.75f)
+            ),
+            valueRange = min..max,
+            steps = steps
+        )
+    }
+}
+
+@Composable
+inline fun IntSettingEntry(
+    modifier: Modifier = Modifier,
+    title: String,
+    text: String,
+    currentValue: Int,
+    defaultValue: Int = 0,
+    crossinline setValue: (Int) -> Unit,
+    range: IntRange,
+    isEnabled: Boolean = true
+) {
+    var isShowingDialog by remember {
+        mutableStateOf(false)
+    }
+
+    if (isShowingDialog) NumberFieldDialog(
+        onDismiss = { isShowingDialog = false },
+        onDone = {
+            setValue(it)
+            isShowingDialog = false
+        },
+        initialValue = currentValue,
+        defaultValue = defaultValue,
+        convert = { it.toIntOrNull() },
+        range = range
+    )
+
     SettingsEntry(
+        modifier = modifier,
         title = title,
         text = text,
-        isEnabled = isEnabled,
-        onClick = { onCheckedChange(!isChecked) },
-        trailingContent = { Switch(isChecked = isChecked) },
-        modifier = modifier
+        onClick = { isShowingDialog = true },
+        isEnabled = isEnabled
     )
 }
 
 @Composable
 fun SettingsEntry(
-    title: String,
-    text: String,
     modifier: Modifier = Modifier,
+    title: String,
+    text: String? = null,
     onClick: () -> Unit,
     isEnabled: Boolean = true,
-    trailingContent: (@Composable () -> Unit)? = null
+    trailingContent: @Composable (() -> Unit)? = null
 ) {
     val (colorPalette, typography) = LocalAppearance.current
 
@@ -174,16 +257,13 @@ fun SettingsEntry(
             .padding(all = 16.dp)
             .fillMaxWidth()
     ) {
-        Column(
-            modifier = Modifier
-                .weight(1f)
-        ) {
+        Column(modifier = Modifier.weight(1f)) {
             BasicText(
                 text = title,
                 style = typography.xs.semiBold.copy(color = colorPalette.text),
             )
 
-            BasicText(
+            if (text != null) BasicText(
                 text = text,
                 style = typography.xs.semiBold.copy(color = colorPalette.textSecondary),
             )
@@ -242,11 +322,4 @@ fun SettingsEntryGroupText(
 }
 
 @Composable
-fun SettingsGroupSpacer(
-    modifier: Modifier = Modifier,
-) {
-    Spacer(
-        modifier = modifier
-            .height(24.dp)
-    )
-}
+fun SettingsGroupSpacer(modifier: Modifier = Modifier) = Spacer(modifier = modifier.height(24.dp))

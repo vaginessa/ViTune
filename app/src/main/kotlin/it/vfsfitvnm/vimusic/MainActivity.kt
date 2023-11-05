@@ -4,27 +4,30 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
-import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.os.IBinder
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material.ripple.LocalRippleTheme
@@ -50,6 +53,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.coerceIn
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
@@ -58,15 +62,13 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import com.valentinilk.shimmer.LocalShimmerTheme
 import com.valentinilk.shimmer.defaultShimmerTheme
-import it.vfsfitvnm.compose.persist.PersistMap
-import it.vfsfitvnm.compose.persist.PersistMapOwner
 import it.vfsfitvnm.innertube.Innertube
 import it.vfsfitvnm.innertube.models.bodies.BrowseBody
 import it.vfsfitvnm.innertube.requests.playlistPage
 import it.vfsfitvnm.innertube.requests.song
 import it.vfsfitvnm.vimusic.enums.ColorPaletteMode
 import it.vfsfitvnm.vimusic.enums.ColorPaletteName
-import it.vfsfitvnm.vimusic.enums.ThumbnailRoundness
+import it.vfsfitvnm.vimusic.preferences.AppearancePreferences
 import it.vfsfitvnm.vimusic.service.PlayerService
 import it.vfsfitvnm.vimusic.ui.components.BottomSheetMenu
 import it.vfsfitvnm.vimusic.ui.components.LocalMenuState
@@ -82,26 +84,21 @@ import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.ui.styling.colorPaletteOf
 import it.vfsfitvnm.vimusic.ui.styling.dynamicColorPaletteOf
 import it.vfsfitvnm.vimusic.ui.styling.typographyOf
-import it.vfsfitvnm.vimusic.utils.applyFontPaddingKey
 import it.vfsfitvnm.vimusic.utils.asMediaItem
-import it.vfsfitvnm.vimusic.utils.colorPaletteModeKey
-import it.vfsfitvnm.vimusic.utils.colorPaletteNameKey
 import it.vfsfitvnm.vimusic.utils.forcePlay
-import it.vfsfitvnm.vimusic.utils.getEnum
 import it.vfsfitvnm.vimusic.utils.intent
 import it.vfsfitvnm.vimusic.utils.isAtLeastAndroid6
 import it.vfsfitvnm.vimusic.utils.isAtLeastAndroid8
-import it.vfsfitvnm.vimusic.utils.preferences
-import it.vfsfitvnm.vimusic.utils.thumbnailRoundnessKey
-import it.vfsfitvnm.vimusic.utils.useSystemFontKey
+import it.vfsfitvnm.vimusic.utils.isCompositionLaunched
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class MainActivity : ComponentActivity(), PersistMapOwner {
+class MainActivity : ComponentActivity() {
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             if (service is PlayerService.Binder) {
@@ -111,24 +108,22 @@ class MainActivity : ComponentActivity(), PersistMapOwner {
 
         override fun onServiceDisconnected(name: ComponentName?) {
             binder = null
+            // Try to rebind, otherwise die
+            unbindService(this)
+            bindService(intent<PlayerService>(), this, Context.BIND_AUTO_CREATE)
         }
     }
 
     private var binder by mutableStateOf<PlayerService.Binder?>(null)
-
-    override lateinit var persistMap: PersistMap
 
     override fun onStart() {
         super.onStart()
         bindService(intent<PlayerService>(), serviceConnection, Context.BIND_AUTO_CREATE)
     }
 
-    @OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
+    @OptIn(ExperimentalLayoutApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        @Suppress("DEPRECATION", "UNCHECKED_CAST")
-        persistMap = lastCustomNonConfigurationInstance as? PersistMap ?: PersistMap()
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
@@ -139,28 +134,27 @@ class MainActivity : ComponentActivity(), PersistMapOwner {
             val isSystemInDarkTheme = isSystemInDarkTheme()
 
             var appearance by rememberSaveable(
-                isSystemInDarkTheme,
-                stateSaver = Appearance.Companion
+                isSystemInDarkTheme, isCompositionLaunched(),
+                stateSaver = Appearance.AppearanceSaver
             ) {
-                with(preferences) {
-                    val colorPaletteName = getEnum(colorPaletteNameKey, ColorPaletteName.Dynamic)
-                    val colorPaletteMode = getEnum(colorPaletteModeKey, ColorPaletteMode.System)
-                    val thumbnailRoundness =
-                        getEnum(thumbnailRoundnessKey, ThumbnailRoundness.Light)
-
-                    val useSystemFont = getBoolean(useSystemFontKey, false)
-                    val applyFontPadding = getBoolean(applyFontPaddingKey, false)
-
-                    val colorPalette =
-                        colorPaletteOf(colorPaletteName, colorPaletteMode, isSystemInDarkTheme)
+                with(AppearancePreferences) {
+                    val colorPalette = colorPaletteOf(
+                        colorPaletteName = colorPaletteName,
+                        colorPaletteMode = colorPaletteMode,
+                        isSystemInDarkMode = isSystemInDarkTheme
+                    )
 
                     setSystemBarAppearance(colorPalette.isDark)
 
                     mutableStateOf(
                         Appearance(
                             colorPalette = colorPalette,
-                            typography = typographyOf(colorPalette.text, useSystemFont, applyFontPadding),
-                            thumbnailShape = thumbnailRoundness.shape()
+                            typography = typographyOf(
+                                color = colorPalette.text,
+                                useSystemFont = useSystemFont,
+                                applyFontPadding = applyFontPadding
+                            ),
+                            thumbnailShapeCorners = thumbnailRoundness.dp
                         )
                     )
                 }
@@ -168,10 +162,11 @@ class MainActivity : ComponentActivity(), PersistMapOwner {
 
             DisposableEffect(binder, isSystemInDarkTheme) {
                 var bitmapListenerJob: Job? = null
+                var appearanceUpdaterJob: Job? = null
 
                 fun setDynamicPalette(colorPaletteMode: ColorPaletteMode) {
-                    val isDark =
-                        colorPaletteMode == ColorPaletteMode.Dark || (colorPaletteMode == ColorPaletteMode.System && isSystemInDarkTheme)
+                    val isDark = colorPaletteMode == ColorPaletteMode.Dark ||
+                            (colorPaletteMode == ColorPaletteMode.System && isSystemInDarkTheme)
 
                     binder?.setBitmapListener { bitmap: Bitmap? ->
                         if (bitmap == null) {
@@ -206,33 +201,18 @@ class MainActivity : ComponentActivity(), PersistMapOwner {
                     }
                 }
 
-                val listener =
-                    SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences, key ->
-                        when (key) {
-                            colorPaletteNameKey, colorPaletteModeKey -> {
-                                val colorPaletteName =
-                                    sharedPreferences.getEnum(
-                                        colorPaletteNameKey,
-                                        ColorPaletteName.Dynamic
-                                    )
-
-                                val colorPaletteMode =
-                                    sharedPreferences.getEnum(
-                                        colorPaletteModeKey,
-                                        ColorPaletteMode.System
-                                    )
-
-                                if (colorPaletteName == ColorPaletteName.Dynamic) {
-                                    setDynamicPalette(colorPaletteMode)
-                                } else {
+                with(AppearancePreferences) {
+                    if (colorPaletteName == ColorPaletteName.Dynamic)
+                        setDynamicPalette(colorPaletteMode)
+                    appearanceUpdaterJob = coroutineScope.launch {
+                        launch {
+                            snapshotFlow { colorPaletteName to colorPaletteMode }.collectLatest { (name, mode) ->
+                                if (name == ColorPaletteName.Dynamic) setDynamicPalette(mode) else {
                                     bitmapListenerJob?.cancel()
                                     binder?.setBitmapListener(null)
 
-                                    val colorPalette = colorPaletteOf(
-                                        colorPaletteName,
-                                        colorPaletteMode,
-                                        isSystemInDarkTheme
-                                    )
+                                    val colorPalette =
+                                        colorPaletteOf(name, mode, isSystemInDarkTheme)
 
                                     setSystemBarAppearance(colorPalette.isDark)
 
@@ -242,40 +222,31 @@ class MainActivity : ComponentActivity(), PersistMapOwner {
                                     )
                                 }
                             }
-
-                            thumbnailRoundnessKey -> {
-                                val thumbnailRoundness =
-                                    sharedPreferences.getEnum(key, ThumbnailRoundness.Light)
-
+                        }
+                        launch {
+                            snapshotFlow { thumbnailRoundness }
+                                .collectLatest {
+                                    appearance = appearance.copy(thumbnailShapeCorners = it.dp)
+                                }
+                        }
+                        launch {
+                            snapshotFlow { useSystemFont to applyFontPadding }.collectLatest { (system, padding) ->
                                 appearance = appearance.copy(
-                                    thumbnailShape = thumbnailRoundness.shape()
-                                )
-                            }
-
-                            useSystemFontKey, applyFontPaddingKey -> {
-                                val useSystemFont = sharedPreferences.getBoolean(useSystemFontKey, false)
-                                val applyFontPadding = sharedPreferences.getBoolean(applyFontPaddingKey, false)
-
-                                appearance = appearance.copy(
-                                    typography = typographyOf(appearance.colorPalette.text, useSystemFont, applyFontPadding),
+                                    typography = typographyOf(
+                                        appearance.colorPalette.text,
+                                        system,
+                                        padding
+                                    )
                                 )
                             }
                         }
                     }
+                }
 
-                with(preferences) {
-                    registerOnSharedPreferenceChangeListener(listener)
-
-                    val colorPaletteName = getEnum(colorPaletteNameKey, ColorPaletteName.Dynamic)
-                    if (colorPaletteName == ColorPaletteName.Dynamic) {
-                        setDynamicPalette(getEnum(colorPaletteModeKey, ColorPaletteMode.System))
-                    }
-
-                    onDispose {
-                        bitmapListenerJob?.cancel()
-                        binder?.setBitmapListener(null)
-                        unregisterOnSharedPreferenceChangeListener(listener)
-                    }
+                onDispose {
+                    bitmapListenerJob?.cancel()
+                    appearanceUpdaterJob?.cancel()
+                    binder?.setBitmapListener(null)
                 }
             }
 
@@ -310,7 +281,7 @@ class MainActivity : ComponentActivity(), PersistMapOwner {
                         Color.Unspecified.copy(alpha = 0.25f),
                         Color.White.copy(alpha = 0.50f),
                         Color.Unspecified.copy(alpha = 0.25f),
-                    ),
+                    )
                 )
             }
 
@@ -323,15 +294,33 @@ class MainActivity : ComponentActivity(), PersistMapOwner {
                 val windowsInsets = WindowInsets.systemBars
                 val bottomDp = with(density) { windowsInsets.getBottom(density).toDp() }
 
+                val imeVisible = WindowInsets.isImeVisible
+                val imeBottomDp = with(density) { WindowInsets.ime.getBottom(density).toDp() }
+                val animatedBottomDp by animateDpAsState(
+                    targetValue = if (imeVisible) 0.dp else bottomDp,
+                    label = ""
+                )
+
                 val playerBottomSheetState = rememberBottomSheetState(
                     dismissedBound = 0.dp,
                     collapsedBound = Dimensions.collapsedPlayer + bottomDp,
                     expandedBound = maxHeight,
                 )
 
-                val playerAwareWindowInsets by remember(bottomDp, playerBottomSheetState.value) {
+                val playerAwareWindowInsets by remember(
+                    bottomDp,
+                    animatedBottomDp,
+                    playerBottomSheetState.value,
+                    imeVisible,
+                    imeBottomDp
+                ) {
                     derivedStateOf {
-                        val bottom = playerBottomSheetState.value.coerceIn(bottomDp, playerBottomSheetState.collapsedBound)
+                        val bottom =
+                            if (imeVisible) imeBottomDp.coerceAtLeast(playerBottomSheetState.value)
+                            else playerBottomSheetState.value.coerceIn(
+                                animatedBottomDp,
+                                playerBottomSheetState.collapsedBound
+                            )
 
                         windowsInsets
                             .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
@@ -348,22 +337,24 @@ class MainActivity : ComponentActivity(), PersistMapOwner {
                     LocalPlayerAwareWindowInsets provides playerAwareWindowInsets,
                     LocalLayoutDirection provides LayoutDirection.Ltr
                 ) {
-                    HomeScreen(
-                        onPlaylistUrl = { url ->
-                            onNewIntent(Intent.parseUri(url, 0))
-                        }
-                    )
+                    Box {
+                        HomeScreen(
+                            onPlaylistUrl = { url ->
+                                onNewIntent(Intent.parseUri(url, 0))
+                            }
+                        )
+                    }
 
                     Player(
                         layoutState = playerBottomSheetState,
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
+                        modifier = Modifier.align(Alignment.BottomCenter)
                     )
 
                     BottomSheetMenu(
                         state = LocalMenuState.current,
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
+                            .imePadding()
                     )
                 }
 
@@ -429,7 +420,7 @@ class MainActivity : ComponentActivity(), PersistMapOwner {
                             }
                         }
                     } else {
-                        playlistRoute.ensureGlobal(browseId)
+                        playlistRoute.ensureGlobal(browseId, uri.getQueryParameter("params"), null)
                     }
                 }
 
@@ -453,19 +444,9 @@ class MainActivity : ComponentActivity(), PersistMapOwner {
         }
     }
 
-    override fun onRetainCustomNonConfigurationInstance() = persistMap
-
     override fun onStop() {
         unbindService(serviceConnection)
         super.onStop()
-    }
-
-    override fun onDestroy() {
-        if (!isChangingConfigurations) {
-            persistMap.clear()
-        }
-
-        super.onDestroy()
     }
 
     private fun setSystemBarAppearance(isDark: Boolean) {

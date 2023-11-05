@@ -12,6 +12,7 @@ import io.ktor.client.request.header
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
+import it.vfsfitvnm.innertube.models.MusicNavigationButtonRenderer
 import it.vfsfitvnm.innertube.models.NavigationEndpoint
 import it.vfsfitvnm.innertube.models.Runs
 import it.vfsfitvnm.innertube.models.Thumbnail
@@ -38,7 +39,7 @@ object Innertube {
         }
 
         defaultRequest {
-            url(scheme = "https", host ="music.youtube.com") {
+            url(scheme = "https", host = "music.youtube.com") {
                 headers.append(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 headers.append("X-Goog-Api-Key", "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8")
                 parameters.append("prettyPrint", "false")
@@ -46,16 +47,18 @@ object Innertube {
         }
     }
 
-    internal const val browse = "/youtubei/v1/browse"
-    internal const val next = "/youtubei/v1/next"
-    internal const val player = "/youtubei/v1/player"
-    internal const val queue = "/youtubei/v1/music/get_queue"
-    internal const val search = "/youtubei/v1/search"
-    internal const val searchSuggestions = "/youtubei/v1/music/get_search_suggestions"
-
-    internal const val musicResponsiveListItemRendererMask = "musicResponsiveListItemRenderer(flexColumns,fixedColumns,thumbnail,navigationEndpoint)"
-    internal const val musicTwoRowItemRendererMask = "musicTwoRowItemRenderer(thumbnailRenderer,title,subtitle,navigationEndpoint)"
-    const val playlistPanelVideoRendererMask = "playlistPanelVideoRenderer(title,navigationEndpoint,longBylineText,shortBylineText,thumbnail,lengthText)"
+    internal const val BROWSE = "/youtubei/v1/browse"
+    internal const val NEXT = "/youtubei/v1/next"
+    internal const val PLAYER = "/youtubei/v1/player"
+    internal const val QUEUE = "/youtubei/v1/music/get_queue"
+    internal const val SEARCH = "/youtubei/v1/search"
+    internal const val SEARCH_SUGGESTIONS = "/youtubei/v1/music/get_search_suggestions"
+    internal const val MUSIC_RESPONSIVE_LIST_ITEM_RENDERER_MASK =
+        "musicResponsiveListItemRenderer(flexColumns,fixedColumns,thumbnail,navigationEndpoint)"
+    internal const val MUSIC_TWO_ROW_ITEM_RENDERER_MASK =
+        "musicTwoRowItemRenderer(thumbnailRenderer,title,subtitle,navigationEndpoint)"
+    internal const val PLAYLIST_PANEL_VIDEO_RENDERER_MASK =
+        "playlistPanelVideoRenderer(title,navigationEndpoint,longBylineText,shortBylineText,thumbnail,lengthText)"
 
     internal fun HttpRequestBuilder.mask(value: String = "*") =
         header("X-Goog-FieldMask", value)
@@ -115,13 +118,6 @@ object Innertube {
                 ?.watchEndpointMusicSupportedConfigs
                 ?.watchEndpointMusicConfig
                 ?.musicVideoType == "MUSIC_VIDEO_TYPE_OMV"
-
-        val isUserGeneratedContent: Boolean
-            get() = info
-                ?.endpoint
-                ?.watchEndpointMusicSupportedConfigs
-                ?.watchEndpointMusicConfig
-                ?.musicVideoType == "MUSIC_VIDEO_TYPE_UGC"
 
         companion object
     }
@@ -195,6 +191,30 @@ object Innertube {
         val albums: List<AlbumItem>? = null,
         val artists: List<ArtistItem>? = null,
     )
+
+    data class DiscoverPage(
+        val newReleaseAlbums: List<AlbumItem>,
+        val moods: List<Mood.Item>
+    )
+
+    data class Mood(
+        val title: String,
+        val items: List<Item>
+    ) {
+        data class Item(
+            val title: String,
+            val stripeColor: Long,
+            val endpoint: NavigationEndpoint.Endpoint.Browse
+        )
+    }
+
+    fun MusicNavigationButtonRenderer.toMood(): Mood.Item? {
+        return Mood.Item(
+            title = buttonText.runs.firstOrNull()?.text ?: return null,
+            stripeColor = solid?.leftStripeColor ?: return null,
+            endpoint = clickCommand.browseEndpoint ?: return null
+        )
+    }
 
     data class ItemsPage<T : Item>(
         val items: List<T>?,

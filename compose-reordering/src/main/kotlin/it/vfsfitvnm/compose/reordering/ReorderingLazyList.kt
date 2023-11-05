@@ -3,7 +3,6 @@
 package it.vfsfitvnm.compose.reordering
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.OverscrollEffect
 import androidx.compose.foundation.checkScrollableContainerConstraints
 import androidx.compose.foundation.clipScrollableContainer
 import androidx.compose.foundation.gestures.FlingBehavior
@@ -18,16 +17,14 @@ import androidx.compose.foundation.lazy.DataIndex
 import androidx.compose.foundation.lazy.LazyListBeyondBoundsInfo
 import androidx.compose.foundation.lazy.LazyListItemPlacementAnimator
 import androidx.compose.foundation.lazy.LazyListItemProvider
-import androidx.compose.foundation.lazy.LazyListMeasureResult
+import androidx.compose.foundation.lazy.LazyListMeasuredItem
+import androidx.compose.foundation.lazy.LazyListMeasuredItemProvider
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.LazyMeasuredItem
-import androidx.compose.foundation.lazy.LazyMeasuredItemProvider
 import androidx.compose.foundation.lazy.layout.LazyLayout
 import androidx.compose.foundation.lazy.layout.LazyLayoutMeasureScope
 import androidx.compose.foundation.lazy.layout.lazyLayoutSemantics
 import androidx.compose.foundation.lazy.lazyListBeyondBoundsModifier
-import androidx.compose.foundation.lazy.lazyListPinningModifier
 import androidx.compose.foundation.lazy.measureLazyList
 import androidx.compose.foundation.lazy.rememberLazyListItemProvider
 import androidx.compose.foundation.lazy.rememberLazyListSemanticState
@@ -65,7 +62,7 @@ internal fun ReorderingLazyList(
     val overscrollEffect = ScrollableDefaults.overscrollEffect()
     val itemProvider = rememberLazyListItemProvider(reorderingState.lazyListState, content)
     val semanticState =
-        rememberLazyListSemanticState(reorderingState.lazyListState, itemProvider, reverseLayout, isVertical)
+        rememberLazyListSemanticState(reorderingState.lazyListState, isVertical)
     val beyondBoundsInfo = reorderingState.lazyListBeyondBoundsInfo
     val scope = rememberCoroutineScope()
     val placementAnimator = remember(reorderingState.lazyListState, isVertical) {
@@ -77,10 +74,10 @@ internal fun ReorderingLazyList(
         itemProvider,
         reorderingState.lazyListState,
         beyondBoundsInfo,
-        overscrollEffect,
         contentPadding,
         reverseLayout,
         isVertical,
+        beyondBoundsItemCount = 2,
         horizontalAlignment,
         verticalAlignment,
         horizontalArrangement,
@@ -97,11 +94,17 @@ internal fun ReorderingLazyList(
                 itemProvider = itemProvider,
                 state = semanticState,
                 orientation = orientation,
-                userScrollEnabled = userScrollEnabled
+                userScrollEnabled = userScrollEnabled,
+                reverseScrolling = reverseLayout
             )
             .clipScrollableContainer(orientation)
-            .lazyListBeyondBoundsModifier(reorderingState.lazyListState, beyondBoundsInfo, reverseLayout)
-            .lazyListPinningModifier(reorderingState.lazyListState, beyondBoundsInfo)
+            .lazyListBeyondBoundsModifier(
+                reorderingState.lazyListState,
+                beyondBoundsInfo,
+                reverseLayout,
+                orientation
+            )
+            //.lazyListPinningModifier(reorderingState.lazyListState, beyondBoundsInfo)
             .overscroll(overscrollEffect)
             .scrollable(
                 orientation = orientation,
@@ -125,22 +128,33 @@ internal fun ReorderingLazyList(
 @ExperimentalFoundationApi
 @Composable
 private fun rememberLazyListMeasurePolicy(
+    /** Items provider of the list. */
     itemProvider: LazyListItemProvider,
+    /** The state of the list. */
     state: LazyListState,
+    /** Keeps track of the number of items we measure and place that are beyond visible bounds. */
     beyondBoundsInfo: LazyListBeyondBoundsInfo,
-    overscrollEffect: OverscrollEffect,
+    /** The inner padding to be added for the whole content(nor for each individual item) */
     contentPadding: PaddingValues,
+    /** reverse the direction of scrolling and layout */
     reverseLayout: Boolean,
+    /** The layout orientation of the list */
     isVertical: Boolean,
+    /** Number of items to layout before and after the visible items */
+    beyondBoundsItemCount: Int,
+    /** The alignment to align items horizontally. Required when isVertical is true */
     horizontalAlignment: Alignment.Horizontal? = null,
+    /** The alignment to align items vertically. Required when isVertical is false */
     verticalAlignment: Alignment.Vertical? = null,
+    /** The horizontal arrangement for items. Required when isVertical is false */
     horizontalArrangement: Arrangement.Horizontal? = null,
+    /** The vertical arrangement for items. Required when isVertical is true */
     verticalArrangement: Arrangement.Vertical? = null,
+    /** Item placement animator. Should be notified with the measuring result */
     placementAnimator: LazyListItemPlacementAnimator
 ) = remember<LazyLayoutMeasureScope.(Constraints) -> MeasureResult>(
     state,
     beyondBoundsInfo,
-    overscrollEffect,
     contentPadding,
     reverseLayout,
     isVertical,
@@ -156,10 +170,12 @@ private fun rememberLazyListMeasurePolicy(
             if (isVertical) Orientation.Vertical else Orientation.Horizontal
         )
 
+        // resolve content paddings
         val startPadding =
             if (isVertical) {
                 contentPadding.calculateLeftPadding(layoutDirection).roundToPx()
             } else {
+                // in horizontal configuration, padding is reversed by placeRelative
                 contentPadding.calculateStartPadding(layoutDirection).roundToPx()
             }
 
@@ -167,6 +183,7 @@ private fun rememberLazyListMeasurePolicy(
             if (isVertical) {
                 contentPadding.calculateRightPadding(layoutDirection).roundToPx()
             } else {
+                // in horizontal configuration, padding is reversed by placeRelative
                 contentPadding.calculateEndPadding(layoutDirection).roundToPx()
             }
         val topPadding = contentPadding.calculateTopPadding().roundToPx()
@@ -178,14 +195,18 @@ private fun rememberLazyListMeasurePolicy(
             isVertical && !reverseLayout -> topPadding
             isVertical && reverseLayout -> bottomPadding
             !isVertical && !reverseLayout -> startPadding
-            else -> endPadding
+            else -> endPadding // !isVertical && reverseLayout
         }
         val afterContentPadding = totalMainAxisPadding - beforeContentPadding
         val contentConstraints =
             containerConstraints.offset(-totalHorizontalPadding, -totalVerticalPadding)
 
+        state.updateScrollPositionIfTheFirstItemWasMoved(itemProvider)
+
+        // Update the state's cached Density
         state.density = this
 
+        // this will update the scope used by the item composables
         itemProvider.itemScope.setMaxSize(
             width = contentConstraints.maxWidth,
             height = contentConstraints.maxHeight
@@ -200,6 +221,7 @@ private fun rememberLazyListMeasurePolicy(
 
         val itemsCount = itemProvider.itemCount
 
+        // can be negative if the content padding is larger than the max size from constraints
         val mainAxisAvailableSize = if (isVertical) {
             containerConstraints.maxHeight - totalVerticalPadding
         } else {
@@ -208,20 +230,25 @@ private fun rememberLazyListMeasurePolicy(
         val visualItemOffset = if (!reverseLayout || mainAxisAvailableSize > 0) {
             IntOffset(startPadding, topPadding)
         } else {
+            // When layout is reversed and paddings together take >100% of the available space,
+            // layout size is coerced to 0 when positioning. To take that space into account,
+            // we offset start padding by negative space between paddings.
             IntOffset(
                 if (isVertical) startPadding else startPadding + mainAxisAvailableSize,
                 if (isVertical) topPadding + mainAxisAvailableSize else topPadding
             )
         }
 
-        val measuredItemProvider = LazyMeasuredItemProvider(
+        val measuredItemProvider = LazyListMeasuredItemProvider(
             contentConstraints,
             isVertical,
             itemProvider,
             this
         ) { index, key, placeables ->
+            // we add spaceBetweenItems as an extra spacing for all items apart from the last one so
+            // the lazy list measuring logic will take it into account.
             val spacing = if (index.value == itemsCount - 1) 0 else spaceBetweenItems
-            LazyMeasuredItem(
+            LazyListMeasuredItem(
                 index = index.value,
                 placeables = placeables,
                 isVertical = isVertical,
@@ -248,7 +275,8 @@ private fun rememberLazyListMeasurePolicy(
 
         measureLazyList(
             itemsCount = itemsCount,
-            itemProvider = measuredItemProvider,
+            itemProvider = itemProvider,
+            measuredItemProvider = measuredItemProvider,
             mainAxisAvailableSize = mainAxisAvailableSize,
             beforeContentPadding = beforeContentPadding,
             afterContentPadding = afterContentPadding,
@@ -265,6 +293,8 @@ private fun rememberLazyListMeasurePolicy(
             density = this,
             placementAnimator = placementAnimator,
             beyondBoundsInfo = beyondBoundsInfo,
+            beyondBoundsItemCount = beyondBoundsItemCount,
+            pinnedItems = state.pinnedItems,
             layout = { width, height, placement ->
                 layout(
                     containerConstraints.constrainWidth(width + totalHorizontalPadding),
@@ -275,19 +305,6 @@ private fun rememberLazyListMeasurePolicy(
             }
         ).also {
             state.applyMeasureResult(it)
-            refreshOverscrollInfo(overscrollEffect, it)
         }
     }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-private fun refreshOverscrollInfo(
-    overscrollEffect: OverscrollEffect,
-    result: LazyListMeasureResult
-) {
-    val canScrollForward = result.canScrollForward
-    val canScrollBackward = (result.firstVisibleItem?.index ?: 0) != 0 ||
-            result.firstVisibleItemScrollOffset != 0
-
-    overscrollEffect.isEnabled = canScrollForward || canScrollBackward
 }

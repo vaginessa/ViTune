@@ -14,9 +14,9 @@ import it.vfsfitvnm.innertube.utils.from
 import it.vfsfitvnm.innertube.utils.runCatchingNonCancellable
 
 suspend fun Innertube.playlistPage(body: BrowseBody) = runCatchingNonCancellable {
-    val response = client.post(browse) {
+    val response = client.post(BROWSE) {
         setBody(body)
-        mask("contents.singleColumnBrowseResultsRenderer.tabs.tabRenderer.content.sectionListRenderer.contents(musicPlaylistShelfRenderer(continuations,contents.$musicResponsiveListItemRendererMask),musicCarouselShelfRenderer.contents.$musicTwoRowItemRendererMask),header.musicDetailHeaderRenderer(title,subtitle,thumbnail),microformat")
+        mask("contents.singleColumnBrowseResultsRenderer.tabs.tabRenderer.content.sectionListRenderer.contents(musicPlaylistShelfRenderer(continuations,contents.$MUSIC_RESPONSIVE_LIST_ITEM_RENDERER_MASK),musicCarouselShelfRenderer.contents.$MUSIC_TWO_ROW_ITEM_RENDERER_MASK),header.musicDetailHeaderRenderer(title,subtitle,thumbnail),microformat")
     }.body<BrowseResponse>()
 
     val musicDetailHeaderRenderer = response
@@ -76,9 +76,9 @@ suspend fun Innertube.playlistPage(body: BrowseBody) = runCatchingNonCancellable
 }
 
 suspend fun Innertube.playlistPage(body: ContinuationBody) = runCatchingNonCancellable {
-    val response = client.post(browse) {
+    val response = client.post(BROWSE) {
         setBody(body)
-        mask("continuationContents.musicPlaylistShelfContinuation(continuations,contents.$musicResponsiveListItemRendererMask)")
+        mask("continuationContents.musicPlaylistShelfContinuation(continuations,contents.$MUSIC_RESPONSIVE_LIST_ITEM_RENDERER_MASK)")
     }.body<ContinuationResponse>()
 
     response
@@ -87,15 +87,14 @@ suspend fun Innertube.playlistPage(body: ContinuationBody) = runCatchingNonCance
         ?.toSongsPage()
 }
 
-private fun MusicShelfRenderer?.toSongsPage() =
-    Innertube.ItemsPage(
-        items = this
-            ?.contents
-            ?.mapNotNull(MusicShelfRenderer.Content::musicResponsiveListItemRenderer)
-            ?.mapNotNull(Innertube.SongItem::from),
-        continuation = this
-            ?.continuations
-            ?.firstOrNull()
-            ?.nextContinuationData
-            ?.continuation
-    )
+private fun MusicShelfRenderer?.toSongsPage() = Innertube.ItemsPage(
+    items = this
+        ?.contents
+        ?.mapNotNull(MusicShelfRenderer.Content::musicResponsiveListItemRenderer)
+        ?.mapNotNull(Innertube.SongItem::from),
+    continuation = this
+        ?.continuations
+        ?.firstOrNull()
+        ?.nextContinuationData
+        ?.continuation
+)

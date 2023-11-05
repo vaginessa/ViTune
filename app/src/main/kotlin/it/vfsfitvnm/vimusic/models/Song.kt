@@ -13,7 +13,8 @@ data class Song(
     val durationText: String?,
     val thumbnailUrl: String?,
     val likedAt: Long? = null,
-    val totalPlayTimeMs: Long = 0
+    val totalPlayTimeMs: Long = 0,
+    val loudnessBoost: Float? = null
 ) {
     val formattedTotalPlayTime: String
         get() {
@@ -28,9 +29,5 @@ data class Song(
             }
         }
 
-    fun toggleLike(): Song {
-        return copy(
-            likedAt = if (likedAt == null) System.currentTimeMillis() else null
-        )
-    }
+    fun toggleLike() = copy(likedAt = if (likedAt == null) System.currentTimeMillis() else null)
 }

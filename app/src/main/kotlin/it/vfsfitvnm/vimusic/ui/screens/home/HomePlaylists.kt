@@ -39,6 +39,8 @@ import it.vfsfitvnm.vimusic.enums.PlaylistSortBy
 import it.vfsfitvnm.vimusic.enums.SortOrder
 import it.vfsfitvnm.vimusic.models.Playlist
 import it.vfsfitvnm.vimusic.models.PlaylistPreview
+import it.vfsfitvnm.vimusic.preferences.DataPreferences
+import it.vfsfitvnm.vimusic.preferences.OrderPreferences
 import it.vfsfitvnm.vimusic.query
 import it.vfsfitvnm.vimusic.ui.components.themed.FloatingActionsContainerWithScrollToTop
 import it.vfsfitvnm.vimusic.ui.components.themed.Header
@@ -49,18 +51,14 @@ import it.vfsfitvnm.vimusic.ui.items.PlaylistItem
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.ui.styling.px
-import it.vfsfitvnm.vimusic.utils.playlistSortByKey
-import it.vfsfitvnm.vimusic.utils.playlistSortOrderKey
-import it.vfsfitvnm.vimusic.utils.rememberPreference
 
-@ExperimentalAnimationApi
-@ExperimentalFoundationApi
+@OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
 @Composable
 fun HomePlaylists(
     onBuiltInPlaylist: (BuiltInPlaylist) -> Unit,
     onPlaylistClick: (Playlist) -> Unit,
     onSearchClick: () -> Unit,
-) {
+) = with(OrderPreferences) {
     val (colorPalette) = LocalAppearance.current
 
     var isCreatingANewPlaylist by rememberSaveable {
@@ -80,22 +78,19 @@ fun HomePlaylists(
             }
         )
     }
-
-    var sortBy by rememberPreference(playlistSortByKey, PlaylistSortBy.DateAdded)
-    var sortOrder by rememberPreference(playlistSortOrderKey, SortOrder.Descending)
-
     var items by persistList<PlaylistPreview>("home/playlists")
 
-    LaunchedEffect(sortBy, sortOrder) {
-        Database.playlistPreviews(sortBy, sortOrder).collect { items = it }
+    LaunchedEffect(playlistSortBy, playlistSortOrder) {
+        Database.playlistPreviews(playlistSortBy, playlistSortOrder).collect { items = it }
     }
 
     val sortOrderIconRotation by animateFloatAsState(
-        targetValue = if (sortOrder == SortOrder.Ascending) 0f else 180f,
-        animationSpec = tween(durationMillis = 400, easing = LinearEasing)
+        targetValue = if (playlistSortOrder == SortOrder.Ascending) 0f else 180f,
+        animationSpec = tween(durationMillis = 400, easing = LinearEasing),
+        label = ""
     )
 
-    val thumbnailSizeDp = 108.dp
+    val thumbnailSizeDp = Dimensions.thumbnails.playlist
     val thumbnailSizePx = thumbnailSizeDp.px
 
     val lazyGridState = rememberLazyGridState()
@@ -129,20 +124,20 @@ fun HomePlaylists(
 
                     HeaderIconButton(
                         icon = R.drawable.medical,
-                        color = if (sortBy == PlaylistSortBy.SongCount) colorPalette.text else colorPalette.textDisabled,
-                        onClick = { sortBy = PlaylistSortBy.SongCount }
+                        color = if (playlistSortBy == PlaylistSortBy.SongCount) colorPalette.text else colorPalette.textDisabled,
+                        onClick = { playlistSortBy = PlaylistSortBy.SongCount }
                     )
 
                     HeaderIconButton(
                         icon = R.drawable.text,
-                        color = if (sortBy == PlaylistSortBy.Name) colorPalette.text else colorPalette.textDisabled,
-                        onClick = { sortBy = PlaylistSortBy.Name }
+                        color = if (playlistSortBy == PlaylistSortBy.Name) colorPalette.text else colorPalette.textDisabled,
+                        onClick = { playlistSortBy = PlaylistSortBy.Name }
                     )
 
                     HeaderIconButton(
                         icon = R.drawable.time,
-                        color = if (sortBy == PlaylistSortBy.DateAdded) colorPalette.text else colorPalette.textDisabled,
-                        onClick = { sortBy = PlaylistSortBy.DateAdded }
+                        color = if (playlistSortBy == PlaylistSortBy.DateAdded) colorPalette.text else colorPalette.textDisabled,
+                        onClick = { playlistSortBy = PlaylistSortBy.DateAdded }
                     )
 
                     Spacer(
@@ -153,7 +148,7 @@ fun HomePlaylists(
                     HeaderIconButton(
                         icon = R.drawable.arrow_up,
                         color = colorPalette.text,
-                        onClick = { sortOrder = !sortOrder },
+                        onClick = { playlistSortOrder = !playlistSortOrder },
                         modifier = Modifier
                             .graphicsLayer { rotationZ = sortOrderIconRotation }
                     )
@@ -184,6 +179,20 @@ fun HomePlaylists(
                     alternative = true,
                     modifier = Modifier
                         .clickable(onClick = { onBuiltInPlaylist(BuiltInPlaylist.Offline) })
+                        .animateItemPlacement()
+                )
+            }
+
+            item(key = "top") {
+                PlaylistItem(
+                    icon = R.drawable.trending,
+                    colorTint = colorPalette.red,
+                    name = "My top ${DataPreferences.topListLength}",
+                    songCount = null,
+                    thumbnailSizeDp = thumbnailSizeDp,
+                    alternative = true,
+                    modifier = Modifier
+                        .clickable(onClick = { onBuiltInPlaylist(BuiltInPlaylist.Top) })
                         .animateItemPlacement()
                 )
             }

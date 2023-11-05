@@ -8,10 +8,9 @@ import it.vfsfitvnm.compose.persist.PersistMapCleanup
 import it.vfsfitvnm.compose.routing.RouteHandler
 import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.ui.components.themed.Scaffold
-import it.vfsfitvnm.vimusic.ui.screens.globalRoutes
+import it.vfsfitvnm.vimusic.ui.screens.GlobalRoutes
 
-@ExperimentalFoundationApi
-@ExperimentalAnimationApi
+@OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
 @Composable
 fun LocalPlaylistScreen(playlistId: Long) {
     val saveableStateHolder = rememberSaveableStateHolder()
@@ -19,7 +18,7 @@ fun LocalPlaylistScreen(playlistId: Long) {
     PersistMapCleanup(tagPrefix = "localPlaylist/$playlistId/")
 
     RouteHandler(listenToGlobalEmitter = true) {
-        globalRoutes()
+        GlobalRoutes()
 
         host {
             Scaffold(
@@ -27,8 +26,8 @@ fun LocalPlaylistScreen(playlistId: Long) {
                 onTopIconButtonClick = pop,
                 tabIndex = 0,
                 onTabChanged = { },
-                tabColumnContent = { Item ->
-                    Item(0, "Songs", R.drawable.musical_notes)
+                tabColumnContent = { item ->
+                    item(0, "Songs", R.drawable.musical_notes)
                 }
             ) { currentTabIndex ->
                 saveableStateHolder.SaveableStateProvider(currentTabIndex) {

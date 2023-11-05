@@ -42,7 +42,7 @@ class ReorderingState(
     internal var reachedIndex by mutableStateOf(-1)
     internal var draggingItemSize by mutableStateOf(0)
 
-    lateinit var itemInfo: LazyListItemInfo
+    private lateinit var itemInfo: LazyListItemInfo
 
     private var previousItemSize = 0
     private var nextItemSize = 0

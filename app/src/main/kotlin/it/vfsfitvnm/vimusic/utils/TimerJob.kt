@@ -14,22 +14,18 @@ interface TimerJob {
 }
 
 fun CoroutineScope.timer(delayMillis: Long, onCompletion: () -> Unit): TimerJob {
+    val end = System.currentTimeMillis() + delayMillis
     val millisLeft = MutableStateFlow<Long?>(delayMillis)
     val job = launch {
         while (isActive && millisLeft.value != null) {
             delay(1000)
-            millisLeft.emit(millisLeft.value?.minus(1000)?.takeIf { it > 0 })
+            millisLeft.emit((end - System.currentTimeMillis()).takeIf { it > 0 })
         }
     }
-    val disposableHandle = job.invokeOnCompletion {
-        if (it == null) {
-            onCompletion()
-        }
-    }
+    val disposableHandle = job.invokeOnCompletion { if (it == null) onCompletion() }
 
     return object : TimerJob {
-        override val millisLeft: StateFlow<Long?>
-            get() = millisLeft.asStateFlow()
+        override val millisLeft get() = millisLeft.asStateFlow()
 
         override fun cancel() {
             millisLeft.value = null

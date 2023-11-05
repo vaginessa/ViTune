@@ -5,7 +5,13 @@ import android.content.Intent
 import android.media.audiofx.AudioEffect
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.OptIn
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -27,6 +33,7 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.neverEqualPolicy
@@ -42,14 +49,22 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.coerceAtMost
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
 import coil.compose.AsyncImage
-import it.vfsfitvnm.innertube.models.NavigationEndpoint
 import it.vfsfitvnm.compose.routing.OnGlobalRoute
+import it.vfsfitvnm.innertube.models.NavigationEndpoint
+import it.vfsfitvnm.vimusic.Database
 import it.vfsfitvnm.vimusic.LocalPlayerServiceBinder
 import it.vfsfitvnm.vimusic.R
+import it.vfsfitvnm.vimusic.enums.ThumbnailRoundness
+import it.vfsfitvnm.vimusic.models.ui.toUiMedia
+import it.vfsfitvnm.vimusic.preferences.PlayerPreferences
+import it.vfsfitvnm.vimusic.query
+import it.vfsfitvnm.vimusic.roundedShape
 import it.vfsfitvnm.vimusic.service.PlayerService
 import it.vfsfitvnm.vimusic.ui.components.BottomSheet
 import it.vfsfitvnm.vimusic.ui.components.BottomSheetState
@@ -57,12 +72,16 @@ import it.vfsfitvnm.vimusic.ui.components.LocalMenuState
 import it.vfsfitvnm.vimusic.ui.components.rememberBottomSheetState
 import it.vfsfitvnm.vimusic.ui.components.themed.BaseMediaItemMenu
 import it.vfsfitvnm.vimusic.ui.components.themed.IconButton
+import it.vfsfitvnm.vimusic.ui.components.themed.SecondaryTextButton
+import it.vfsfitvnm.vimusic.ui.components.themed.SliderDialog
+import it.vfsfitvnm.vimusic.ui.components.themed.TextToggle
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.ui.styling.collapsedPlayerProgressBar
 import it.vfsfitvnm.vimusic.ui.styling.px
 import it.vfsfitvnm.vimusic.utils.DisposableListener
 import it.vfsfitvnm.vimusic.utils.forceSeekToNext
+import it.vfsfitvnm.vimusic.utils.forceSeekToPrevious
 import it.vfsfitvnm.vimusic.utils.isLandscape
 import it.vfsfitvnm.vimusic.utils.positionAndDurationState
 import it.vfsfitvnm.vimusic.utils.seamlessPlay
@@ -72,17 +91,15 @@ import it.vfsfitvnm.vimusic.utils.shouldBePlaying
 import it.vfsfitvnm.vimusic.utils.thumbnail
 import it.vfsfitvnm.vimusic.utils.toast
 import kotlin.math.absoluteValue
+import kotlin.math.roundToInt
 
-@ExperimentalFoundationApi
-@ExperimentalAnimationApi
+@kotlin.OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
+@OptIn(UnstableApi::class)
 @Composable
-fun Player(
-    layoutState: BottomSheetState,
-    modifier: Modifier = Modifier,
-) {
+fun Player(layoutState: BottomSheetState, modifier: Modifier = Modifier) {
     val menuState = LocalMenuState.current
 
-    val (colorPalette, typography, thumbnailShape) = LocalAppearance.current
+    val (colorPalette, typography, thumbnailCornerSize) = LocalAppearance.current
     val binder = LocalPlayerServiceBinder.current
 
     binder?.player ?: return
@@ -151,10 +168,7 @@ fun Player(
                         )
                     }
             ) {
-                Spacer(
-                    modifier = Modifier
-                        .width(2.dp)
-                )
+                Spacer(modifier = Modifier.width(2.dp))
 
                 Box(
                     contentAlignment = Alignment.Center,
@@ -166,7 +180,7 @@ fun Player(
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
-                            .clip(thumbnailShape)
+                            .clip(thumbnailCornerSize.coerceAtMost(ThumbnailRoundness.Heavy.dp).roundedShape)
                             .size(48.dp)
                     )
                 }
@@ -177,31 +191,52 @@ fun Player(
                         .height(Dimensions.collapsedPlayer)
                         .weight(1f)
                 ) {
-                    BasicText(
-                        text = mediaItem.mediaMetadata.title?.toString() ?: "",
-                        style = typography.xs.semiBold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    BasicText(
-                        text = mediaItem.mediaMetadata.artist?.toString() ?: "",
-                        style = typography.xs.semiBold.secondary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
+                    AnimatedContent(
+                        targetState = mediaItem.mediaMetadata.title?.toString() ?: "",
+                        label = "",
+                        transitionSpec = { fadeIn() togetherWith fadeOut() }
+                    ) { text ->
+                        BasicText(
+                            text = text,
+                            style = typography.xs.semiBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    AnimatedVisibility(visible = mediaItem.mediaMetadata.artist != null) {
+                        AnimatedContent(
+                            targetState = mediaItem.mediaMetadata.artist?.toString() ?: "",
+                            label = "",
+                            transitionSpec = { fadeIn() togetherWith fadeOut() }
+                        ) { text ->
+                            BasicText(
+                                text = text,
+                                style = typography.xs.semiBold.secondary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
                 }
 
-                Spacer(
-                    modifier = Modifier
-                        .width(2.dp)
-                )
+                Spacer(modifier = Modifier.width(2.dp))
 
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .height(Dimensions.collapsedPlayer)
+                    modifier = Modifier.height(Dimensions.collapsedPlayer)
                 ) {
+                    AnimatedVisibility(visible = PlayerPreferences.isShowingPrevButtonCollapsed) {
+                        IconButton(
+                            icon = R.drawable.play_skip_back,
+                            color = colorPalette.text,
+                            onClick = binder.player::forceSeekToPrevious,
+                            modifier = Modifier
+                                .padding(horizontal = 4.dp, vertical = 8.dp)
+                                .size(20.dp)
+                        )
+                    }
+
                     IconButton(
                         icon = if (shouldBePlaying) R.drawable.pause else R.drawable.play,
                         color = colorPalette.text,
@@ -230,20 +265,11 @@ fun Player(
                     )
                 }
 
-                Spacer(
-                    modifier = Modifier
-                        .width(2.dp)
-                )
+                Spacer(modifier = Modifier.width(2.dp))
             }
         }
     ) {
-        var isShowingLyrics by rememberSaveable {
-            mutableStateOf(false)
-        }
-
-        var isShowingStatsForNerds by rememberSaveable {
-            mutableStateOf(false)
-        }
+        var isShowingStatsForNerds by rememberSaveable { mutableStateOf(false) }
 
         val playerBottomSheetState = rememberBottomSheetState(
             64.dp + horizontalBottomPaddingValues.calculateBottomPadding(),
@@ -261,90 +287,155 @@ fun Player(
 
         val thumbnailContent: @Composable (modifier: Modifier) -> Unit = { modifier ->
             Thumbnail(
-                isShowingLyrics = isShowingLyrics,
-                onShowLyrics = { isShowingLyrics = it },
+                isShowingLyrics = PlayerPreferences.isShowingLyrics,
+                onShowLyrics = { PlayerPreferences.isShowingLyrics = it },
                 isShowingStatsForNerds = isShowingStatsForNerds,
                 onShowStatsForNerds = { isShowingStatsForNerds = it },
-                modifier = modifier
-                    .nestedScroll(layoutState.preUpPostDownNestedScrollConnection)
+                modifier = modifier.nestedScroll(layoutState.preUpPostDownNestedScrollConnection)
             )
         }
 
         val controlsContent: @Composable (modifier: Modifier) -> Unit = { modifier ->
             Controls(
-                mediaId = mediaItem.mediaId,
-                title = mediaItem.mediaMetadata.title?.toString(),
-                artist = mediaItem.mediaMetadata.artist?.toString(),
+                media = mediaItem.toUiMedia(positionAndDuration.second),
                 shouldBePlaying = shouldBePlaying,
                 position = positionAndDuration.first,
-                duration = positionAndDuration.second,
                 modifier = modifier
             )
         }
 
-        if (isLandscape) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = containerModifier
-                    .padding(top = 32.dp)
+        if (isLandscape) Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = containerModifier.padding(top = 32.dp)
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .weight(0.66f)
+                    .padding(bottom = 16.dp)
             ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .weight(0.66f)
-                        .padding(bottom = 16.dp)
-                ) {
-                    thumbnailContent(
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                    )
-                }
-
-                controlsContent(
-                    modifier = Modifier
-                        .padding(vertical = 8.dp)
-                        .fillMaxHeight()
-                        .weight(1f)
-                )
+                thumbnailContent(Modifier.padding(horizontal = 16.dp))
             }
-        } else {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = containerModifier
-                    .padding(top = 54.dp)
-            ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .weight(1.25f)
-                ) {
-                    thumbnailContent(
-                        modifier = Modifier
-                            .padding(horizontal = 32.dp, vertical = 8.dp)
-                    )
-                }
 
-                controlsContent(
-                    modifier = Modifier
-                        .padding(vertical = 8.dp)
-                        .fillMaxWidth()
-                        .weight(1f)
+            controlsContent(
+                Modifier
+                    .padding(vertical = 8.dp)
+                    .fillMaxHeight()
+                    .weight(1f)
+            )
+        } else Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = containerModifier.padding(top = 54.dp)
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.weight(1.25f)
+            ) {
+                thumbnailContent(Modifier.padding(horizontal = 32.dp, vertical = 8.dp))
+            }
+
+            controlsContent(
+                Modifier
+                    .padding(vertical = 8.dp)
+                    .fillMaxWidth()
+                    .weight(1f)
+            )
+        }
+
+        var speedDialogOpen by rememberSaveable { mutableStateOf(false) }
+
+        if (speedDialogOpen) SliderDialog(
+            onDismiss = { speedDialogOpen = false },
+            title = "Playback speed",
+            initialValue = PlayerPreferences.speed * 100f,
+            onSlide = { },
+            onSlideCompleted = { PlayerPreferences.speed = it.roundToInt() / 100f },
+            min = 0f,
+            max = 200f,
+            toDisplay = { if (it <= 1f) "Why would you do this?!" else "${"%.2f".format(it.roundToInt() / 100f)}x" }
+        ) {
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                SecondaryTextButton(
+                    text = "Reset",
+                    onClick = {
+                        PlayerPreferences.speed = 1f
+                        speedDialogOpen = false
+                    }
                 )
             }
         }
 
+        var boostDialogOpen by rememberSaveable { mutableStateOf(false) }
 
-        Queue(
-            layoutState = playerBottomSheetState,
-            content = {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.End,
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(horizontal = 8.dp)
-                        .fillMaxHeight()
+        if (boostDialogOpen) {
+            val state by Database.loudnessBoost(mediaItem.mediaId).collectAsState(initial = null)
+            var newValue by remember(state) { mutableStateOf(state ?: 0f) }
+
+            fun submit() = query {
+                Database.setLoudnessBoost(mediaItem.mediaId, if (newValue == 0f) null else newValue)
+            }
+
+            SliderDialog(
+                onDismiss = {
+                    boostDialogOpen = false
+                    submit()
+                },
+                title = "Song volume boost",
+                state = newValue * 100f,
+                setState = { newValue = it / 100f },
+                onSlide = { },
+                onSlideCompleted = { submit() },
+                min = -2000f,
+                max = 2000f,
+                toDisplay = { "${"%.2f".format(it.roundToInt() / 100f)} dB" }
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
                 ) {
+                    SecondaryTextButton(
+                        text = "Reset",
+                        onClick = {
+                            newValue = 0f
+                            submit()
+                        }
+                    )
+                }
+            }
+        }
+
+        with(PlayerPreferences) {
+            Queue(
+                layoutState = playerBottomSheetState,
+                beforeContent = {
+                    TextToggle(
+                        state = trackLoopEnabled,
+                        toggleState = { trackLoopEnabled = !trackLoopEnabled },
+                        name = "Song loop"
+                    )
+                },
+                afterContent = {
+                    IconButton(
+                        onClick = { speedDialogOpen = true },
+                        icon = R.drawable.speed,
+                        color = colorPalette.text,
+                        modifier = Modifier
+                            .padding(horizontal = 8.dp, vertical = 8.dp)
+                            .size(20.dp)
+                    )
+
+                    IconButton(
+                        onClick = { boostDialogOpen = true },
+                        icon = R.drawable.volume_up,
+                        color = colorPalette.text,
+                        modifier = Modifier
+                            .padding(horizontal = 8.dp, vertical = 8.dp)
+                            .size(20.dp)
+                    )
+
                     IconButton(
                         icon = R.drawable.ellipsis_horizontal,
                         color = colorPalette.text,
@@ -358,25 +449,22 @@ fun Player(
                             }
                         },
                         modifier = Modifier
-                            .padding(horizontal = 4.dp, vertical = 8.dp)
+                            .padding(start = 8.dp, end = 4.dp, top = 8.dp, bottom = 8.dp)
                             .size(20.dp)
                     )
 
-                    Spacer(
-                        modifier = Modifier
-                            .width(4.dp)
-                    )
-                }
-            },
-            backgroundColorProvider = { colorPalette.background2 },
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-        )
+                    Spacer(modifier = Modifier.width(4.dp))
+                },
+                backgroundColorProvider = { colorPalette.background2 },
+                modifier = Modifier.align(Alignment.BottomCenter)
+            )
+        }
     }
 }
 
 @ExperimentalAnimationApi
 @Composable
+@OptIn(UnstableApi::class)
 private fun PlayerMenu(
     binder: PlayerService.Binder,
     mediaItem: MediaItem,

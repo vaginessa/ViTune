@@ -1,9 +1,12 @@
 package it.vfsfitvnm.vimusic.ui.screens.home
 
+import androidx.annotation.OptIn
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -20,17 +23,33 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.media3.common.util.UnstableApi
 import it.vfsfitvnm.compose.persist.persistList
 import it.vfsfitvnm.vimusic.Database
 import it.vfsfitvnm.vimusic.LocalPlayerAwareWindowInsets
@@ -39,6 +58,8 @@ import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.enums.SongSortBy
 import it.vfsfitvnm.vimusic.enums.SortOrder
 import it.vfsfitvnm.vimusic.models.Song
+import it.vfsfitvnm.vimusic.preferences.OrderPreferences
+import it.vfsfitvnm.vimusic.service.isLocal
 import it.vfsfitvnm.vimusic.ui.components.LocalMenuState
 import it.vfsfitvnm.vimusic.ui.components.themed.FloatingActionsContainerWithScrollToTop
 import it.vfsfitvnm.vimusic.ui.components.themed.Header
@@ -54,36 +75,67 @@ import it.vfsfitvnm.vimusic.utils.asMediaItem
 import it.vfsfitvnm.vimusic.utils.center
 import it.vfsfitvnm.vimusic.utils.color
 import it.vfsfitvnm.vimusic.utils.forcePlayAtIndex
-import it.vfsfitvnm.vimusic.utils.rememberPreference
+import it.vfsfitvnm.vimusic.utils.secondary
 import it.vfsfitvnm.vimusic.utils.semiBold
-import it.vfsfitvnm.vimusic.utils.songSortByKey
-import it.vfsfitvnm.vimusic.utils.songSortOrderKey
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
-@ExperimentalFoundationApi
-@ExperimentalAnimationApi
 @Composable
 fun HomeSongs(
     onSearchClick: () -> Unit
+) = with(OrderPreferences) {
+    HomeSongs(
+        onSearchClick = onSearchClick,
+        songProvider = { Database.songs(songSortBy, songSortOrder).map { songs ->
+            songs.filter { !it.isLocal } } },
+        sortBy = songSortBy,
+        setSortBy = { songSortBy = it },
+        sortOrder = songSortOrder,
+        setSortOrder = { songSortOrder = it },
+        title = "Songs"
+    )
+}
+
+@kotlin.OptIn(
+    ExperimentalComposeUiApi::class,
+    ExperimentalFoundationApi::class,
+    ExperimentalAnimationApi::class
+)
+@OptIn(UnstableApi::class)
+@Composable
+fun HomeSongs(
+    onSearchClick: () -> Unit,
+    songProvider: () -> Flow<List<Song>>,
+    sortBy: SongSortBy,
+    setSortBy: (SongSortBy) -> Unit,
+    sortOrder: SortOrder,
+    setSortOrder: (SortOrder) -> Unit,
+    title: String
 ) {
-    val (colorPalette, typography, thumbnailShape) = LocalAppearance.current
+    val (colorPalette, typography, _, thumbnailShape) = LocalAppearance.current
     val binder = LocalPlayerServiceBinder.current
     val menuState = LocalMenuState.current
 
     val thumbnailSizeDp = Dimensions.thumbnails.song
     val thumbnailSizePx = thumbnailSizeDp.px
 
-    var sortBy by rememberPreference(songSortByKey, SongSortBy.DateAdded)
-    var sortOrder by rememberPreference(songSortOrderKey, SortOrder.Descending)
-
+    var filter: String? by rememberSaveable { mutableStateOf(null) }
     var items by persistList<Song>("home/songs")
+    val filteredItems by remember {
+        derivedStateOf {
+            filter?.lowercase()?.ifBlank { null }
+                ?.let { f -> items.filter { f in it.title.lowercase() }.sortedBy { it.title } }
+                ?: items
+        }
+    }
 
     LaunchedEffect(sortBy, sortOrder) {
-        Database.songs(sortBy, sortOrder).collect { items = it }
+        songProvider().collect { items = it }
     }
 
     val sortOrderIconRotation by animateFloatAsState(
         targetValue = if (sortOrder == SortOrder.Ascending) 0f else 180f,
-        animationSpec = tween(durationMillis = 400, easing = LinearEasing)
+        animationSpec = tween(durationMillis = 400, easing = LinearEasing), label = ""
     )
 
     val lazyListState = rememberLazyListState()
@@ -102,23 +154,89 @@ fun HomeSongs(
                 key = "header",
                 contentType = 0
             ) {
-                Header(title = "Songs") {
+                Header(title = title) {
+                    var searching by rememberSaveable { mutableStateOf(false) }
+
+                    if (searching) {
+                        val focusRequester = remember { FocusRequester() }
+                        val focusManager = LocalFocusManager.current
+                        val keyboardController = LocalSoftwareKeyboardController.current
+
+                        LaunchedEffect(searching) {
+                            focusRequester.requestFocus()
+                        }
+
+                        BasicTextField(
+                            value = filter ?: "",
+                            onValueChange = { filter = it },
+                            textStyle = typography.xs.semiBold,
+                            singleLine = true,
+                            maxLines = 1,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                            keyboardActions = KeyboardActions(onDone = {
+                                if (filter.isNullOrBlank()) filter = ""
+                                focusManager.clearFocus()
+                            }),
+                            cursorBrush = SolidColor(colorPalette.text),
+                            decorationBox = { innerTextField ->
+                                Box(
+                                    contentAlignment = Alignment.CenterStart,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    androidx.compose.animation.AnimatedVisibility(
+                                        visible = filter?.isEmpty() ?: true,
+                                        enter = fadeIn(tween(100)),
+                                        exit = fadeOut(tween(100)),
+                                    ) {
+                                        BasicText(
+                                            text = "Filter...",
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            style = typography.xs.semiBold.secondary.copy(color = colorPalette.textDisabled)
+                                        )
+                                    }
+
+                                    innerTextField()
+                                }
+                            },
+                            modifier = Modifier
+                                .focusRequester(focusRequester)
+                                .onFocusChanged {
+                                    if (!it.hasFocus) {
+                                        keyboardController?.hide()
+                                        if (filter?.isBlank() == true) {
+                                            filter = null
+                                            searching = false
+                                        }
+                                    }
+                                }
+                        )
+                    } else {
+                        HeaderIconButton(
+                            onClick = { searching = true },
+                            icon = R.drawable.search,
+                            color = colorPalette.text
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f))
+
                     HeaderIconButton(
                         icon = R.drawable.trending,
                         color = if (sortBy == SongSortBy.PlayTime) colorPalette.text else colorPalette.textDisabled,
-                        onClick = { sortBy = SongSortBy.PlayTime }
+                        onClick = { setSortBy(SongSortBy.PlayTime) }
                     )
 
                     HeaderIconButton(
                         icon = R.drawable.text,
                         color = if (sortBy == SongSortBy.Title) colorPalette.text else colorPalette.textDisabled,
-                        onClick = { sortBy = SongSortBy.Title }
+                        onClick = { setSortBy(SongSortBy.Title) }
                     )
 
                     HeaderIconButton(
                         icon = R.drawable.time,
                         color = if (sortBy == SongSortBy.DateAdded) colorPalette.text else colorPalette.textDisabled,
-                        onClick = { sortBy = SongSortBy.DateAdded }
+                        onClick = { setSortBy(SongSortBy.DateAdded) }
                     )
 
                     Spacer(
@@ -129,7 +247,7 @@ fun HomeSongs(
                     HeaderIconButton(
                         icon = R.drawable.arrow_up,
                         color = colorPalette.text,
-                        onClick = { sortOrder = !sortOrder },
+                        onClick = { setSortOrder(!sortOrder) },
                         modifier = Modifier
                             .graphicsLayer { rotationZ = sortOrderIconRotation }
                     )
@@ -137,10 +255,29 @@ fun HomeSongs(
             }
 
             itemsIndexed(
-                items = items,
+                items = filteredItems,
                 key = { _, song -> song.id }
             ) { index, song ->
                 SongItem(
+                    modifier = Modifier
+                        .combinedClickable(
+                            onLongClick = {
+                                menuState.display {
+                                    InHistoryMediaItemMenu(
+                                        song = song,
+                                        onDismiss = menuState::hide
+                                    )
+                                }
+                            },
+                            onClick = {
+                                binder?.stopRadio()
+                                binder?.player?.forcePlayAtIndex(
+                                    items.map(Song::asMediaItem),
+                                    index
+                                )
+                            }
+                        )
+                        .animateItemPlacement(),
                     song = song,
                     thumbnailSizePx = thumbnailSizePx,
                     thumbnailSizeDp = thumbnailSizeDp,
@@ -161,26 +298,7 @@ fun HomeSongs(
                                 .padding(horizontal = 8.dp, vertical = 4.dp)
                                 .align(Alignment.BottomCenter)
                         )
-                    }) else null,
-                    modifier = Modifier
-                        .combinedClickable(
-                            onLongClick = {
-                                menuState.display {
-                                    InHistoryMediaItemMenu(
-                                        song = song,
-                                        onDismiss = menuState::hide
-                                    )
-                                }
-                            },
-                            onClick = {
-                                binder?.stopRadio()
-                                binder?.player?.forcePlayAtIndex(
-                                    items.map(Song::asMediaItem),
-                                    index
-                                )
-                            }
-                        )
-                        .animateItemPlacement()
+                    }) else null
                 )
             }
         }

@@ -1,6 +1,5 @@
 package it.vfsfitvnm.vimusic.service
 
-import android.os.Binder as AndroidBinder
 import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
@@ -10,9 +9,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.SharedPreferences
 import android.content.res.Configuration
-import android.database.SQLException
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.media.AudioDeviceCallback
@@ -21,15 +18,18 @@ import android.media.AudioManager
 import android.media.MediaDescription
 import android.media.MediaMetadata
 import android.media.audiofx.AudioEffect
+import android.media.audiofx.BassBoost
 import android.media.audiofx.LoudnessEnhancer
 import android.media.session.MediaSession
 import android.media.session.PlaybackState
 import android.net.Uri
 import android.os.Handler
 import android.text.format.DateUtils
+import androidx.annotation.OptIn
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat.startForegroundService
 import androidx.core.content.getSystemService
@@ -41,8 +41,12 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.Timeline
+import androidx.media3.common.audio.SonicAudioProcessor
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.database.StandaloneDatabaseProvider
 import androidx.media3.datasource.DataSource
+import androidx.media3.datasource.DataSpec
+import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.datasource.ResolvingDataSource
 import androidx.media3.datasource.cache.Cache
@@ -60,13 +64,9 @@ import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.exoplayer.audio.DefaultAudioSink.DefaultAudioProcessorChain
 import androidx.media3.exoplayer.audio.MediaCodecAudioRenderer
 import androidx.media3.exoplayer.audio.SilenceSkippingAudioProcessor
-import androidx.media3.exoplayer.audio.SonicAudioProcessor
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
-import androidx.media3.exoplayer.source.MediaSource
-import androidx.media3.extractor.ExtractorsFactory
-import androidx.media3.extractor.mkv.MatroskaExtractor
-import androidx.media3.extractor.mp4.FragmentedMp4Extractor
+import androidx.media3.extractor.DefaultExtractorsFactory
 import it.vfsfitvnm.innertube.Innertube
 import it.vfsfitvnm.innertube.models.NavigationEndpoint
 import it.vfsfitvnm.innertube.models.bodies.PlayerBody
@@ -77,37 +77,30 @@ import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.enums.ExoPlayerDiskCacheMaxSize
 import it.vfsfitvnm.vimusic.models.Event
 import it.vfsfitvnm.vimusic.models.QueuedMediaItem
+import it.vfsfitvnm.vimusic.models.Song
+import it.vfsfitvnm.vimusic.models.SongWithContentLength
+import it.vfsfitvnm.vimusic.preferences.AppearancePreferences
+import it.vfsfitvnm.vimusic.preferences.DataPreferences
+import it.vfsfitvnm.vimusic.preferences.PlayerPreferences
 import it.vfsfitvnm.vimusic.query
+import it.vfsfitvnm.vimusic.utils.ConditionalCacheDataSourceFactory
 import it.vfsfitvnm.vimusic.utils.InvincibleService
 import it.vfsfitvnm.vimusic.utils.RingBuffer
 import it.vfsfitvnm.vimusic.utils.TimerJob
 import it.vfsfitvnm.vimusic.utils.YouTubeRadio
 import it.vfsfitvnm.vimusic.utils.activityPendingIntent
 import it.vfsfitvnm.vimusic.utils.broadCastPendingIntent
-import it.vfsfitvnm.vimusic.utils.exoPlayerDiskCacheMaxSizeKey
 import it.vfsfitvnm.vimusic.utils.findNextMediaItemById
 import it.vfsfitvnm.vimusic.utils.forcePlayFromBeginning
 import it.vfsfitvnm.vimusic.utils.forceSeekToNext
 import it.vfsfitvnm.vimusic.utils.forceSeekToPrevious
-import it.vfsfitvnm.vimusic.utils.getEnum
 import it.vfsfitvnm.vimusic.utils.intent
 import it.vfsfitvnm.vimusic.utils.isAtLeastAndroid13
 import it.vfsfitvnm.vimusic.utils.isAtLeastAndroid6
 import it.vfsfitvnm.vimusic.utils.isAtLeastAndroid8
-import it.vfsfitvnm.vimusic.utils.isInvincibilityEnabledKey
-import it.vfsfitvnm.vimusic.utils.isShowingThumbnailInLockscreenKey
 import it.vfsfitvnm.vimusic.utils.mediaItems
-import it.vfsfitvnm.vimusic.utils.persistentQueueKey
-import it.vfsfitvnm.vimusic.utils.preferences
-import it.vfsfitvnm.vimusic.utils.queueLoopEnabledKey
-import it.vfsfitvnm.vimusic.utils.resumePlaybackWhenDeviceConnectedKey
 import it.vfsfitvnm.vimusic.utils.shouldBePlaying
-import it.vfsfitvnm.vimusic.utils.skipSilenceKey
 import it.vfsfitvnm.vimusic.utils.timer
-import it.vfsfitvnm.vimusic.utils.trackLoopEnabledKey
-import it.vfsfitvnm.vimusic.utils.volumeNormalizationKey
-import kotlin.math.roundToInt
-import kotlin.system.exitProcess
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -115,58 +108,65 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.cancellable
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.plus
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import kotlin.math.roundToInt
+import kotlin.system.exitProcess
+import android.os.Binder as AndroidBinder
+
+const val LOCAL_KEY_PREFIX = "local:"
+
+@get:OptIn(UnstableApi::class)
+val DataSpec.isLocal get() = key?.startsWith(LOCAL_KEY_PREFIX) == true
+
+val MediaItem.isLocal get() = mediaId.startsWith(LOCAL_KEY_PREFIX)
+val Song.isLocal get() = id.startsWith(LOCAL_KEY_PREFIX)
 
 @Suppress("DEPRECATION")
-class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListener.Callback,
-    SharedPreferences.OnSharedPreferenceChangeListener {
+@OptIn(UnstableApi::class)
+class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListener.Callback {
     private lateinit var mediaSession: MediaSession
     private lateinit var cache: SimpleCache
     private lateinit var player: ExoPlayer
 
-    private val stateBuilder = PlaybackState.Builder()
-        .setActions(
-            PlaybackState.ACTION_PLAY
-                    or PlaybackState.ACTION_PAUSE
-                    or PlaybackState.ACTION_PLAY_PAUSE
-                    or PlaybackState.ACTION_STOP
-                    or PlaybackState.ACTION_SKIP_TO_PREVIOUS
-                    or PlaybackState.ACTION_SKIP_TO_NEXT
-                    or PlaybackState.ACTION_SKIP_TO_QUEUE_ITEM
-                    or PlaybackState.ACTION_SEEK_TO
-                    or PlaybackState.ACTION_REWIND
-        )
+    private val stateBuilder = PlaybackState.Builder().setActions(
+        PlaybackState.ACTION_PLAY or
+                PlaybackState.ACTION_PAUSE or
+                PlaybackState.ACTION_PLAY_PAUSE or
+                PlaybackState.ACTION_STOP or
+                PlaybackState.ACTION_SKIP_TO_PREVIOUS or
+                PlaybackState.ACTION_SKIP_TO_NEXT or
+                PlaybackState.ACTION_SKIP_TO_QUEUE_ITEM or
+                PlaybackState.ACTION_SEEK_TO or
+                PlaybackState.ACTION_REWIND
+    )
 
     private val metadataBuilder = MediaMetadata.Builder()
 
     private var notificationManager: NotificationManager? = null
-
     private var timerJob: TimerJob? = null
-
     private var radio: YouTubeRadio? = null
 
     private lateinit var bitmapProvider: BitmapProvider
 
-    private val coroutineScope = CoroutineScope(Dispatchers.IO) + Job()
+    private val coroutineScope = CoroutineScope(Dispatchers.IO + Job())
+    private var preferenceUpdaterJob: Job? = null
 
     private var volumeNormalizationJob: Job? = null
 
-    private var isPersistentQueueEnabled = false
-    private var isShowingThumbnailInLockscreen = true
     override var isInvincibilityEnabled = false
 
     private var audioManager: AudioManager? = null
     private var audioDeviceCallback: AudioDeviceCallback? = null
 
     private var loudnessEnhancer: LoudnessEnhancer? = null
+    private var bassBoost: BassBoost? = null
 
     private val binder = Binder()
 
     private var isNotificationStarted = false
 
-    override val notificationId: Int
-        get() = NotificationId
+    override val notificationId get() = NOTIFICATION_ID
 
     private lateinit var notificationActionReceiver: NotificationActionReceiver
 
@@ -175,6 +175,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         return binder
     }
 
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     override fun onCreate() {
         super.onCreate()
 
@@ -187,16 +188,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
         createNotificationChannel()
 
-        preferences.registerOnSharedPreferenceChangeListener(this)
-
-        val preferences = preferences
-        isPersistentQueueEnabled = preferences.getBoolean(persistentQueueKey, false)
-        isInvincibilityEnabled = preferences.getBoolean(isInvincibilityEnabledKey, false)
-        isShowingThumbnailInLockscreen =
-            preferences.getBoolean(isShowingThumbnailInLockscreenKey, false)
-
-        val cacheEvictor = when (val size =
-            preferences.getEnum(exoPlayerDiskCacheMaxSizeKey, ExoPlayerDiskCacheMaxSize.`2GB`)) {
+        val cacheEvictor = when (val size = DataPreferences.exoPlayerDiskCacheMaxSize) {
             ExoPlayerDiskCacheMaxSize.Unlimited -> NoOpCacheEvictor()
             else -> LeastRecentlyUsedCacheEvictor(size.bytes)
         }
@@ -207,11 +199,9 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
             directory.mkdir()
 
-            cacheDir.listFiles()?.forEach { file ->
-                if (file.isDirectory && file.name.length == 1 && file.name.isDigitsOnly() || file.extension == "uid") {
-                    if (!file.renameTo(directory.resolve(file.name))) {
-                        file.deleteRecursively()
-                    }
+            cacheDir.listFiles()?.forEach {
+                if (it.isDirectory && it.name.length == 1 && it.name.isDigitsOnly() || it.extension == "uid") {
+                    if (!it.renameTo(directory.resolve(it.name))) it.deleteRecursively()
                 }
             }
 
@@ -232,13 +222,9 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             .setUsePlatformDiagnostics(false)
             .build()
 
-        player.repeatMode = when {
-            preferences.getBoolean(trackLoopEnabledKey, false) -> Player.REPEAT_MODE_ONE
-            preferences.getBoolean(queueLoopEnabledKey, true) -> Player.REPEAT_MODE_ALL
-            else -> Player.REPEAT_MODE_OFF
-        }
+        updateRepeatMode()
 
-        player.skipSilenceEnabled = preferences.getBoolean(skipSilenceKey, false)
+        player.skipSilenceEnabled = PlayerPreferences.skipSilence
         player.addListener(this)
         player.addAnalyticsListener(PlaybackStatsListener(false, this))
 
@@ -262,19 +248,72 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         registerReceiver(notificationActionReceiver, filter)
 
         maybeResumePlaybackWhenDeviceConnected()
+
+        fun <T> CoroutineScope.stateCallback(
+            runner: suspend (suspend () -> Unit) -> Unit = { withContext(Dispatchers.Main) { it() } },
+            state: () -> T,
+            callback: suspend () -> Unit
+        ) = launch { snapshotFlow(state).collectLatest { runner(callback) } }
+
+        preferenceUpdaterJob = coroutineScope.launch {
+            with(PlayerPreferences) {
+                stateCallback(
+                    state = { resumePlaybackWhenDeviceConnected },
+                    callback = ::maybeResumePlaybackWhenDeviceConnected
+                )
+                stateCallback(
+                    state = { AppearancePreferences.isShowingThumbnailInLockscreen },
+                    callback = ::maybeShowSongCoverInLockScreen
+                )
+                stateCallback(
+                    state = { trackLoopEnabled; queueLoopEnabled },
+                    callback = ::updateRepeatMode
+                )
+                stateCallback(
+                    state = { volumeNormalization; volumeNormalizationBaseGain },
+                    callback = ::maybeNormalizeVolume
+                )
+                stateCallback(
+                    state = { bassBoost; bassBoostLevel },
+                    callback = ::maybeBassBoost
+                )
+                stateCallback(
+                    state = { speed },
+                    callback = { player.setPlaybackSpeed(speed.coerceAtLeast(0.01f)) }
+                )
+                stateCallback(
+                    state = { isInvincibilityEnabled },
+                    callback = {
+                        this@PlayerService.isInvincibilityEnabled = isInvincibilityEnabled
+                    }
+                )
+                stateCallback(
+                    state = { skipSilence },
+                    callback = { player.skipSilenceEnabled = skipSilence },
+                    runner = { handler.post { runBlocking { it() } } }
+                )
+            }
+        }
+    }
+
+    private fun updateRepeatMode() {
+        player.repeatMode = when {
+            PlayerPreferences.trackLoopEnabled -> Player.REPEAT_MODE_ONE
+            PlayerPreferences.queueLoopEnabled -> Player.REPEAT_MODE_ALL
+            else -> Player.REPEAT_MODE_OFF
+        }
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
-        if (!player.shouldBePlaying) {
-            broadCastPendingIntent<NotificationDismissReceiver>().send()
-        }
+        if (!player.shouldBePlaying) broadCastPendingIntent<NotificationDismissReceiver>().send()
         super.onTaskRemoved(rootIntent)
     }
 
-    override fun onDestroy() {
+    override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) =
         maybeSavePlayerQueue()
 
-        preferences.unregisterOnSharedPreferenceChangeListener(this)
+    override fun onDestroy() {
+        maybeSavePlayerQueue()
 
         player.removeListener(this)
         player.stop()
@@ -288,17 +327,16 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
         loudnessEnhancer?.release()
 
+        preferenceUpdaterJob?.cancel()
+
         super.onDestroy()
     }
 
-    override fun shouldBeInvincible(): Boolean {
-        return !player.shouldBePlaying
-    }
+    override fun shouldBeInvincible() = !player.shouldBePlaying
 
     override fun onConfigurationChanged(newConfig: Configuration) {
-        if (bitmapProvider.setDefaultBitmap() && player.currentMediaItem != null) {
-            notificationManager?.notify(NotificationId, notification())
-        }
+        if (bitmapProvider.setDefaultBitmap() && player.currentMediaItem != null)
+            notificationManager?.notify(NOTIFICATION_ID, notification())
         super.onConfigurationChanged(newConfig)
     }
 
@@ -311,24 +349,19 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
         val totalPlayTimeMs = playbackStats.totalPlayTimeMs
 
-        if (totalPlayTimeMs > 5000) {
-            query {
-                Database.incrementTotalPlayTimeMs(mediaItem.mediaId, totalPlayTimeMs)
-            }
+        if (totalPlayTimeMs > 5000 && !DataPreferences.pausePlaytime) query {
+            Database.incrementTotalPlayTimeMs(mediaItem.mediaId, totalPlayTimeMs)
         }
 
-        if (totalPlayTimeMs > 30000) {
-            query {
-                try {
-                    Database.insert(
-                        Event(
-                            songId = mediaItem.mediaId,
-                            timestamp = System.currentTimeMillis(),
-                            playTime = totalPlayTimeMs
-                        )
+        if (totalPlayTimeMs > 30000 && !DataPreferences.pauseHistory) query {
+            runCatching {
+                Database.insert(
+                    Event(
+                        songId = mediaItem.mediaId,
+                        timestamp = System.currentTimeMillis(),
+                        playTime = totalPlayTimeMs
                     )
-                } catch (_: SQLException) {
-                }
+                )
             }
         }
     }
@@ -338,10 +371,10 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         maybeNormalizeVolume()
         maybeProcessRadio()
 
-        if (mediaItem == null) {
-            bitmapProvider.listener?.invoke(null)
-        } else if (mediaItem.mediaMetadata.artworkUri == bitmapProvider.lastUri) {
-            bitmapProvider.listener?.invoke(bitmapProvider.lastBitmap)
+        when {
+            mediaItem == null -> bitmapProvider.listener?.invoke(null)
+            mediaItem.mediaMetadata.artworkUri == bitmapProvider.lastUri ->
+                bitmapProvider.listener?.invoke(bitmapProvider.lastBitmap)
         }
 
         if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO || reason == Player.MEDIA_ITEM_TRANSITION_REASON_SEEK) {
@@ -350,9 +383,9 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
     }
 
     override fun onTimelineChanged(timeline: Timeline, reason: Int) {
-        if (reason == Player.TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED) {
-            updateMediaSessionQueue(timeline)
-        }
+        if (reason != Player.TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED) return
+        updateMediaSessionQueue(timeline)
+        maybeSavePlayerQueue()
     }
 
     private fun updateMediaSessionQueue(timeline: Timeline) {
@@ -363,9 +396,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         var startIndex = currentMediaItemIndex - 7
         var endIndex = currentMediaItemIndex + 7
 
-        if (startIndex < 0) {
-            endIndex -= startIndex
-        }
+        if (startIndex < 0) endIndex -= startIndex
 
         if (endIndex > lastIndex) {
             startIndex -= (endIndex - lastIndex)
@@ -391,43 +422,37 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
     }
 
     private fun maybeRecoverPlaybackError() {
-        if (player.playerError != null) {
-            player.prepare()
-        }
+        if (player.playerError != null) player.prepare()
     }
 
-    private fun maybeProcessRadio() {
-        radio?.let { radio ->
-            if (player.mediaItemCount - player.currentMediaItemIndex <= 3) {
-                coroutineScope.launch(Dispatchers.Main) {
-                    player.addMediaItems(radio.process())
-                }
+    private fun maybeProcessRadio() = radio?.let { radio ->
+        if (player.mediaItemCount - player.currentMediaItemIndex <= 3)
+            coroutineScope.launch(Dispatchers.Main) {
+                player.addMediaItems(radio.process())
             }
-        }
+        Unit
     }
 
     private fun maybeSavePlayerQueue() {
-        if (!isPersistentQueueEnabled) return
+        if (!PlayerPreferences.persistentQueue) return
 
         val mediaItems = player.currentTimeline.mediaItems
         val mediaItemIndex = player.currentMediaItemIndex
         val mediaItemPosition = player.currentPosition
 
-        mediaItems.mapIndexed { index, mediaItem ->
-            QueuedMediaItem(
-                mediaItem = mediaItem,
-                position = if (index == mediaItemIndex) mediaItemPosition else null
-            )
-        }.let { queuedMediaItems ->
-            query {
-                Database.clearQueue()
-                Database.insert(queuedMediaItems)
-            }
+        query {
+            Database.clearQueue()
+            Database.insert(mediaItems.mapIndexed { index, mediaItem ->
+                QueuedMediaItem(
+                    mediaItem = mediaItem,
+                    position = if (index == mediaItemIndex) mediaItemPosition else null
+                )
+            })
         }
     }
 
     private fun maybeRestorePlayerQueue() {
-        if (!isPersistentQueueEnabled) return
+        if (!PlayerPreferences.persistentQueue) return
 
         query {
             val queuedSong = Database.queue()
@@ -454,50 +479,68 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
                 isNotificationStarted = true
                 startForegroundService(this@PlayerService, intent<PlayerService>())
-                startForeground(NotificationId, notification())
+                startForeground(NOTIFICATION_ID, notification())
             }
         }
     }
 
     private fun maybeNormalizeVolume() {
-        if (!preferences.getBoolean(volumeNormalizationKey, false)) {
+        if (!PlayerPreferences.volumeNormalization) {
             loudnessEnhancer?.enabled = false
             loudnessEnhancer?.release()
             loudnessEnhancer = null
             volumeNormalizationJob?.cancel()
+            volumeNormalizationJob?.invokeOnCompletion { volumeNormalizationJob = null }
             player.volume = 1f
             return
         }
 
-        if (loudnessEnhancer == null) {
-            loudnessEnhancer = LoudnessEnhancer(player.audioSessionId)
-        }
+        if (loudnessEnhancer == null) loudnessEnhancer = LoudnessEnhancer(player.audioSessionId)
 
-        player.currentMediaItem?.mediaId?.let { songId ->
-            volumeNormalizationJob?.cancel()
-            volumeNormalizationJob = coroutineScope.launch(Dispatchers.Main) {
-                Database.loudnessDb(songId).cancellable().collectLatest { loudnessDb ->
-                    try {
-                        loudnessEnhancer?.setTargetGain(-((loudnessDb ?: 0f) * 100).toInt() + 500)
-                        loudnessEnhancer?.enabled = true
-                    } catch (_: Exception) { }
+        val songId = player.currentMediaItem?.mediaId ?: return
+        volumeNormalizationJob?.cancel()
+        volumeNormalizationJob = coroutineScope.launch {
+            runCatching {
+                Database.loudnessDb(songId).cancellable().collectLatest { loudness ->
+                    Database.loudnessBoost(songId).cancellable().collectLatest { boost ->
+                        withContext(Dispatchers.Main) {
+                            loudnessEnhancer?.setTargetGain(
+                                PlayerPreferences.volumeNormalizationBaseGainRounded +
+                                        ((boost ?: 0f) * 100).toInt() -
+                                        ((loudness ?: 0f) * 100).toInt()
+                            )
+                            loudnessEnhancer?.enabled = true
+                        }
+                    }
                 }
             }
         }
     }
 
+    private fun maybeBassBoost() {
+        if (!PlayerPreferences.bassBoost) {
+            bassBoost?.enabled = false
+            bassBoost?.release()
+            bassBoost = null
+            maybeNormalizeVolume()
+            return
+        }
+
+        if (bassBoost == null) bassBoost = BassBoost(0, player.audioSessionId)
+        bassBoost?.setStrength(PlayerPreferences.bassBoostLevel.toShort())
+        bassBoost?.enabled = true
+    }
+
     private fun maybeShowSongCoverInLockScreen() {
-        val bitmap =
-            if (isAtLeastAndroid13 || isShowingThumbnailInLockscreen) bitmapProvider.bitmap else null
+        val bitmap = if (isAtLeastAndroid13 || AppearancePreferences.isShowingThumbnailInLockscreen)
+            bitmapProvider.bitmap else null
 
         metadataBuilder.putBitmap(MediaMetadata.METADATA_KEY_ART, bitmap)
 
-        if (isAtLeastAndroid13 && player.currentMediaItemIndex == 0) {
-            metadataBuilder.putText(
-                MediaMetadata.METADATA_KEY_TITLE,
-                "${player.mediaMetadata.title} "
-            )
-        }
+        if (isAtLeastAndroid13 && player.currentMediaItemIndex == 0) metadataBuilder.putText(
+            MediaMetadata.METADATA_KEY_TITLE,
+            "${player.mediaMetadata.title} "
+        )
 
         mediaSession.setMetadata(metadataBuilder.build())
     }
@@ -506,10 +549,8 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
     private fun maybeResumePlaybackWhenDeviceConnected() {
         if (!isAtLeastAndroid6) return
 
-        if (preferences.getBoolean(resumePlaybackWhenDeviceConnectedKey, false)) {
-            if (audioManager == null) {
-                audioManager = getSystemService(AUDIO_SERVICE) as AudioManager?
-            }
+        if (PlayerPreferences.resumePlaybackWhenDeviceConnected) {
+            if (audioManager == null) audioManager = getSystemService<AudioManager>()
 
             audioDeviceCallback = object : AudioDeviceCallback() {
                 private fun canPlayMusic(audioDeviceInfo: AudioDeviceInfo): Boolean {
@@ -522,41 +563,34 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                 }
 
                 override fun onAudioDevicesAdded(addedDevices: Array<AudioDeviceInfo>) {
-                    if (!player.isPlaying && addedDevices.any(::canPlayMusic)) {
-                        player.play()
-                    }
+                    if (!player.isPlaying && addedDevices.any(::canPlayMusic)) player.play()
                 }
 
                 override fun onAudioDevicesRemoved(removedDevices: Array<AudioDeviceInfo>) = Unit
             }
 
             audioManager?.registerAudioDeviceCallback(audioDeviceCallback, handler)
-
         } else {
             audioManager?.unregisterAudioDeviceCallback(audioDeviceCallback)
             audioDeviceCallback = null
         }
     }
 
-    private fun sendOpenEqualizerIntent() {
-        sendBroadcast(
-            Intent(AudioEffect.ACTION_OPEN_AUDIO_EFFECT_CONTROL_SESSION).apply {
-                putExtra(AudioEffect.EXTRA_AUDIO_SESSION, player.audioSessionId)
-                putExtra(AudioEffect.EXTRA_PACKAGE_NAME, packageName)
-                putExtra(AudioEffect.EXTRA_CONTENT_TYPE, AudioEffect.CONTENT_TYPE_MUSIC)
-            }
-        )
-    }
+    private fun sendOpenEqualizerIntent() = sendBroadcast(
+        Intent(AudioEffect.ACTION_OPEN_AUDIO_EFFECT_CONTROL_SESSION).apply {
+            putExtra(AudioEffect.EXTRA_AUDIO_SESSION, player.audioSessionId)
+            putExtra(AudioEffect.EXTRA_PACKAGE_NAME, packageName)
+            putExtra(AudioEffect.EXTRA_CONTENT_TYPE, AudioEffect.CONTENT_TYPE_MUSIC)
+        }
+    )
 
-    private fun sendCloseEqualizerIntent() {
-        sendBroadcast(
-            Intent(AudioEffect.ACTION_CLOSE_AUDIO_EFFECT_CONTROL_SESSION).apply {
-                putExtra(AudioEffect.EXTRA_AUDIO_SESSION, player.audioSessionId)
-            }
-        )
-    }
+    private fun sendCloseEqualizerIntent() = sendBroadcast(
+        Intent(AudioEffect.ACTION_CLOSE_AUDIO_EFFECT_CONTROL_SESSION).apply {
+            putExtra(AudioEffect.EXTRA_AUDIO_SESSION, player.audioSessionId)
+        }
+    )
 
-    private val Player.androidPlaybackState: Int
+    private val Player.androidPlaybackState
         get() = when (playbackState) {
             Player.STATE_BUFFERING -> if (playWhenReady) PlaybackState.STATE_BUFFERING else PlaybackState.STATE_PAUSED
             Player.STATE_READY -> if (playWhenReady) PlaybackState.STATE_PLAYING else PlaybackState.STATE_PAUSED
@@ -597,14 +631,14 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                 makeInvincible(false)
                 stopForeground(false)
                 sendCloseEqualizerIntent()
-                notificationManager?.cancel(NotificationId)
+                notificationManager?.cancel(NOTIFICATION_ID)
                 return
             }
 
             if (player.shouldBePlaying && !isNotificationStarted) {
                 isNotificationStarted = true
                 startForegroundService(this@PlayerService, intent<PlayerService>())
-                startForeground(NotificationId, notification)
+                startForeground(NOTIFICATION_ID, notification)
                 makeInvincible(false)
                 sendOpenEqualizerIntent()
             } else {
@@ -614,35 +648,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                     makeInvincible(true)
                     sendCloseEqualizerIntent()
                 }
-                notificationManager?.notify(NotificationId, notification)
-            }
-        }
-    }
-
-    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
-        when (key) {
-            persistentQueueKey -> isPersistentQueueEnabled =
-                sharedPreferences.getBoolean(key, isPersistentQueueEnabled)
-
-            volumeNormalizationKey -> maybeNormalizeVolume()
-
-            resumePlaybackWhenDeviceConnectedKey -> maybeResumePlaybackWhenDeviceConnected()
-
-            isInvincibilityEnabledKey -> isInvincibilityEnabled =
-                sharedPreferences.getBoolean(key, isInvincibilityEnabled)
-
-            skipSilenceKey -> player.skipSilenceEnabled = sharedPreferences.getBoolean(key, false)
-            isShowingThumbnailInLockscreenKey -> {
-                isShowingThumbnailInLockscreen = sharedPreferences.getBoolean(key, true)
-                maybeShowSongCoverInLockScreen()
-            }
-
-            trackLoopEnabledKey, queueLoopEnabledKey -> {
-                player.repeatMode = when {
-                    preferences.getBoolean(trackLoopEnabledKey, false) -> Player.REPEAT_MODE_ONE
-                    preferences.getBoolean(queueLoopEnabledKey, true) -> Player.REPEAT_MODE_ALL
-                    else -> Player.REPEAT_MODE_OFF
-                }
+                notificationManager?.notify(NOTIFICATION_ID, notification)
             }
         }
     }
@@ -658,7 +664,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         val mediaMetadata = player.mediaMetadata
 
         val builder = if (isAtLeastAndroid8) {
-            Notification.Builder(applicationContext, NotificationChannelId)
+            Notification.Builder(applicationContext, NOTIFICATION_CHANNEL_ID)
         } else {
             Notification.Builder(applicationContext)
         }
@@ -695,7 +701,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
         bitmapProvider.load(mediaMetadata.artworkUri) { bitmap ->
             maybeShowSongCoverInLockScreen()
-            notificationManager?.notify(NotificationId, builder.setLargeIcon(bitmap).build())
+            notificationManager?.notify(NOTIFICATION_ID, builder.setLargeIcon(bitmap).build())
         }
 
         return builder.build()
@@ -707,24 +713,22 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         if (!isAtLeastAndroid8) return
 
         notificationManager?.run {
-            if (getNotificationChannel(NotificationChannelId) == null) {
-                createNotificationChannel(
-                    NotificationChannel(
-                        NotificationChannelId,
-                        "Now playing",
-                        NotificationManager.IMPORTANCE_LOW
-                    ).apply {
-                        setSound(null, null)
-                        enableLights(false)
-                        enableVibration(false)
-                    }
-                )
-            }
+            if (getNotificationChannel(NOTIFICATION_CHANNEL_ID) == null) createNotificationChannel(
+                NotificationChannel(
+                    NOTIFICATION_CHANNEL_ID,
+                    "Now playing",
+                    NotificationManager.IMPORTANCE_LOW
+                ).apply {
+                    setSound(null, null)
+                    enableLights(false)
+                    enableVibration(false)
+                }
+            )
 
-            if (getNotificationChannel(SleepTimerNotificationChannelId) == null) {
+            if (getNotificationChannel(SLEEP_TIMER_NOTIFICATION_CHANNEL_ID) == null)
                 createNotificationChannel(
                     NotificationChannel(
-                        SleepTimerNotificationChannelId,
+                        SLEEP_TIMER_NOTIFICATION_CHANNEL_ID,
                         "Sleep timer",
                         NotificationManager.IMPORTANCE_LOW
                     ).apply {
@@ -733,20 +737,19 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                         enableVibration(false)
                     }
                 )
-            }
         }
     }
 
-    private fun createCacheDataSource(): DataSource.Factory {
-        return CacheDataSource.Factory().setCache(cache).apply {
-            setUpstreamDataSourceFactory(
-                DefaultHttpDataSource.Factory()
-                    .setConnectTimeoutMs(16000)
-                    .setReadTimeoutMs(8000)
-                    .setUserAgent("Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0")
-            )
-        }
-    }
+    private fun createCacheDataSource() = ConditionalCacheDataSourceFactory(
+        cacheDataSourceFactory = CacheDataSource.Factory().setCache(cache),
+        upstreamDataSourceFactory = DefaultDataSource.Factory(
+            applicationContext,
+            DefaultHttpDataSource.Factory()
+                .setConnectTimeoutMs(16000)
+                .setReadTimeoutMs(8000)
+                .setUserAgent("Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0")
+        )
+    ) { !it.isLocal }
 
     private fun createDataSourceFactory(): DataSource.Factory {
         val chunkLength = 512 * 1024L
@@ -755,101 +758,97 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         return ResolvingDataSource.Factory(createCacheDataSource()) { dataSpec ->
             val videoId = dataSpec.key ?: error("A key must be set")
 
-            if (cache.isCached(videoId, dataSpec.position, chunkLength)) {
-                dataSpec
-            } else {
-                when (videoId) {
-                    ringBuffer.getOrNull(0)?.first -> dataSpec.withUri(ringBuffer.getOrNull(0)!!.second)
-                    ringBuffer.getOrNull(1)?.first -> dataSpec.withUri(ringBuffer.getOrNull(1)!!.second)
-                    else -> {
-                        val urlResult = runBlocking(Dispatchers.IO) {
-                            Innertube.player(PlayerBody(videoId = videoId))
-                        }?.mapCatching { body ->
-                            if (body.videoDetails?.videoId != videoId) {
-                                throw VideoIdMismatchException()
+            when {
+                dataSpec.isLocal ||
+                        cache.isCached(videoId, dataSpec.position, chunkLength) -> dataSpec
+
+                videoId == ringBuffer.getOrNull(0)?.first ->
+                    dataSpec.withUri(ringBuffer.getOrNull(0)!!.second)
+
+                videoId == ringBuffer.getOrNull(1)?.first ->
+                    dataSpec.withUri(ringBuffer.getOrNull(1)!!.second)
+
+                else -> {
+                    val body = runBlocking(Dispatchers.IO) {
+                        Innertube.player(PlayerBody(videoId = videoId))
+                    }?.getOrThrow()
+
+                    if (body?.videoDetails?.videoId != videoId) throw VideoIdMismatchException()
+
+                    val url = when (val status = body.playabilityStatus?.status) {
+                        "OK" -> body.streamingData?.highestQualityFormat?.let { format ->
+                            val mediaItem = runBlocking(Dispatchers.Main) {
+                                player.findNextMediaItemById(videoId)
                             }
 
-                            when (val status = body.playabilityStatus?.status) {
-                                "OK" -> body.streamingData?.highestQualityFormat?.let { format ->
-                                    val mediaItem = runBlocking(Dispatchers.Main) {
-                                        player.findNextMediaItemById(videoId)
-                                    }
-
-                                    if (mediaItem?.mediaMetadata?.extras?.getString("durationText") == null) {
-                                        format.approxDurationMs?.div(1000)
-                                            ?.let(DateUtils::formatElapsedTime)?.removePrefix("0")
-                                            ?.let { durationText ->
-                                                mediaItem?.mediaMetadata?.extras?.putString(
-                                                    "durationText",
-                                                    durationText
-                                                )
-                                                Database.updateDurationText(videoId, durationText)
-                                            }
-                                    }
-
-                                    query {
-                                        mediaItem?.let(Database::insert)
-
-                                        Database.insert(
-                                            it.vfsfitvnm.vimusic.models.Format(
-                                                songId = videoId,
-                                                itag = format.itag,
-                                                mimeType = format.mimeType,
-                                                bitrate = format.bitrate,
-                                                loudnessDb = body.playerConfig?.audioConfig?.normalizedLoudnessDb,
-                                                contentLength = format.contentLength,
-                                                lastModified = format.lastModified
-                                            )
+                            if (mediaItem?.mediaMetadata?.extras?.getString("durationText") == null)
+                                format.approxDurationMs?.div(1000)
+                                    ?.let(DateUtils::formatElapsedTime)?.removePrefix("0")
+                                    ?.let { durationText ->
+                                        mediaItem?.mediaMetadata?.extras?.putString(
+                                            "durationText",
+                                            durationText
                                         )
+                                        Database.updateDurationText(videoId, durationText)
                                     }
 
-                                    format.url
-                                } ?: throw PlayableFormatNotFoundException()
+                            query {
+                                mediaItem?.let(Database::insert)
 
-                                "UNPLAYABLE" -> throw UnplayableException()
-                                "LOGIN_REQUIRED" -> throw LoginRequiredException()
-                                else -> throw PlaybackException(
-                                    status,
-                                    null,
-                                    PlaybackException.ERROR_CODE_REMOTE_ERROR
+                                Database.insert(
+                                    it.vfsfitvnm.vimusic.models.Format(
+                                        songId = videoId,
+                                        itag = format.itag,
+                                        mimeType = format.mimeType,
+                                        bitrate = format.bitrate,
+                                        loudnessDb = body.playerConfig?.audioConfig?.normalizedLoudnessDb,
+                                        contentLength = format.contentLength,
+                                        lastModified = format.lastModified
+                                    )
                                 )
                             }
-                        }
 
-                        urlResult?.getOrThrow()?.let { url ->
-                            ringBuffer.append(videoId to url.toUri())
-                            dataSpec.withUri(url.toUri())
-                                .subrange(dataSpec.uriPositionOffset, chunkLength)
-                        } ?: throw PlaybackException(
+                            format.url
+                        } ?: throw PlayableFormatNotFoundException()
+
+                        "UNPLAYABLE" -> throw UnplayableException()
+                        "LOGIN_REQUIRED" -> throw LoginRequiredException()
+
+                        else -> throw PlaybackException(
+                            status,
                             null,
-                            urlResult?.exceptionOrNull(),
                             PlaybackException.ERROR_CODE_REMOTE_ERROR
                         )
                     }
+
+                    ringBuffer.append(videoId to url.toUri())
+                    dataSpec.withUri(url.toUri()).subrange(dataSpec.uriPositionOffset, chunkLength)
                 }
             }
         }
     }
 
-    private fun createMediaSourceFactory(): MediaSource.Factory {
-        return DefaultMediaSourceFactory(createDataSourceFactory(), createExtractorsFactory())
-    }
+    private fun createMediaSourceFactory() = DefaultMediaSourceFactory(
+        /* dataSourceFactory = */ createDataSourceFactory(),
+        /* extractorsFactory = */ createExtractorsFactory()
+    )
 
-    private fun createExtractorsFactory(): ExtractorsFactory {
-        return ExtractorsFactory {
-            arrayOf(MatroskaExtractor(), FragmentedMp4Extractor())
-        }
-    }
+    private fun createExtractorsFactory() = DefaultExtractorsFactory()
 
     private fun createRendersFactory(): RenderersFactory {
+        val minimumSilenceDuration = PlayerPreferences.minimumSilence.coerceIn(1000L..2_000_000L)
         val audioSink = DefaultAudioSink.Builder()
             .setEnableFloatOutput(false)
             .setEnableAudioTrackPlaybackParams(false)
             .setOffloadMode(DefaultAudioSink.OFFLOAD_MODE_DISABLED)
             .setAudioProcessorChain(
                 DefaultAudioProcessorChain(
-                    emptyArray(),
-                    SilenceSkippingAudioProcessor(2_000_000, 20_000, 256),
+                    arrayOf(),
+                    SilenceSkippingAudioProcessor(
+                        /* minimumSilenceDurationUs = */ minimumSilenceDuration,
+                        /* paddingSilenceUs         = */ minimumSilenceDuration / 100L,
+                        /* silenceThresholdLevel    = */ 256
+                    ),
                     SonicAudioProcessor()
                 )
             )
@@ -886,6 +885,12 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         var isLoadingRadio by mutableStateOf(false)
             private set
 
+        var invincible
+            get() = isInvincibilityEnabled
+            set(value) {
+                isInvincibilityEnabled = value
+            }
+
         fun setBitmapListener(listener: ((Bitmap?) -> Unit)?) {
             bitmapProvider.listener = listener
         }
@@ -895,7 +900,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
             timerJob = coroutineScope.timer(delayMillis) {
                 val notification = NotificationCompat
-                    .Builder(this@PlayerService, SleepTimerNotificationChannelId)
+                    .Builder(this@PlayerService, SLEEP_TIMER_NOTIFICATION_CHANNEL_ID)
                     .setContentTitle("Sleep timer ended")
                     .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                     .setAutoCancel(true)
@@ -904,7 +909,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                     .setSmallIcon(R.drawable.app_icon)
                     .build()
 
-                notificationManager?.notify(SleepTimerNotificationId, notification)
+                notificationManager?.notify(SLEEP_TIMER_NOTIFICATION_ID, notification)
 
                 stopSelf()
                 exitProcess(0)
@@ -949,6 +954,18 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             radioJob?.cancel()
             radio = null
         }
+
+        /**
+         * This method should ONLY be called when the application (sc. activity) is in the foreground!
+         */
+        fun restartForegroundOrStop() {
+            player.pause()
+            isInvincibilityEnabled = false
+            stopSelf()
+        }
+
+        fun isCached(song: SongWithContentLength) =
+            song.contentLength?.let { cache.isCached(song.song.id, 0L, it) } ?: false
     }
 
     private class SessionCallback(private val player: Player) : MediaSession.Callback() {
@@ -959,10 +976,13 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         override fun onSeekTo(pos: Long) = player.seekTo(pos)
         override fun onStop() = player.pause()
         override fun onRewind() = player.seekToDefaultPosition()
-        override fun onSkipToQueueItem(id: Long) = runCatching { player.seekToDefaultPosition(id.toInt()) }.let { }
+        override fun onSkipToQueueItem(id: Long) =
+            runCatching { player.seekToDefaultPosition(id.toInt()) }.let { }
     }
 
-    private class NotificationActionReceiver(private val player: Player) : BroadcastReceiver() {
+    class NotificationActionReceiver internal constructor(
+        private val player: Player
+    ) : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
                 Action.pause.value -> player.pause()
@@ -999,10 +1019,10 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
     }
 
     private companion object {
-        const val NotificationId = 1001
-        const val NotificationChannelId = "default_channel_id"
+        const val NOTIFICATION_ID = 1001
+        const val NOTIFICATION_CHANNEL_ID = "default_channel_id"
 
-        const val SleepTimerNotificationId = 1002
-        const val SleepTimerNotificationChannelId = "sleep_timer_channel_id"
+        const val SLEEP_TIMER_NOTIFICATION_ID = 1002
+        const val SLEEP_TIMER_NOTIFICATION_CHANNEL_ID = "sleep_timer_channel_id"
     }
 }

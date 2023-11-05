@@ -1,6 +1,5 @@
 package it.vfsfitvnm.innertube.models
 
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 @Serializable

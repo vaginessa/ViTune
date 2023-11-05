@@ -1,17 +1,27 @@
+@file:OptIn(UnstableApi::class)
+
 package it.vfsfitvnm.vimusic.utils
 
+import android.content.ContentUris
 import android.net.Uri
 import android.os.Build
+import android.provider.MediaStore
 import android.text.format.DateUtils
+import androidx.annotation.OptIn
 import androidx.core.net.toUri
 import androidx.core.os.bundleOf
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import androidx.media3.common.util.UnstableApi
 import it.vfsfitvnm.innertube.Innertube
 import it.vfsfitvnm.innertube.models.bodies.ContinuationBody
 import it.vfsfitvnm.innertube.requests.playlistPage
 import it.vfsfitvnm.innertube.utils.plus
 import it.vfsfitvnm.vimusic.models.Song
+import it.vfsfitvnm.vimusic.service.LOCAL_KEY_PREFIX
+import it.vfsfitvnm.vimusic.service.isLocal
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.onEach
 
 val Innertube.SongItem.asMediaItem: MediaItem
     get() = MediaItem.Builder()
@@ -28,7 +38,8 @@ val Innertube.SongItem.asMediaItem: MediaItem
                     bundleOf(
                         "albumId" to album?.endpoint?.browseId,
                         "durationText" to durationText,
-                        "artistNames" to authors?.filter { it.endpoint != null }?.mapNotNull { it.name },
+                        "artistNames" to authors?.filter { it.endpoint != null }
+                            ?.mapNotNull { it.name },
                         "artistIds" to authors?.mapNotNull { it.endpoint?.browseId },
                     )
                 )
@@ -49,7 +60,8 @@ val Innertube.VideoItem.asMediaItem: MediaItem
                 .setExtras(
                     bundleOf(
                         "durationText" to durationText,
-                        "artistNames" to if (isOfficialMusicVideo) authors?.filter { it.endpoint != null }?.mapNotNull { it.name } else null,
+                        "artistNames" to if (isOfficialMusicVideo) authors?.filter { it.endpoint != null }
+                            ?.mapNotNull { it.name } else null,
                         "artistIds" to if (isOfficialMusicVideo) authors?.mapNotNull { it.endpoint?.browseId } else null,
                     )
                 )
@@ -72,7 +84,12 @@ val Song.asMediaItem: MediaItem
                 .build()
         )
         .setMediaId(id)
-        .setUri(id)
+        .setUri(
+            if (isLocal) ContentUris.withAppendedId(
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                id.substringAfter(LOCAL_KEY_PREFIX).toLong()
+            ) else id.toUri()
+        )
         .setCustomCacheKey(id)
         .build()
 
@@ -90,12 +107,14 @@ fun Uri?.thumbnail(size: Int): Uri? {
 
 fun formatAsDuration(millis: Long) = DateUtils.formatElapsedTime(millis / 1000).removePrefix("0")
 
-suspend fun Result<Innertube.PlaylistOrAlbumPage>.completed(): Result<Innertube.PlaylistOrAlbumPage>? {
+suspend fun Result<Innertube.PlaylistOrAlbumPage>.completed(maxDepth: Int = Int.MAX_VALUE): Result<Innertube.PlaylistOrAlbumPage>? {
     var playlistPage = getOrNull() ?: return null
 
-    while (playlistPage.songsPage?.continuation != null) {
+    var depth = 0
+    while (playlistPage.songsPage?.continuation != null && depth++ < maxDepth) {
         val continuation = playlistPage.songsPage?.continuation!!
-        val otherPlaylistPageResult = Innertube.playlistPage(ContinuationBody(continuation = continuation)) ?: break
+        val otherPlaylistPageResult =
+            Innertube.playlistPage(ContinuationBody(continuation = continuation)) ?: break
 
         if (otherPlaylistPageResult.isFailure) break
 
@@ -107,11 +126,27 @@ suspend fun Result<Innertube.PlaylistOrAlbumPage>.completed(): Result<Innertube.
     return Result.success(playlistPage)
 }
 
+fun <T> Flow<T>.onFirst(block: suspend (T) -> Unit): Flow<T> {
+    var isFirst = true
+    return onEach {
+        if (isFirst) {
+            block(it)
+            isFirst = false
+        }
+    }
+}
+
 inline val isAtLeastAndroid6
     get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
 
 inline val isAtLeastAndroid8
     get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+
+inline val isAtLeastAndroid10
+    get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+
+inline val isAtLeastAndroid11
+    get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
 
 inline val isAtLeastAndroid12
     get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S

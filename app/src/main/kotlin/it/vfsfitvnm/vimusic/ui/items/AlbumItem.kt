@@ -13,6 +13,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import it.vfsfitvnm.innertube.Innertube
 import it.vfsfitvnm.vimusic.models.Album
 import it.vfsfitvnm.vimusic.ui.components.themed.TextPlaceholder
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
@@ -20,7 +21,6 @@ import it.vfsfitvnm.vimusic.ui.styling.shimmer
 import it.vfsfitvnm.vimusic.utils.secondary
 import it.vfsfitvnm.vimusic.utils.semiBold
 import it.vfsfitvnm.vimusic.utils.thumbnail
-import it.vfsfitvnm.innertube.Innertube
 
 @Composable
 fun AlbumItem(
@@ -73,7 +73,7 @@ fun AlbumItem(
     modifier: Modifier = Modifier,
     alternative: Boolean = false
 ) {
-    val (_, typography, thumbnailShape) = LocalAppearance.current
+    val (_, typography, _, thumbnailShape) = LocalAppearance.current
 
     ItemContainer(
         alternative = alternative,
@@ -126,7 +126,7 @@ fun AlbumItemPlaceholder(
     modifier: Modifier = Modifier,
     alternative: Boolean = false
 ) {
-    val (colorPalette, _, thumbnailShape) = LocalAppearance.current
+    val (colorPalette, _, _, thumbnailShape) = LocalAppearance.current
 
     ItemContainer(
         alternative = alternative,

@@ -10,9 +10,9 @@ import it.vfsfitvnm.innertube.utils.from
 import it.vfsfitvnm.innertube.utils.runCatchingNonCancellable
 
 suspend fun Innertube.queue(body: QueueBody) = runCatchingNonCancellable {
-    val response = client.post(queue) {
+    val response = client.post(QUEUE) {
         setBody(body)
-        mask("queueDatas.content.$playlistPanelVideoRendererMask")
+        mask("queueDatas.content.$PLAYLIST_PANEL_VIDEO_RENDERER_MASK")
     }.body<GetQueueResponse>()
 
     response

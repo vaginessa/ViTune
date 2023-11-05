@@ -4,47 +4,39 @@ import io.ktor.utils.io.CancellationException
 import it.vfsfitvnm.innertube.Innertube
 import it.vfsfitvnm.innertube.models.SectionListRenderer
 
-internal fun SectionListRenderer.findSectionByTitle(text: String): SectionListRenderer.Content? {
-    return contents?.find { content ->
-        val title = content
-            .musicCarouselShelfRenderer
-            ?.header
-            ?.musicCarouselShelfBasicHeaderRenderer
+internal fun SectionListRenderer.findSectionByTitle(text: String) = contents?.find {
+    val title = it
+        .musicCarouselShelfRenderer
+        ?.header
+        ?.musicCarouselShelfBasicHeaderRenderer
+        ?.title
+        ?: it
+            .musicShelfRenderer
             ?.title
-            ?: content
-                .musicShelfRenderer
-                ?.title
 
-        title
-            ?.runs
-            ?.firstOrNull()
-            ?.text == text
-    }
+    title
+        ?.runs
+        ?.firstOrNull()
+        ?.text == text
 }
 
-internal fun SectionListRenderer.findSectionByStrapline(text: String): SectionListRenderer.Content? {
-    return contents?.find { content ->
-        content
-            .musicCarouselShelfRenderer
-            ?.header
-            ?.musicCarouselShelfBasicHeaderRenderer
-            ?.strapline
-            ?.runs
-            ?.firstOrNull()
-            ?.text == text
-    }
+internal fun SectionListRenderer.findSectionByStrapline(text: String) = contents?.find {
+    it
+        .musicCarouselShelfRenderer
+        ?.header
+        ?.musicCarouselShelfBasicHeaderRenderer
+        ?.strapline
+        ?.runs
+        ?.firstOrNull()
+        ?.text == text
 }
 
-internal inline fun <R> runCatchingNonCancellable(block: () -> R): Result<R>? {
-    val result = runCatching(block)
-    return when (result.exceptionOrNull()) {
-        is CancellationException -> null
-        else -> result
-    }
-}
+internal inline fun <R> runCatchingNonCancellable(block: () -> R) = runCatching(block)
+    .let { if (it.exceptionOrNull() is CancellationException) null else it }
 
 infix operator fun <T : Innertube.Item> Innertube.ItemsPage<T>?.plus(other: Innertube.ItemsPage<T>) =
     other.copy(
         items = (this?.items?.plus(other.items ?: emptyList())
-            ?: other.items)?.distinctBy(Innertube.Item::key)
+            ?: other.items)?.distinctBy(Innertube.Item::key),
+        continuation = other.continuation ?: this?.continuation
     )

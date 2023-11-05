@@ -8,6 +8,7 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.ui.styling.primaryButton
@@ -25,7 +26,7 @@ fun SecondaryTextButton(
 
     BasicText(
         text = text,
-        style = typography.xxs.medium,
+        style = typography.xxs.medium.copy(textAlign = TextAlign.Center),
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
             .clickable(enabled = enabled, onClick = onClick)

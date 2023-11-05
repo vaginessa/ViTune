@@ -71,7 +71,7 @@ fun ArtistOverview(
 
     val songThumbnailSizeDp = Dimensions.thumbnails.song
     val songThumbnailSizePx = songThumbnailSizeDp.px
-    val albumThumbnailSizeDp = 108.dp
+    val albumThumbnailSizeDp = Dimensions.thumbnails.album
     val albumThumbnailSizePx = albumThumbnailSizeDp.px
 
     val endPaddingValues = windowInsets.only(WindowInsetsSides.End).asPaddingValues()
@@ -300,7 +300,8 @@ fun ArtistOverview(
                         if (attributionsIndex != -1) {
                             BasicText(
                                 text = "From Wikipedia under Creative Commons Attribution CC-BY-SA 3.0",
-                                style = typography.xxs.color(colorPalette.textDisabled).align(TextAlign.End),
+                                style = typography.xxs.color(colorPalette.textDisabled)
+                                    .align(TextAlign.End),
                                 modifier = Modifier
                                     .padding(horizontal = 16.dp)
                                     .padding(bottom = 16.dp)

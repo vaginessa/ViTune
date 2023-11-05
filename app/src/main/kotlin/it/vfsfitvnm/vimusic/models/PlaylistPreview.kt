@@ -1,10 +1,18 @@
 package it.vfsfitvnm.vimusic.models
 
 import androidx.compose.runtime.Immutable
-import androidx.room.Embedded
 
 @Immutable
 data class PlaylistPreview(
-    @Embedded val playlist: Playlist,
+    val id: Long,
+    val name: String,
     val songCount: Int
-)
+) {
+    val playlist by lazy {
+        Playlist(
+            id = id,
+            name = name,
+            browseId = null
+        )
+    }
+}

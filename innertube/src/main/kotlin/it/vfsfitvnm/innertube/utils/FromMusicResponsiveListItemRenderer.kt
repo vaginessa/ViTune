@@ -5,8 +5,8 @@ import it.vfsfitvnm.innertube.models.MusicResponsiveListItemRenderer
 import it.vfsfitvnm.innertube.models.NavigationEndpoint
 import it.vfsfitvnm.innertube.models.Runs
 
-fun Innertube.SongItem.Companion.from(renderer: MusicResponsiveListItemRenderer): Innertube.SongItem? {
-    return Innertube.SongItem(
+fun Innertube.SongItem.Companion.from(renderer: MusicResponsiveListItemRenderer) =
+    Innertube.SongItem(
         info = renderer
             .flexColumns
             .getOrNull(0)
@@ -46,4 +46,3 @@ fun Innertube.SongItem.Companion.from(renderer: MusicResponsiveListItemRenderer)
             ?.thumbnails
             ?.firstOrNull()
     ).takeIf { it.info?.endpoint?.videoId != null }
-}
