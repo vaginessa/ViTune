@@ -172,9 +172,6 @@ interface Database {
     @Query("SELECT * FROM Album WHERE id = :id")
     fun album(id: String): Flow<Album?>
 
-    @Query("SELECT timestamp FROM Album WHERE id = :id")
-    fun albumTimestamp(id: String): Long?
-
     @Transaction
     @Query("SELECT * FROM Song JOIN SongAlbumMap ON Song.id = SongAlbumMap.songId WHERE SongAlbumMap.albumId = :albumId AND position IS NOT NULL ORDER BY position")
     @RewriteQueriesToDropUnusedColumns
@@ -198,22 +195,20 @@ interface Database {
     @Query("SELECT * FROM Album WHERE bookmarkedAt IS NOT NULL ORDER BY bookmarkedAt DESC")
     fun albumsByRowIdDesc(): Flow<List<Album>>
 
-    fun albums(sortBy: AlbumSortBy, sortOrder: SortOrder): Flow<List<Album>> {
-        return when (sortBy) {
-            AlbumSortBy.Title -> when (sortOrder) {
-                SortOrder.Ascending -> albumsByTitleAsc()
-                SortOrder.Descending -> albumsByTitleDesc()
-            }
+    fun albums(sortBy: AlbumSortBy, sortOrder: SortOrder) = when (sortBy) {
+        AlbumSortBy.Title -> when (sortOrder) {
+            SortOrder.Ascending -> albumsByTitleAsc()
+            SortOrder.Descending -> albumsByTitleDesc()
+        }
 
-            AlbumSortBy.Year -> when (sortOrder) {
-                SortOrder.Ascending -> albumsByYearAsc()
-                SortOrder.Descending -> albumsByYearDesc()
-            }
+        AlbumSortBy.Year -> when (sortOrder) {
+            SortOrder.Ascending -> albumsByYearAsc()
+            SortOrder.Descending -> albumsByYearDesc()
+        }
 
-            AlbumSortBy.DateAdded -> when (sortOrder) {
-                SortOrder.Ascending -> albumsByRowIdAsc()
-                SortOrder.Descending -> albumsByRowIdDesc()
-            }
+        AlbumSortBy.DateAdded -> when (sortOrder) {
+            SortOrder.Ascending -> albumsByRowIdAsc()
+            SortOrder.Descending -> albumsByRowIdDesc()
         }
     }
 
@@ -251,22 +246,20 @@ interface Database {
     fun playlistPreviews(
         sortBy: PlaylistSortBy,
         sortOrder: SortOrder
-    ): Flow<List<PlaylistPreview>> {
-        return when (sortBy) {
-            PlaylistSortBy.Name -> when (sortOrder) {
-                SortOrder.Ascending -> playlistPreviewsByNameAsc()
-                SortOrder.Descending -> playlistPreviewsByNameDesc()
-            }
+    ) = when (sortBy) {
+        PlaylistSortBy.Name -> when (sortOrder) {
+            SortOrder.Ascending -> playlistPreviewsByNameAsc()
+            SortOrder.Descending -> playlistPreviewsByNameDesc()
+        }
 
-            PlaylistSortBy.SongCount -> when (sortOrder) {
-                SortOrder.Ascending -> playlistPreviewsByDateSongCountAsc()
-                SortOrder.Descending -> playlistPreviewsByDateSongCountDesc()
-            }
+        PlaylistSortBy.SongCount -> when (sortOrder) {
+            SortOrder.Ascending -> playlistPreviewsByDateSongCountAsc()
+            SortOrder.Descending -> playlistPreviewsByDateSongCountDesc()
+        }
 
-            PlaylistSortBy.DateAdded -> when (sortOrder) {
-                SortOrder.Ascending -> playlistPreviewsByDateAddedAsc()
-                SortOrder.Descending -> playlistPreviewsByDateAddedDesc()
-            }
+        PlaylistSortBy.DateAdded -> when (sortOrder) {
+            SortOrder.Ascending -> playlistPreviewsByDateAddedAsc()
+            SortOrder.Descending -> playlistPreviewsByDateAddedDesc()
         }
     }
 
@@ -284,10 +277,6 @@ interface Database {
     @Transaction
     @Query("SELECT Song.*, contentLength FROM Song JOIN Format ON id = songId WHERE contentLength IS NOT NULL AND totalPlayTimeMs > 0 ORDER BY Song.ROWID DESC")
     fun songsWithContentLength(): Flow<List<SongWithContentLength>>
-
-    @Transaction
-    @Query("SELECT contentLength FROM Song JOIN Format ON id = songId WHERE id = :songId LIMIT 1")
-    fun contentLength(songId: String): Long
 
     @Query(
         """
@@ -327,14 +316,18 @@ interface Database {
     fun songArtistInfo(songId: String): List<Info>
 
     @Transaction
-    @Query("SELECT Song.* FROM Event JOIN Song ON Song.id = songId GROUP BY songId ORDER BY SUM(CAST(playTime AS REAL) / (((:now - timestamp) / 86400000) + 1)) DESC LIMIT :limit")
+    @Query("SELECT Song.* FROM Event JOIN Song ON Song.id = songId GROUP BY songId ORDER BY SUM(playTime) DESC LIMIT :limit")
     @RewriteQueriesToDropUnusedColumns
-    fun trending(limit: Int = 3, now: Long = System.currentTimeMillis()): Flow<List<Song>>
+    fun trending(limit: Int = 3): Flow<List<Song>>
 
     @Transaction
-    @Query("SELECT Song.* FROM Event JOIN Song ON Song.id = songId WHERE (:now - Event.timestamp) <= :period GROUP BY songId ORDER BY SUM(CAST(playTime AS REAL) / (((:now - timestamp) / 86400000) + 1)) DESC LIMIT :limit")
+    @Query("SELECT Song.* FROM Event JOIN Song ON Song.id = songId WHERE (:now - Event.timestamp) <= :period GROUP BY songId ORDER BY SUM(playTime) DESC LIMIT :limit")
     @RewriteQueriesToDropUnusedColumns
-    fun trending(limit: Int = 3, now: Long = System.currentTimeMillis(), period: Long): Flow<List<Song>>
+    fun trending(
+        limit: Int = 3,
+        now: Long = System.currentTimeMillis(),
+        period: Long
+    ): Flow<List<Song>>
 
     @Query("SELECT COUNT (*) FROM Event")
     fun eventsCount(): Flow<Int>
@@ -428,9 +421,6 @@ interface Database {
 
     @Upsert
     fun upsert(album: Album, songAlbumMaps: List<SongAlbumMap>)
-
-    @Upsert
-    fun upsert(songAlbumMap: SongAlbumMap)
 
     @Upsert
     fun upsert(artist: Artist)
@@ -679,6 +669,7 @@ abstract class DatabaseInitializer protected constructor() : RoomDatabase() {
 }
 
 @TypeConverters
+@Suppress("unused")
 object Converters {
     @TypeConverter
     @OptIn(UnstableApi::class)

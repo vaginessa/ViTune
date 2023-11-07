@@ -170,12 +170,11 @@ class MainActivity : ComponentActivity() {
 
                     binder?.setBitmapListener { bitmap: Bitmap? ->
                         if (bitmap == null) {
-                            val colorPalette =
-                                colorPaletteOf(
-                                    ColorPaletteName.Dynamic,
-                                    colorPaletteMode,
-                                    isSystemInDarkTheme
-                                )
+                            val colorPalette = colorPaletteOf(
+                                ColorPaletteName.Dynamic,
+                                colorPaletteMode,
+                                isSystemInDarkTheme
+                            )
 
                             setSystemBarAppearance(colorPalette.isDark)
 

@@ -33,7 +33,6 @@ import it.vfsfitvnm.vimusic.LocalPlayerServiceBinder
 import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.enums.BuiltInPlaylist
 import it.vfsfitvnm.vimusic.models.Song
-import it.vfsfitvnm.vimusic.models.SongWithContentLength
 import it.vfsfitvnm.vimusic.preferences.DataPreferences
 import it.vfsfitvnm.vimusic.ui.components.LocalMenuState
 import it.vfsfitvnm.vimusic.ui.components.themed.FloatingActionsContainerWithScrollToTop
@@ -65,7 +64,7 @@ import kotlin.math.min
 @ExperimentalAnimationApi
 @OptIn(UnstableApi::class)
 @Composable
-fun BuiltInPlaylistSongs(builtInPlaylist: BuiltInPlaylist) {
+fun BuiltInPlaylistSongs(builtInPlaylist: BuiltInPlaylist) = with(DataPreferences) {
     val (colorPalette) = LocalAppearance.current
     val binder = LocalPlayerServiceBinder.current
     val menuState = LocalMenuState.current
@@ -74,29 +73,25 @@ fun BuiltInPlaylistSongs(builtInPlaylist: BuiltInPlaylist) {
 
     LaunchedEffect(Unit) {
         when (builtInPlaylist) {
-            BuiltInPlaylist.Favorites -> Database
-                .favorites()
+            BuiltInPlaylist.Favorites -> Database.favorites()
 
             BuiltInPlaylist.Offline -> Database
                 .songsWithContentLength()
                 .flowOn(Dispatchers.IO)
                 .map { songs ->
-                    songs
-                        .filter { binder?.isCached(it) ?: false }
-                        .map(SongWithContentLength::song)
+                    songs.filter { binder?.isCached(it) ?: false }.map { it.song }
                 }
 
-            BuiltInPlaylist.Top ->
-                snapshotFlow { DataPreferences.topListPeriod to DataPreferences.topListLength }
-                    .distinctUntilChanged().transformLatest { (period, length) ->
-                        emitAll(
-                            if (period.duration != null) Database.trending(
-                                limit = length,
-                                period = period.duration.inWholeMilliseconds
-                            ) else Database.songsByPlayTimeDesc().distinctUntilChanged()
-                                .map { it.subList(0, min(length, it.size)) }.cancellable()
-                        )
-                    }
+            BuiltInPlaylist.Top -> snapshotFlow { topListPeriod to topListLength }
+                .distinctUntilChanged().transformLatest { (period, length) ->
+                    emitAll(
+                        if (period.duration != null) Database.trending(
+                            limit = length,
+                            period = period.duration.inWholeMilliseconds
+                        ) else Database.songsByPlayTimeDesc().distinctUntilChanged()
+                            .map { it.subList(0, min(length, it.size)) }.cancellable()
+                    )
+                }
         }.collect { songs = it }
     }
 
@@ -114,18 +109,14 @@ fun BuiltInPlaylistSongs(builtInPlaylist: BuiltInPlaylist) {
                 .background(colorPalette.background0)
                 .fillMaxSize()
         ) {
-            item(
-                key = "header",
-                contentType = 0
-            ) {
+            item(key = "header", contentType = 0) {
                 Header(
                     title = when (builtInPlaylist) {
                         BuiltInPlaylist.Favorites -> "Favorites"
                         BuiltInPlaylist.Offline -> "Offline"
-                        BuiltInPlaylist.Top -> "My top ${DataPreferences.topListLength}"
+                        BuiltInPlaylist.Top -> "My top $topListLength"
                     },
-                    modifier = Modifier
-                        .padding(bottom = 8.dp)
+                    modifier = Modifier.padding(bottom = 8.dp)
                 ) {
                     SecondaryTextButton(
                         text = "Enqueue",
@@ -135,25 +126,22 @@ fun BuiltInPlaylistSongs(builtInPlaylist: BuiltInPlaylist) {
                         }
                     )
 
-                    Spacer(
-                        modifier = Modifier
-                            .weight(1f)
-                    )
+                    Spacer(modifier = Modifier.weight(1f))
 
                     if (builtInPlaylist == BuiltInPlaylist.Top) {
                         var dialogShowing by rememberSaveable { mutableStateOf(false) }
 
                         SecondaryTextButton(
-                            text = DataPreferences.topListPeriod.displayName,
+                            text = topListPeriod.displayName,
                             onClick = { dialogShowing = true }
                         )
 
                         if (dialogShowing) ValueSelectorDialog(
                             onDismiss = { dialogShowing = false },
-                            title = "View top ${DataPreferences.topListLength} of ...",
-                            selectedValue = DataPreferences.topListPeriod,
+                            title = "View top $topListLength of ...",
+                            selectedValue = topListPeriod,
                             values = DataPreferences.TopListPeriod.entries,
-                            onValueSelected = { DataPreferences.topListPeriod = it },
+                            onValueSelected = { topListPeriod = it },
                             valueText = { it.displayName }
                         )
                     }
