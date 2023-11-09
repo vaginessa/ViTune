@@ -49,12 +49,10 @@ import it.vfsfitvnm.vimusic.utils.asMediaItem
 import it.vfsfitvnm.vimusic.utils.enqueue
 import it.vfsfitvnm.vimusic.utils.forcePlayAtIndex
 import it.vfsfitvnm.vimusic.utils.forcePlayFromBeginning
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.cancellable
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.transformLatest
 import kotlin.math.min
@@ -71,16 +69,13 @@ fun BuiltInPlaylistSongs(builtInPlaylist: BuiltInPlaylist) = with(DataPreference
 
     var songs by persistList<Song>("${builtInPlaylist.name}/songs")
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(binder) {
         when (builtInPlaylist) {
             BuiltInPlaylist.Favorites -> Database.favorites()
 
-            BuiltInPlaylist.Offline -> Database
-                .songsWithContentLength()
-                .flowOn(Dispatchers.IO)
-                .map { songs ->
-                    songs.filter { binder?.isCached(it) ?: false }.map { it.song }
-                }
+            BuiltInPlaylist.Offline -> Database.songsWithContentLength().map { songs ->
+                songs.filter { binder?.isCached(it) ?: false }.map { it.song }
+            }
 
             BuiltInPlaylist.Top -> snapshotFlow { topListPeriod to topListLength }
                 .distinctUntilChanged().transformLatest { (period, length) ->
