@@ -28,6 +28,7 @@ import it.vfsfitvnm.vimusic.Database
 import it.vfsfitvnm.vimusic.models.Song
 import it.vfsfitvnm.vimusic.preferences.OrderPreferences
 import it.vfsfitvnm.vimusic.service.LOCAL_KEY_PREFIX
+import it.vfsfitvnm.vimusic.service.isLocal
 import it.vfsfitvnm.vimusic.transaction
 import it.vfsfitvnm.vimusic.ui.components.themed.SecondaryTextButton
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
@@ -43,8 +44,10 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
@@ -69,11 +72,17 @@ fun HomeLocalSongs(
         onResult = { hasPermission = it }
     )
 
-    val songs = remember { context.musicFilesAsFlow() }
+    LaunchedEffect(hasPermission) {
+        context.musicFilesAsFlow().collect()
+    }
 
     if (hasPermission) HomeSongs(
         onSearchClick = onSearchClick,
-        songProvider = { songs },
+        songProvider = {
+            Database
+                .songs(sortBy = localSongSortBy, sortOrder = localSongSortOrder)
+                .map { songs -> songs.filter { it.isLocal } }
+        },
         sortBy = localSongSortBy,
         setSortBy = { localSongSortBy = it },
         sortOrder = localSongSortOrder,
@@ -159,11 +168,8 @@ fun Context.musicFilesAsFlow(): StateFlow<List<Song>> = flow {
                     }
                 }?.let { emit(it) }
         }
-        delay(10.seconds)
+        delay(5.seconds)
     }
-}
-    .distinctUntilChanged()
-    .onEach { songs ->
-        transaction { songs.forEach { Database.insert(it) } }
-    }
+}.distinctUntilChanged()
+    .onEach { songs -> transaction { songs.forEach(Database::insert) } }
     .stateIn(mediaScope, SharingStarted.Eagerly, listOf())
