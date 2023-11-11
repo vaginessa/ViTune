@@ -54,6 +54,7 @@ import it.vfsfitvnm.vimusic.models.SongArtistMap
 import it.vfsfitvnm.vimusic.models.SongPlaylistMap
 import it.vfsfitvnm.vimusic.models.SongWithContentLength
 import it.vfsfitvnm.vimusic.models.SortedSongPlaylistMap
+import it.vfsfitvnm.vimusic.service.LOCAL_KEY_PREFIX
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -81,12 +82,12 @@ interface Database {
     fun songsByTitleDesc(): Flow<List<Song>>
 
     @Transaction
-    @Query("SELECT * FROM Song WHERE totalPlayTimeMs > 0 ORDER BY totalPlayTimeMs ASC")
+    @Query("SELECT * FROM Song WHERE totalPlayTimeMs > 0 AND id NOT LIKE '$LOCAL_KEY_PREFIX%' ORDER BY totalPlayTimeMs ASC")
     @RewriteQueriesToDropUnusedColumns
     fun songsByPlayTimeAsc(): Flow<List<Song>>
 
     @Transaction
-    @Query("SELECT * FROM Song WHERE totalPlayTimeMs > 0 ORDER BY totalPlayTimeMs DESC")
+    @Query("SELECT * FROM Song WHERE totalPlayTimeMs > 0 AND id NOT LIKE '$LOCAL_KEY_PREFIX%' ORDER BY totalPlayTimeMs DESC")
     @RewriteQueriesToDropUnusedColumns
     fun songsByPlayTimeDesc(): Flow<List<Song>>
 
@@ -316,12 +317,12 @@ interface Database {
     fun songArtistInfo(songId: String): List<Info>
 
     @Transaction
-    @Query("SELECT Song.* FROM Event JOIN Song ON Song.id = songId GROUP BY songId ORDER BY SUM(playTime) DESC LIMIT :limit")
+    @Query("SELECT Song.* FROM Event JOIN Song ON Song.id = songId WHERE Song.id NOT LIKE '$LOCAL_KEY_PREFIX%' GROUP BY songId ORDER BY SUM(playTime) DESC LIMIT :limit")
     @RewriteQueriesToDropUnusedColumns
     fun trending(limit: Int = 3): Flow<List<Song>>
 
     @Transaction
-    @Query("SELECT Song.* FROM Event JOIN Song ON Song.id = songId WHERE (:now - Event.timestamp) <= :period GROUP BY songId ORDER BY SUM(playTime) DESC LIMIT :limit")
+    @Query("SELECT Song.* FROM Event JOIN Song ON Song.id = songId WHERE (:now - Event.timestamp) <= :period AND Song.id NOT LIKE '$LOCAL_KEY_PREFIX%' GROUP BY songId ORDER BY SUM(playTime) DESC LIMIT :limit")
     @RewriteQueriesToDropUnusedColumns
     fun trending(
         limit: Int = 3,
