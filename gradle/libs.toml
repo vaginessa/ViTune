@@ -1,18 +1,18 @@
 [versions]
-kotlin = "1.9.10"
-ksp = "1.9.10-1.0.13"
+kotlin = "1.9.20"
+ksp = "1.9.20-1.0.14"
 
 jvm = "11"
-agp = "8.3.0-alpha11"
+agp = "8.3.0-alpha13"
 
 #(TODO)The project uses some hacky API's that are not shipped with new versions of Compose anymore
 #noinspection GradleDependency
 compose = "1.5.0-alpha03"
-compose_compiler = "1.5.3"
+compose_compiler = "1.5.4"
 
 room = "2.6.0"
 media3 = "1.1.1"
-ktor = "2.3.3"
+ktor = "2.3.5"
 
 [plugins]
 android_application = { id = "com.android.application", version.ref = "agp" }
@@ -54,7 +54,7 @@ ktor_serialization_json = { module = "io.ktor:ktor-serialization-kotlinx-json", 
 brotli = { module = "org.brotli:dec", version = "0.1.2" }
 palette = { module = "androidx.palette:palette", version = "1.0.0" }
 
-desugaring = { module = "com.android.tools:desugar_jdk_libs", version = "2.0.3" }
+desugaring = { module = "com.android.tools:desugar_jdk_libs", version = "2.0.4" }
 
 [bundles]
 compose = [
