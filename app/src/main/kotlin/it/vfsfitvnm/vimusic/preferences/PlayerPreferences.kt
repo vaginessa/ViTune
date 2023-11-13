@@ -18,6 +18,7 @@ object PlayerPreferences : GlobalPreferencesHolder() {
     var isShowingSynchronizedLyrics by boolean(false)
     var speed by float(1f)
     var isShowingPrevButtonCollapsed by boolean(false)
+    var stopWhenClosed by boolean(false)
 
     val volumeNormalizationBaseGainRounded get() = (volumeNormalizationBaseGain * 100).toInt()
 }

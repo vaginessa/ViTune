@@ -80,6 +80,13 @@ fun PlayerSettings() = with(PlayerPreferences) {
             }
         )
 
+        SwitchSettingEntry(
+            title = "Stop when closed",
+            text = "When you close the app, the music stops playing.",
+            isChecked = stopWhenClosed,
+            onCheckedChange = { stopWhenClosed = it }
+        )
+
         SettingsGroupSpacer()
 
         SettingsEntryGroupText(title = "AUDIO")
