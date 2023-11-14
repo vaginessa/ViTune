@@ -1,0 +1,7 @@
+* Sharing to ViMusic to import video's/music/playlists/albums/radio from YouTube music is now supported
+* Fixed an inconsistency with player settings
+* Added 'stop when closed' setting
+* Fixed an inconsistency where before local songs could be trending
+* Fixed an inconsistency where local songs could sometimes not show metadata, like play time
+* Fixed the bug where offline songs could disappear
+* Fixed an inconsistency with the trending playlists, the order of the lists now represent more accurately what you watch listen to

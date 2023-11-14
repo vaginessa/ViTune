@@ -7,7 +7,6 @@ import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.text.format.DateUtils
-import android.util.Log
 import androidx.annotation.OptIn
 import androidx.core.net.toUri
 import androidx.core.os.bundleOf
