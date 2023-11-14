@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.Slider
@@ -185,9 +184,10 @@ fun SliderSettingEntry(
             },
             onValueChangeFinished = { onSlideCompleted(state) },
             modifier = Modifier
-                .offset(y = (-16).dp)
                 .height(36.dp)
-                .padding(start = 16.dp, end = 32.dp)
+                .alpha(if (isEnabled) 1f else 0.5f)
+                .padding(start = 16.dp)
+                .padding(all = 16.dp)
                 .fillMaxWidth(),
             colors = SliderDefaults.colors(
                 thumbColor = colorPalette.onAccent,

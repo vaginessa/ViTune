@@ -28,22 +28,19 @@ fun <T : Any> sharedPreferencesProperty(
             state.value = thisRef.getValue(property.name)
             listener = OnSharedPreferenceChangeListener { preferences, key ->
                 if (key == property.name) preferences.getValue(property.name)
-                    .let { if (it != state) state.value = it }
+                    .let { if (it != state && !Snapshot.current.readOnly) state.value = it }
             }
             thisRef.registerOnSharedPreferenceChangeListener(listener)
         }
         return state.value
     }
 
-    override fun setValue(thisRef: PreferencesHolder, property: KProperty<*>, value: T) {
-        if (state == value || Snapshot.current.readOnly) return
-        state.value = value
+    override fun setValue(thisRef: PreferencesHolder, property: KProperty<*>, value: T) =
         coroutineScope.launch {
             thisRef.edit(commit = true) {
                 setValue(property.name, value)
             }
-        }
-    }
+        }.let { }
 }
 
 /**
