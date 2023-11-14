@@ -265,22 +265,18 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                     state = { AppearancePreferences.isShowingThumbnailInLockscreen },
                     callback = ::maybeShowSongCoverInLockScreen
                 )
+                stateCallback(state = { trackLoopEnabled }, callback = ::updateRepeatMode)
+                stateCallback(state = { queueLoopEnabled }, callback = ::updateRepeatMode)
+                stateCallback(state = { volumeNormalization }, callback = ::maybeNormalizeVolume)
                 stateCallback(
-                    state = { trackLoopEnabled; queueLoopEnabled },
-                    callback = ::updateRepeatMode
-                )
-                stateCallback(
-                    state = { volumeNormalization; volumeNormalizationBaseGain },
+                    state = { volumeNormalizationBaseGain },
                     callback = ::maybeNormalizeVolume
                 )
-                stateCallback(
-                    state = { bassBoost; bassBoostLevel },
-                    callback = ::maybeBassBoost
-                )
+                stateCallback(state = { bassBoost }, callback = ::maybeBassBoost)
+                stateCallback(state = { bassBoostLevel }, callback = ::maybeBassBoost)
                 stateCallback(
                     state = { speed },
-                    callback = { player.setPlaybackSpeed(speed.coerceAtLeast(0.01f)) }
-                )
+                    callback = { player.setPlaybackSpeed(speed.coerceAtLeast(0.01f)) })
                 stateCallback(
                     state = { isInvincibilityEnabled },
                     callback = {
