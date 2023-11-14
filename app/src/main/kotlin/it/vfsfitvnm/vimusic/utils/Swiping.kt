@@ -5,6 +5,8 @@ import androidx.compose.animation.core.calculateTargetValue
 import androidx.compose.animation.splineBasedDecay
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitHorizontalTouchSlopOrCancellation
+import androidx.compose.foundation.gestures.awaitVerticalTouchSlopOrCancellation
 import androidx.compose.foundation.gestures.horizontalDrag
 import androidx.compose.foundation.gestures.verticalDrag
 import androidx.compose.runtime.getValue
@@ -40,14 +42,25 @@ fun Modifier.onSwipe(
                     offset = 0f
 
                     val onDrag: (PointerInputChange) -> Unit = {
-                        offset += if (orientation == Orientation.Horizontal) it.positionChange().x
-                        else it.positionChange().y
+                        val change =
+                            if (orientation == Orientation.Horizontal) it.positionChange().x
+                            else it.positionChange().y
+
+                        offset += change
 
                         velocityTracker.addPosition(it.uptimeMillis, it.position)
-                        it.consume()
+                        if (change != 0f) it.consume()
                     }
-                    if (orientation == Orientation.Horizontal) horizontalDrag(pointer, onDrag)
-                    else verticalDrag(pointer, onDrag)
+
+                    if (orientation == Orientation.Horizontal) {
+                        awaitHorizontalTouchSlopOrCancellation(pointer) { change, _ -> onDrag(change) }
+                            ?: return@awaitPointerEventScope
+                        horizontalDrag(pointer, onDrag)
+                    } else {
+                        awaitVerticalTouchSlopOrCancellation(pointer) { change, _ -> onDrag(change) }
+                            ?: return@awaitPointerEventScope
+                        verticalDrag(pointer, onDrag)
+                    }
                 }
 
                 // drag completed, calculate velocity
