@@ -7,6 +7,7 @@ import android.content.ServiceConnection
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.os.IBinder
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -56,6 +57,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.coerceIn
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.MediaItem
@@ -400,12 +402,12 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
 
-        val uri = intent?.data ?: return
+        val uri = intent?.data ?: intent?.getStringExtra(Intent.EXTRA_TEXT)?.toUri() ?: return
 
-        intent.data = null
+        intent?.data = null
         this.intent = null
 
-        Toast.makeText(this, "Opening url...", Toast.LENGTH_SHORT).show()
+        Log.d("MainActivity", "Opening url $uri")
 
         lifecycleScope.launch(Dispatchers.IO) {
             when (val path = uri.pathSegments.firstOrNull()) {
@@ -430,7 +432,11 @@ class MainActivity : ComponentActivity() {
                 else -> when {
                     path == "watch" -> uri.getQueryParameter("v")
                     uri.host == "youtu.be" -> path
-                    else -> null
+                    else -> {
+                        Toast.makeText(this@MainActivity, "Can't open url $uri", Toast.LENGTH_SHORT)
+                            .show()
+                        null
+                    }
                 }?.let { videoId ->
                     Innertube.song(videoId)?.getOrNull()?.let { song ->
                         val binder = snapshotFlow { binder }.filterNotNull().first()

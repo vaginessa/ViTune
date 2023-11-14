@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.text.format.DateUtils
+import android.util.Log
 import androidx.annotation.OptIn
 import androidx.core.net.toUri
 import androidx.core.os.bundleOf
@@ -117,10 +118,12 @@ suspend fun Result<Innertube.PlaylistOrAlbumPage>.completed(maxDepth: Int = Int.
             Innertube.playlistPage(ContinuationBody(continuation = continuation)) ?: break
 
         if (otherPlaylistPageResult.isFailure) break
+        val songs = otherPlaylistPageResult.getOrNull()?.takeIf { result ->
+            result.items?.let { items -> items.isNotEmpty() &&
+                    playlistPage.songsPage?.items?.none { it in items } != false } != false
+        } ?: break
 
-        otherPlaylistPageResult.getOrNull()?.let { otherSongsPage ->
-            playlistPage = playlistPage.copy(songsPage = playlistPage.songsPage + otherSongsPage)
-        }
+        playlistPage = playlistPage.copy(songsPage = playlistPage.songsPage + songs)
     }
 
     return Result.success(playlistPage)
