@@ -267,7 +267,9 @@ fun Lyrics(
                     },
                     valueText = {
                         "${it.artistName} - ${it.trackName} (${
-                            it.duration.seconds.toComponents { minutes, seconds, _ -> "$minutes:$seconds" }
+                            it.duration.seconds.toComponents { minutes, seconds, _ -> 
+                                "$minutes:${seconds.toString().padStart(2, '0')}" 
+                            }
                         })"
                     }
                 )
