@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.ripple.rememberRipple
@@ -26,8 +27,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import it.vfsfitvnm.compose.persist.persist
-import it.vfsfitvnm.compose.reordering.ReorderingLazyColumn
-import it.vfsfitvnm.compose.reordering.animateItemPlacement
 import it.vfsfitvnm.compose.reordering.draggedItem
 import it.vfsfitvnm.compose.reordering.rememberReorderingState
 import it.vfsfitvnm.compose.reordering.reorder
@@ -68,7 +67,6 @@ import it.vfsfitvnm.vimusic.utils.toast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 
 @ExperimentalAnimationApi
 @ExperimentalFoundationApi
@@ -106,35 +104,31 @@ fun LocalPlaylistSongs(
         mutableStateOf(false)
     }
 
-    if (isRenaming) {
-        TextFieldDialog(
-            hintText = "Enter the playlist name",
-            initialTextInput = playlistWithSongs?.playlist?.name ?: "",
-            onDismiss = { isRenaming = false },
-            onDone = { text ->
-                query {
-                    playlistWithSongs?.playlist?.copy(name = text)?.let(Database::update)
-                }
+    if (isRenaming) TextFieldDialog(
+        hintText = "Enter the playlist name",
+        initialTextInput = playlistWithSongs?.playlist?.name ?: "",
+        onDismiss = { isRenaming = false },
+        onDone = { text ->
+            query {
+                playlistWithSongs?.playlist?.copy(name = text)?.let(Database::update)
             }
-        )
-    }
+        }
+    )
 
     var isDeleting by rememberSaveable {
         mutableStateOf(false)
     }
 
-    if (isDeleting) {
-        ConfirmationDialog(
-            text = "Do you really want to delete this playlist?",
-            onDismiss = { isDeleting = false },
-            onConfirm = {
-                query {
-                    playlistWithSongs?.playlist?.let(Database::delete)
-                }
-                onDelete()
+    if (isDeleting) ConfirmationDialog(
+        text = "Do you really want to delete this playlist?",
+        onDismiss = { isDeleting = false },
+        onConfirm = {
+            query {
+                playlistWithSongs?.playlist?.let(Database::delete)
             }
-        )
-    }
+            onDelete()
+        }
+    )
 
     val thumbnailSizeDp = Dimensions.thumbnails.song
     val thumbnailSizePx = thumbnailSizeDp.px
@@ -142,8 +136,8 @@ fun LocalPlaylistSongs(
     val rippleIndication = rememberRipple(bounded = false)
 
     Box {
-        ReorderingLazyColumn(
-            reorderingState = reorderingState,
+        LazyColumn(
+            state = reorderingState.lazyListState,
             contentPadding = LocalPlayerAwareWindowInsets.current
                 .only(WindowInsetsSides.Vertical + WindowInsetsSides.End).asPaddingValues(),
             modifier = Modifier
@@ -171,10 +165,7 @@ fun LocalPlaylistSongs(
                         }
                     )
 
-                    Spacer(
-                        modifier = Modifier
-                            .weight(1f)
-                    )
+                    Spacer(modifier = Modifier.weight(1f))
 
                     HeaderIconButton(
                         icon = R.drawable.ellipsis_horizontal,
@@ -190,14 +181,8 @@ fun LocalPlaylistSongs(
                                                 menuState.hide()
                                                 transaction {
                                                     runBlocking(Dispatchers.IO) {
-                                                        withContext(Dispatchers.IO) {
-                                                            Innertube.playlistPage(
-                                                                BrowseBody(
-                                                                    browseId = browseId
-                                                                )
-                                                            )
-                                                                ?.completed()
-                                                        }
+                                                        Innertube.playlistPage(BrowseBody(browseId = browseId))
+                                                            ?.completed()
                                                     }?.getOrNull()?.let { remotePlaylist ->
                                                         Database.clearPlaylist(playlistId)
 
@@ -224,10 +209,14 @@ fun LocalPlaylistSongs(
                                                 onClick = {
                                                     menuState.hide()
                                                     binder?.player?.pause()
-                                                    uriHandler.openUri("https://youtube.com/watch?v=${firstSongId}&list=${playlistWithSongs?.playlist?.browseId?.drop(2)}")
+                                                    uriHandler.openUri(
+                                                        "https://youtube.com/watch?v=${firstSongId}&list=${
+                                                            playlistWithSongs?.playlist?.browseId
+                                                                ?.drop(2)
+                                                        }"
+                                                    )
                                                 }
                                             )
-
 
                                             MenuEntry(
                                                 icon = R.drawable.musical_notes,
@@ -235,8 +224,14 @@ fun LocalPlaylistSongs(
                                                 onClick = {
                                                     menuState.hide()
                                                     binder?.player?.pause()
-                                                    if (!launchYouTubeMusic(context, "watch?v=${firstSongId}&list=${playlistWithSongs?.playlist?.browseId?.drop(2)}"))
-                                                        context.toast("YouTube Music is not installed on your device!")
+                                                    if (!launchYouTubeMusic(
+                                                            context = context,
+                                                            endpoint = "watch?v=${firstSongId}&list=${
+                                                                playlistWithSongs?.playlist?.browseId
+                                                                    ?.drop(2)
+                                                            }"
+                                                        )
+                                                    ) context.toast("YouTube Music is not installed on your device!")
                                                 }
                                             )
                                         }
@@ -293,7 +288,6 @@ fun LocalPlaylistSongs(
                                     }
                             }
                         )
-                        .animateItemPlacement(reorderingState = reorderingState)
                         .draggedItem(reorderingState = reorderingState, index = index),
                     song = song,
                     thumbnailSizePx = thumbnailSizePx,

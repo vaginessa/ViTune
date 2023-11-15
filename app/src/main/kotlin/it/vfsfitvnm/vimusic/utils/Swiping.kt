@@ -10,7 +10,7 @@ import androidx.compose.foundation.gestures.awaitVerticalTouchSlopOrCancellation
 import androidx.compose.foundation.gestures.horizontalDrag
 import androidx.compose.foundation.gestures.verticalDrag
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -29,7 +29,7 @@ fun Modifier.onSwipe(
     orientation: Orientation = Orientation.Horizontal,
     decay: Density.() -> DecayAnimationSpec<Float> = { splineBasedDecay(this) }
 ) = this.composed {
-    var offset by remember { mutableStateOf(0f) }
+    var offset by remember { mutableFloatStateOf(0f) }
 
     pointerInput(Unit) {
         coroutineScope {

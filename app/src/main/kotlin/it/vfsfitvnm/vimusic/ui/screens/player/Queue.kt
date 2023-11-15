@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -37,6 +38,7 @@ import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -55,8 +57,6 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.Timeline
 import com.valentinilk.shimmer.shimmer
-import it.vfsfitvnm.compose.reordering.ReorderingLazyColumn
-import it.vfsfitvnm.compose.reordering.animateItemPlacement
 import it.vfsfitvnm.compose.reordering.draggedItem
 import it.vfsfitvnm.compose.reordering.rememberReorderingState
 import it.vfsfitvnm.compose.reordering.reorder
@@ -152,7 +152,7 @@ fun Queue(
         val thumbnailSizePx = thumbnailSizeDp.px
 
         var mediaItemIndex by remember {
-            mutableStateOf(if (player.mediaItemCount == 0) -1 else player.currentMediaItemIndex)
+            mutableIntStateOf(if (player.mediaItemCount == 0) -1 else player.currentMediaItemIndex)
         }
 
         var windows by remember {
@@ -203,15 +203,13 @@ fun Queue(
                     .background(colorPalette.background1)
                     .weight(1f)
             ) {
-                ReorderingLazyColumn(
-                    reorderingState = reorderingState,
+                LazyColumn(
+                    state = reorderingState.lazyListState,
                     contentPadding = windowInsets
                         .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
                         .asPaddingValues(),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .nestedScroll(layoutState.preUpPostDownNestedScrollConnection)
-
+                    modifier = Modifier.nestedScroll(layoutState.preUpPostDownNestedScrollConnection)
                 ) {
                     items(
                         items = windows,
@@ -238,21 +236,15 @@ fun Queue(
                                             )
                                             .size(Dimensions.thumbnails.song)
                                     ) {
-                                        if (shouldBePlaying) {
-                                            MusicBars(
-                                                color = colorPalette.onOverlay,
-                                                modifier = Modifier
-                                                    .height(24.dp)
-                                            )
-                                        } else {
-                                            Image(
-                                                painter = painterResource(R.drawable.play),
-                                                contentDescription = null,
-                                                colorFilter = ColorFilter.tint(colorPalette.onOverlay),
-                                                modifier = Modifier
-                                                    .size(24.dp)
-                                            )
-                                        }
+                                        if (shouldBePlaying) MusicBars(
+                                            color = colorPalette.onOverlay,
+                                            modifier = Modifier.height(24.dp)
+                                        ) else Image(
+                                            painter = painterResource(R.drawable.play),
+                                            contentDescription = null,
+                                            colorFilter = ColorFilter.tint(colorPalette.onOverlay),
+                                            modifier = Modifier.size(24.dp)
+                                        )
                                     }
                                 }
                             },
@@ -283,18 +275,13 @@ fun Queue(
                                     },
                                     onClick = {
                                         if (isPlayingThisMediaItem) {
-                                            if (shouldBePlaying) {
-                                                player.pause()
-                                            } else {
-                                                player.play()
-                                            }
+                                            if (shouldBePlaying) player.pause() else player.play()
                                         } else {
                                             player.seekToDefaultPosition(window.firstPeriodIndex)
                                             player.playWhenReady = true
                                         }
                                     }
                                 )
-                                .animateItemPlacement(reorderingState = reorderingState)
                                 .draggedItem(
                                     reorderingState = reorderingState,
                                     index = window.firstPeriodIndex
@@ -303,19 +290,14 @@ fun Queue(
                     }
 
                     item {
-                        if (binder.isLoadingRadio) {
-                            Column(
-                                modifier = Modifier
-                                    .shimmer()
-                            ) {
-                                repeat(3) { index ->
-                                    SongItemPlaceholder(
-                                        thumbnailSizeDp = thumbnailSizeDp,
-                                        modifier = Modifier
-                                            .alpha(1f - index * 0.125f)
-                                            .fillMaxWidth()
-                                    )
-                                }
+                        if (binder.isLoadingRadio) Column(modifier = Modifier.shimmer()) {
+                            repeat(3) { index ->
+                                SongItemPlaceholder(
+                                    thumbnailSizeDp = thumbnailSizeDp,
+                                    modifier = Modifier
+                                        .alpha(1f - index * 0.125f)
+                                        .fillMaxWidth()
+                                )
                             }
                         }
                     }

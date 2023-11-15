@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -65,7 +66,7 @@ fun StatsForNerds(
         exit = fadeOut(),
     ) {
         var cachedBytes by remember(mediaId) {
-            mutableStateOf(binder.cache.getCachedBytes(mediaId, 0, -1))
+            mutableLongStateOf(binder.cache.getCachedBytes(mediaId, 0, -1))
         }
 
         var format by remember {

@@ -9,6 +9,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
@@ -33,9 +34,7 @@ fun SearchScreen(
 ) {
     val saveableStateHolder = rememberSaveableStateHolder()
 
-    val (tabIndex, onTabChanged) = rememberSaveable {
-        mutableStateOf(0)
-    }
+    val (tabIndex, onTabChanged) = rememberSaveable { mutableIntStateOf(0) }
 
     val (textFieldValue, onTextFieldValueChanged) = rememberSaveable(
         initialTextInput,

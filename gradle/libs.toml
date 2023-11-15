@@ -5,14 +5,12 @@ ksp = "1.9.20-1.0.14"
 jvm = "11"
 agp = "8.3.0-alpha13"
 
-#(TODO)The project uses some hacky API's that are not shipped with new versions of Compose anymore
-#noinspection GradleDependency
-compose = "1.5.0-alpha03"
+compose = "1.5.4"
 compose_compiler = "1.5.4"
 
 room = "2.6.0"
 media3 = "1.1.1"
-ktor = "2.3.5"
+ktor = "2.3.6"
 
 [plugins]
 android_application = { id = "com.android.application", version.ref = "agp" }
@@ -32,11 +30,9 @@ compose_animation = { module = "androidx.compose.animation:animation", version.r
 compose_ui_util = { module = "androidx.compose.ui:ui-util", version.ref = "compose" }
 compose_ripple = { module = "androidx.compose.material:material-ripple", version.ref = "compose" }
 compose_activity = { module = "androidx.activity:activity-compose", version = "1.8.0" }
-#(TODO)The project uses some hacky API's that are not shipped with new versions of Compose anymore
-#noinspection GradleDependency
-compose_material3 = { module = "androidx.compose.material3:material3", version = "1.1.0-rc01" }
+compose_material3 = { module = "androidx.compose.material3:material3", version = "1.1.2" }
 compose_shimmer = { module = "com.valentinilk.shimmer:compose-shimmer", version = "1.0.3" }
-compose_coil = { module = "io.coil-kt:coil-compose", version = "2.4.0" }
+compose_coil = { module = "io.coil-kt:coil-compose", version = "2.5.0" }
 
 room = { module = "androidx.room:room-ktx", version.ref = "room" }
 room_compiler = { module = "androidx.room:room-compiler", version.ref = "room" }

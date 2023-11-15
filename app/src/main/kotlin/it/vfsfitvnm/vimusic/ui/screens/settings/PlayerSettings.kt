@@ -21,6 +21,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -101,7 +102,7 @@ fun PlayerSettings() = with(PlayerPreferences) {
         )
 
         val currentValue = { minimumSilence.toFloat() / 1000.0f }
-        var initialValue by rememberSaveable { mutableStateOf(currentValue()) }
+        var initialValue by rememberSaveable { mutableFloatStateOf(currentValue()) }
         var changed by rememberSaveable { mutableStateOf(false) }
 
         AnimatedVisibility(visible = skipSilence) {

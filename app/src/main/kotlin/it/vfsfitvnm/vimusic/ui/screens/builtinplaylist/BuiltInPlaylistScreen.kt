@@ -3,7 +3,7 @@ package it.vfsfitvnm.vimusic.ui.screens.builtinplaylist
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import it.vfsfitvnm.compose.persist.PersistMapCleanup
@@ -20,7 +20,7 @@ fun BuiltInPlaylistScreen(builtInPlaylist: BuiltInPlaylist) {
     val saveableStateHolder = rememberSaveableStateHolder()
 
     val (tabIndex, onTabIndexChanged) = rememberSaveable {
-        mutableStateOf(
+        mutableIntStateOf(
             when (builtInPlaylist) {
                 BuiltInPlaylist.Favorites -> 0
                 BuiltInPlaylist.Offline -> 1

@@ -14,6 +14,8 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -40,9 +42,7 @@ import it.vfsfitvnm.vimusic.utils.semiBold
 fun SettingsScreen() {
     val saveableStateHolder = rememberSaveableStateHolder()
 
-    val (tabIndex, onTabChanged) = rememberSaveable {
-        mutableStateOf(0)
-    }
+    val (tabIndex, onTabChanged) = rememberSaveable { mutableIntStateOf(0) }
 
     RouteHandler(listenToGlobalEmitter = true) {
         GlobalRoutes()
@@ -165,7 +165,7 @@ fun SliderSettingEntry(
 ) {
     val (colorPalette) = LocalAppearance.current
 
-    var state by rememberSaveable { mutableStateOf(initialValue) }
+    var state by rememberSaveable { mutableFloatStateOf(initialValue) }
 
     Column {
         SettingsEntry(

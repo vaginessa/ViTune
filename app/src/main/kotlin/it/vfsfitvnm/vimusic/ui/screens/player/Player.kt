@@ -35,6 +35,7 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.neverEqualPolicy
 import androidx.compose.runtime.remember
@@ -372,7 +373,7 @@ fun Player(layoutState: BottomSheetState, modifier: Modifier = Modifier) {
 
         if (boostDialogOpen) {
             val state by Database.loudnessBoost(mediaItem.mediaId).collectAsState(initial = null)
-            var newValue by remember(state) { mutableStateOf(state ?: 0f) }
+            var newValue by remember(state) { mutableFloatStateOf(state ?: 0f) }
 
             fun submit() = query {
                 Database.setLoudnessBoost(mediaItem.mediaId, if (newValue == 0f) null else newValue)

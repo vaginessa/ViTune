@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
@@ -50,9 +51,7 @@ import kotlinx.coroutines.withContext
 fun AlbumScreen(browseId: String) {
     val saveableStateHolder = rememberSaveableStateHolder()
 
-    var tabIndex by rememberSaveable {
-        mutableStateOf(0)
-    }
+    var tabIndex by rememberSaveable { mutableIntStateOf(0) }
 
     var album by persist<Album?>("album/$browseId/album")
     var albumPage by persist<Innertube.PlaylistOrAlbumPage?>("album/$browseId/albumPage")

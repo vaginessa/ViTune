@@ -30,6 +30,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -511,7 +512,7 @@ fun MediaItemMenu(
                             DefaultDialog(
                                 onDismiss = { isShowingSleepTimerDialog = false }
                             ) {
-                                var amount by remember { mutableStateOf(1) }
+                                var amount by remember { mutableIntStateOf(1) }
 
                                 BasicText(
                                     text = "Set sleep timer",
