@@ -1,4 +1,4 @@
-package it.vfsfitvnm.vimusic.utils
+package it.vfsfitvnm.vimusic.ui.modifiers
 
 import androidx.compose.animation.core.DecayAnimationSpec
 import androidx.compose.animation.core.calculateTargetValue

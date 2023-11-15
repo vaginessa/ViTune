@@ -41,6 +41,7 @@ import it.vfsfitvnm.vimusic.service.PlayableFormatNotFoundException
 import it.vfsfitvnm.vimusic.service.UnplayableException
 import it.vfsfitvnm.vimusic.service.VideoIdMismatchException
 import it.vfsfitvnm.vimusic.service.isLocal
+import it.vfsfitvnm.vimusic.ui.modifiers.onSwipe
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.ui.styling.px
@@ -48,7 +49,6 @@ import it.vfsfitvnm.vimusic.utils.DisposableListener
 import it.vfsfitvnm.vimusic.utils.currentWindow
 import it.vfsfitvnm.vimusic.utils.forceSeekToNext
 import it.vfsfitvnm.vimusic.utils.forceSeekToPrevious
-import it.vfsfitvnm.vimusic.utils.onSwipe
 import it.vfsfitvnm.vimusic.utils.thumbnail
 import java.net.UnknownHostException
 import java.nio.channels.UnresolvedAddressException
@@ -132,7 +132,10 @@ fun Thumbnail(
         },
         modifier = Modifier.onSwipe(
             onSwipeLeft = binder.player::forceSeekToNext,
-            onSwipeRight = binder.player::forceSeekToPrevious
+            onSwipeRight = {
+                binder.player.seekToDefaultPosition()
+                binder.player.forceSeekToPrevious()
+            }
         ),
         contentAlignment = Alignment.Center,
         label = ""
