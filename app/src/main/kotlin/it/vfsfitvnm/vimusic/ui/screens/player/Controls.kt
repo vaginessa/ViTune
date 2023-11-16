@@ -1,10 +1,12 @@
 package it.vfsfitvnm.vimusic.ui.screens.player
 
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateDp
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.expandVertically
@@ -14,6 +16,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,14 +24,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -39,29 +45,37 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEachIndexed
 import androidx.media3.common.C
 import androidx.media3.common.Player
 import it.vfsfitvnm.vimusic.Database
 import it.vfsfitvnm.vimusic.LocalPlayerServiceBinder
 import it.vfsfitvnm.vimusic.R
+import it.vfsfitvnm.vimusic.models.Info
 import it.vfsfitvnm.vimusic.models.ui.UiMedia
 import it.vfsfitvnm.vimusic.ui.components.SeekBar
 import it.vfsfitvnm.vimusic.ui.components.themed.BigIconButton
+import it.vfsfitvnm.vimusic.ui.screens.artistRoute
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.utils.bold
 import it.vfsfitvnm.vimusic.utils.forceSeekToNext
 import it.vfsfitvnm.vimusic.utils.forceSeekToPrevious
 import it.vfsfitvnm.vimusic.utils.formatAsDuration
+import it.vfsfitvnm.vimusic.utils.horizontalFadingEdge
 import it.vfsfitvnm.vimusic.utils.isCompositionLaunched
+import it.vfsfitvnm.vimusic.utils.px
 import it.vfsfitvnm.vimusic.utils.secondary
 import it.vfsfitvnm.vimusic.utils.semiBold
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 private const val FORWARD_BACKWARD_OFFSET = 16f
 
@@ -87,17 +101,16 @@ fun Controls(
         if (compositionLaunched) animatedPosition.animateTo(0f)
     }
     LaunchedEffect(position) {
-        if (!isSeeking && !animatedPosition.isRunning)
-            animatedPosition.animateTo(position.toFloat(), tween(
+        if (!isSeeking && !animatedPosition.isRunning) animatedPosition.animateTo(
+            targetValue = position.toFloat(),
+            animationSpec = tween(
                 durationMillis = 1000,
                 easing = LinearEasing
-            ))
+            )
+        )
     }
     val durationVisible by remember(isSeeking) { derivedStateOf { isSeeking } }
-
-    var likedAt by rememberSaveable {
-        mutableStateOf<Long?>(null)
-    }
+    var likedAt by rememberSaveable { mutableStateOf<Long?>(null) }
 
     LaunchedEffect(media.id) {
         Database.likedAt(media.id).distinctUntilChanged().collect { likedAt = it }
@@ -107,14 +120,16 @@ fun Controls(
 
     val controlHeight = 64.dp
 
-    val playButtonRadius by shouldBePlayingTransition.animateDp(transitionSpec = {
-        tween(
-            durationMillis = 100,
-            easing = LinearEasing
-        )
-    },
+    val playButtonRadius by shouldBePlayingTransition.animateDp(
+        transitionSpec = {
+            tween(
+                durationMillis = 100,
+                easing = LinearEasing
+            )
+        },
         label = "playPauseRoundness",
-        targetValueByState = { if (it) 32.dp else 16.dp })
+        targetValueByState = { if (it) 32.dp else 16.dp }
+    )
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -122,15 +137,11 @@ fun Controls(
             .fillMaxWidth()
             .padding(horizontal = 32.dp)
     ) {
-        Spacer(
-            modifier = Modifier.weight(1f)
-        )
+        Spacer(modifier = Modifier.weight(1f))
 
         MediaInfo(media)
 
-        Spacer(
-            modifier = Modifier.weight(1f)
-        )
+        Spacer(modifier = Modifier.weight(1f))
 
         Row(
             Modifier.fillMaxWidth(),
@@ -178,8 +189,8 @@ fun Controls(
                             isSeeking = true
                             scope.launch {
                                 animatedPosition.snapTo(
-                                    animatedPosition.value.plus(delta)
-                                        .coerceIn(0f, media.duration.toFloat())
+                                    (animatedPosition.value + delta)
+                                        .coerceIn(0f..media.duration.toFloat())
                                 )
                             }
                         }
@@ -205,37 +216,9 @@ fun Controls(
                     }
                 }
             }
-
-//            BigIconButton(
-//                if (likedAt == null) R.drawable.heart_outline else R.drawable.heart,
-//                onClick = {
-//                    val currentMediaItem = binder.player.currentMediaItem
-//                    query {
-//                        if (Database.like(
-//                                media.id, if (likedAt == null) System.currentTimeMillis() else null
-//                            ) == 0
-//                        ) {
-//                            currentMediaItem?.takeIf { it.mediaId == media.id }?.let {
-//                                Database.insert(currentMediaItem, Song::toggleLike)
-//                            }
-//                        }
-//                    }
-//                },
-//                Modifier.weight(1f),
-//                backgroundColor = if (likedAt == null) colorPalette.background2 else colorPalette.accent
-//            )
-//
-//            BigIconButton(
-//                R.drawable.infinite,
-//                onClick = { trackLoopEnabled = !trackLoopEnabled },
-//                Modifier.weight(1f),
-//                contentColor = if (trackLoopEnabled) colorPalette.text else colorPalette.textDisabled
-//            )
         }
 
-        Spacer(
-            modifier = Modifier.weight(1f)
-        )
+        Spacer(modifier = Modifier.weight(1f))
     }
 }
 
@@ -249,6 +232,7 @@ private fun SkipButton(
     val scope = rememberCoroutineScope()
     val offsetDp = remember { Animatable(0f) }
     val density = LocalDensity.current
+
     BigIconButton(
         id,
         onClick = {
@@ -283,19 +267,18 @@ private fun PlayButton(
 ) {
     val colorPalette = LocalAppearance.current.colorPalette
     val binder = LocalPlayerServiceBinder.current
-    Box(modifier = modifier
-        .clip(RoundedCornerShape(playButtonRadius()))
-        .clickable {
-            if (shouldBePlaying) {
-                binder?.player?.pause()
-            } else {
-                if (binder?.player?.playbackState == Player.STATE_IDLE) {
-                    binder.player.prepare()
+
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(playButtonRadius()))
+            .clickable {
+                if (shouldBePlaying) binder?.player?.pause() else {
+                    if (binder?.player?.playbackState == Player.STATE_IDLE) binder.player.prepare()
+                    binder?.player?.play()
                 }
-                binder?.player?.play()
             }
-        }
-        .background(colorPalette.accent)) {
+            .background(colorPalette.accent)
+    ) {
         Image(
             painter = painterResource(if (shouldBePlaying) R.drawable.pause else R.drawable.play),
             contentDescription = null,
@@ -313,6 +296,7 @@ private fun Duration(
     duration: Long,
 ) {
     val typography = LocalAppearance.current.typography
+
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
@@ -325,31 +309,77 @@ private fun Duration(
             overflow = TextOverflow.Ellipsis,
         )
 
-        if (duration != C.TIME_UNSET) {
-            BasicText(
-                text = formatAsDuration(duration),
-                style = typography.xxs.semiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
+        if (duration != C.TIME_UNSET) BasicText(
+            text = formatAsDuration(duration),
+            style = typography.xxs.semiBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
 @Composable
 private fun MediaInfo(media: UiMedia) {
     val typography = LocalAppearance.current.typography
-    BasicText(
-        text = media.title,
-        style = typography.l.bold,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis
-    )
 
-    BasicText(
-        text = media.artist,
-        style = typography.s.semiBold.secondary,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis
-    )
+    var artistInfo: List<Info>? by remember { mutableStateOf(null) }
+    var maxHeight by rememberSaveable { mutableIntStateOf(0) }
+
+    LaunchedEffect(Unit) {
+        artistInfo = withContext(Dispatchers.IO) { Database.songArtistInfo(media.id) }
+    }
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        BasicText(
+            text = media.title,
+            style = typography.l.bold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+
+        AnimatedContent(targetState = artistInfo, label = "") { state ->
+            state?.let { artists ->
+                val scrollState = rememberScrollState()
+                val alphaLeft by animateFloatAsState(
+                    targetValue = if (scrollState.canScrollBackward) 1f else 0f,
+                    label = ""
+                )
+                val alphaRight by animateFloatAsState(
+                    targetValue = if (scrollState.canScrollForward) 1f else 0f,
+                    label = ""
+                )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(0.75f)
+                        .heightIn(max = maxHeight.px.dp)
+                        .horizontalFadingEdge(right = false, alpha = alphaLeft, middle = 10)
+                        .horizontalFadingEdge(left = false, alpha = alphaRight, middle = 10)
+                        .horizontalScroll(scrollState),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    artists.fastForEachIndexed { i, artist ->
+                        if (i == artists.lastIndex && artists.size > 1) BasicText(
+                            text = " & ",
+                            style = typography.s.semiBold.secondary
+                        )
+                        BasicText(
+                            text = artist.name.orEmpty(),
+                            style = typography.s.semiBold.secondary,
+                            modifier = Modifier.clickable { artistRoute.global(artist.id) })
+                        if (i != artists.lastIndex && i + 1 != artists.lastIndex) BasicText(
+                            text = ", ",
+                            style = typography.s.semiBold.secondary
+                        )
+                    }
+                }
+            } ?: BasicText(
+                text = media.artist,
+                style = typography.s.semiBold.secondary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.onGloballyPositioned { maxHeight = it.size.height }
+            )
+        }
+    }
 }
