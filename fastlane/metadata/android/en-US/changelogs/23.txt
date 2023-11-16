@@ -1,0 +1,6 @@
+* Added a swipe gesture to skip to the previous/next song
+* Fixed inconsistent behavior/UI of settings
+* Fixed weird behavior of the reordering animation
+* Fixed formatting in the lyrics picking dialog
+* You can now click on the artist name directly from the player
+* Added a few more animations
