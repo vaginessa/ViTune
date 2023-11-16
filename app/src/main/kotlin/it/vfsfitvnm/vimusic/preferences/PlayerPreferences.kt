@@ -19,6 +19,7 @@ object PlayerPreferences : GlobalPreferencesHolder() {
     var speed by float(1f)
     var isShowingPrevButtonCollapsed by boolean(false)
     var stopWhenClosed by boolean(false)
+    var horizontalSwipeToClose by boolean(false)
 
     val volumeNormalizationBaseGainRounded get() = (volumeNormalizationBaseGain * 100).toInt()
 }

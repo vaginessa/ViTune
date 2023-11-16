@@ -76,6 +76,7 @@ import it.vfsfitvnm.vimusic.ui.components.themed.IconButton
 import it.vfsfitvnm.vimusic.ui.components.themed.SecondaryTextButton
 import it.vfsfitvnm.vimusic.ui.components.themed.SliderDialog
 import it.vfsfitvnm.vimusic.ui.components.themed.TextToggle
+import it.vfsfitvnm.vimusic.ui.modifiers.onSwipe
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.ui.styling.collapsedPlayerProgressBar
@@ -93,6 +94,11 @@ import it.vfsfitvnm.vimusic.utils.thumbnail
 import it.vfsfitvnm.vimusic.utils.toast
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
+
+private fun onDismiss(binder: PlayerService.Binder) {
+    binder.stopRadio()
+    binder.player.clearMediaItems()
+}
 
 @kotlin.OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
 @OptIn(UnstableApi::class)
@@ -145,10 +151,7 @@ fun Player(layoutState: BottomSheetState, modifier: Modifier = Modifier) {
     BottomSheet(
         state = layoutState,
         modifier = modifier,
-        onDismiss = {
-            binder.stopRadio()
-            binder.player.clearMediaItems()
-        },
+        onDismiss = { onDismiss(binder) },
         collapsedContent = {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -168,13 +171,22 @@ fun Player(layoutState: BottomSheetState, modifier: Modifier = Modifier) {
                             strokeWidth = 2.dp.toPx()
                         )
                     }
+                    .let {
+                        if (PlayerPreferences.horizontalSwipeToClose) it.onSwipe(
+                            animateOffset = true,
+                            onSwipeOut = {
+                                layoutState.dismiss()
+                                onDismiss(binder)
+                            }
+                        ) else it
+                    }
+
             ) {
                 Spacer(modifier = Modifier.width(2.dp))
 
                 Box(
                     contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .height(Dimensions.collapsedPlayer)
+                    modifier = Modifier.height(Dimensions.collapsedPlayer)
                 ) {
                     AsyncImage(
                         model = mediaItem.mediaMetadata.artworkUri.thumbnail(Dimensions.thumbnails.song.px),

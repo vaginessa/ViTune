@@ -125,6 +125,13 @@ fun AppearanceSettings() {
                 isChecked = PlayerPreferences.isShowingPrevButtonCollapsed,
                 onCheckedChange = { PlayerPreferences.isShowingPrevButtonCollapsed = it }
             )
+
+            SwitchSettingEntry(
+                title = "Swipe horizontally to close",
+                text = "Closes the player when swiping left/right on the collapsed player. Useful for users with Android's one-handed mode enabled.",
+                isChecked = PlayerPreferences.horizontalSwipeToClose,
+                onCheckedChange = { PlayerPreferences.horizontalSwipeToClose = it }
+            )
         }
     }
 }
