@@ -13,6 +13,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,6 +22,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -319,45 +321,59 @@ private fun Duration(
 }
 
 @Composable
+private inline fun MediaInfoEntry(
+    maxHeight: Dp? = null,
+    content: @Composable RowScope.() -> Unit
+) {
+    val scrollState = rememberScrollState()
+    val alphaLeft by animateFloatAsState(
+        targetValue = if (scrollState.canScrollBackward) 1f else 0f,
+        label = ""
+    )
+    val alphaRight by animateFloatAsState(
+        targetValue = if (scrollState.canScrollForward) 1f else 0f,
+        label = ""
+    )
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth(0.75f)
+            .let { if (maxHeight == null) it else it.heightIn(max = maxHeight) }
+            .horizontalFadingEdge(right = false, alpha = alphaLeft, middle = 10)
+            .horizontalFadingEdge(left = false, alpha = alphaRight, middle = 10)
+            .horizontalScroll(scrollState),
+        horizontalArrangement = Arrangement.Center,
+        content = content
+    )
+}
+
+@Composable
 private fun MediaInfo(media: UiMedia) {
     val typography = LocalAppearance.current.typography
 
     var artistInfo: List<Info>? by remember { mutableStateOf(null) }
     var maxHeight by rememberSaveable { mutableIntStateOf(0) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(media) {
         artistInfo = withContext(Dispatchers.IO) { Database.songArtistInfo(media.id) }
     }
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        BasicText(
-            text = media.title,
-            style = typography.l.bold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
+        MediaInfoEntry {
+            BasicText(
+                text = media.title,
+                style = typography.l.bold,
+                maxLines = 1
+            )
+        }
 
-        AnimatedContent(targetState = artistInfo, label = "") { state ->
+        AnimatedContent(
+            targetState = artistInfo,
+            transitionSpec = { fadeIn() togetherWith fadeOut() },
+            label = ""
+        ) { state ->
             state?.let { artists ->
-                val scrollState = rememberScrollState()
-                val alphaLeft by animateFloatAsState(
-                    targetValue = if (scrollState.canScrollBackward) 1f else 0f,
-                    label = ""
-                )
-                val alphaRight by animateFloatAsState(
-                    targetValue = if (scrollState.canScrollForward) 1f else 0f,
-                    label = ""
-                )
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(0.75f)
-                        .heightIn(max = maxHeight.px.dp)
-                        .horizontalFadingEdge(right = false, alpha = alphaLeft, middle = 10)
-                        .horizontalFadingEdge(left = false, alpha = alphaRight, middle = 10)
-                        .horizontalScroll(scrollState),
-                    horizontalArrangement = Arrangement.Center
-                ) {
+                MediaInfoEntry(maxHeight = maxHeight.px.dp) {
                     artists.fastForEachIndexed { i, artist ->
                         if (i == artists.lastIndex && artists.size > 1) BasicText(
                             text = " & ",
@@ -366,20 +382,22 @@ private fun MediaInfo(media: UiMedia) {
                         BasicText(
                             text = artist.name.orEmpty(),
                             style = typography.s.semiBold.secondary,
-                            modifier = Modifier.clickable { artistRoute.global(artist.id) })
+                            modifier = Modifier.clickable { artistRoute.global(artist.id) }
+                        )
                         if (i != artists.lastIndex && i + 1 != artists.lastIndex) BasicText(
                             text = ", ",
                             style = typography.s.semiBold.secondary
                         )
                     }
                 }
-            } ?: BasicText(
-                text = media.artist,
-                style = typography.s.semiBold.secondary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.onGloballyPositioned { maxHeight = it.size.height }
-            )
+            } ?: MediaInfoEntry {
+                BasicText(
+                    text = media.artist,
+                    style = typography.s.semiBold.secondary,
+                    maxLines = 1,
+                    modifier = Modifier.onGloballyPositioned { maxHeight = it.size.height }
+                )
+            }
         }
     }
 }
