@@ -355,7 +355,7 @@ private fun MediaInfo(media: UiMedia) {
     var maxHeight by rememberSaveable { mutableIntStateOf(0) }
 
     LaunchedEffect(media) {
-        artistInfo = withContext(Dispatchers.IO) { Database.songArtistInfo(media.id) }
+        artistInfo = withContext(Dispatchers.IO) { Database.songArtistInfo(media.id).takeIf { it.isNotEmpty() } }
     }
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
