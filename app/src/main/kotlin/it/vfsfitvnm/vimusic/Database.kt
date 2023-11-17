@@ -91,10 +91,20 @@ interface Database {
     @RewriteQueriesToDropUnusedColumns
     fun songsByPlayTimeDesc(): Flow<List<Song>>
 
-    fun songs(sortBy: SongSortBy, sortOrder: SortOrder) = when (sortBy) {
+    @Transaction
+    @Query("SELECT * FROM Song WHERE totalPlayTimeMs > 0 AND id LIKE '$LOCAL_KEY_PREFIX%' ORDER BY totalPlayTimeMs ASC")
+    @RewriteQueriesToDropUnusedColumns
+    fun localSongsByPlayTimeAsc(): Flow<List<Song>>
+
+    @Transaction
+    @Query("SELECT * FROM Song WHERE totalPlayTimeMs > 0 AND id LIKE '$LOCAL_KEY_PREFIX%' ORDER BY totalPlayTimeMs DESC")
+    @RewriteQueriesToDropUnusedColumns
+    fun localSongsByPlayTimeDesc(): Flow<List<Song>>
+
+    fun songs(sortBy: SongSortBy, sortOrder: SortOrder, isLocal: Boolean = false) = when (sortBy) {
         SongSortBy.PlayTime -> when (sortOrder) {
-            SortOrder.Ascending -> songsByPlayTimeAsc()
-            SortOrder.Descending -> songsByPlayTimeDesc()
+            SortOrder.Ascending -> if (isLocal) localSongsByPlayTimeAsc() else songsByPlayTimeAsc()
+            SortOrder.Descending -> if (isLocal) localSongsByPlayTimeDesc() else songsByPlayTimeDesc()
         }
 
         SongSortBy.Title -> when (sortOrder) {

@@ -79,9 +79,11 @@ fun HomeLocalSongs(
     if (hasPermission) HomeSongs(
         onSearchClick = onSearchClick,
         songProvider = {
-            Database
-                .songs(sortBy = localSongSortBy, sortOrder = localSongSortOrder)
-                .map { songs -> songs.filter { it.isLocal } }
+            Database.songs(
+                sortBy = localSongSortBy,
+                sortOrder = localSongSortOrder,
+                isLocal = true
+            ).map { songs -> songs.filter { it.isLocal } }
         },
         sortBy = localSongSortBy,
         setSortBy = { localSongSortBy = it },
