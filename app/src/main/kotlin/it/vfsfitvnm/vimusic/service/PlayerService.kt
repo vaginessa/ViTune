@@ -23,6 +23,7 @@ import android.media.audiofx.LoudnessEnhancer
 import android.media.session.MediaSession
 import android.media.session.PlaybackState
 import android.net.Uri
+import android.os.Bundle
 import android.os.Handler
 import android.text.format.DateUtils
 import androidx.annotation.OptIn
@@ -83,6 +84,7 @@ import it.vfsfitvnm.vimusic.preferences.AppearancePreferences
 import it.vfsfitvnm.vimusic.preferences.DataPreferences
 import it.vfsfitvnm.vimusic.preferences.PlayerPreferences
 import it.vfsfitvnm.vimusic.query
+import it.vfsfitvnm.vimusic.transaction
 import it.vfsfitvnm.vimusic.utils.ConditionalCacheDataSourceFactory
 import it.vfsfitvnm.vimusic.utils.InvincibleService
 import it.vfsfitvnm.vimusic.utils.RingBuffer
@@ -103,12 +105,26 @@ import it.vfsfitvnm.vimusic.utils.shouldBePlaying
 import it.vfsfitvnm.vimusic.utils.timer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.cancellable
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapMerge
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 import kotlin.system.exitProcess
@@ -122,6 +138,7 @@ val DataSpec.isLocal get() = key?.startsWith(LOCAL_KEY_PREFIX) == true
 val MediaItem.isLocal get() = mediaId.startsWith(LOCAL_KEY_PREFIX)
 val Song.isLocal get() = id.startsWith(LOCAL_KEY_PREFIX)
 
+@kotlin.OptIn(ExperimentalCoroutinesApi::class)
 @Suppress("DEPRECATION")
 @OptIn(UnstableApi::class)
 class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListener.Callback {
@@ -129,17 +146,24 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
     private lateinit var cache: SimpleCache
     private lateinit var player: ExoPlayer
 
-    private val stateBuilder = PlaybackState.Builder().setActions(
-        PlaybackState.ACTION_PLAY or
-                PlaybackState.ACTION_PAUSE or
-                PlaybackState.ACTION_PLAY_PAUSE or
-                PlaybackState.ACTION_STOP or
-                PlaybackState.ACTION_SKIP_TO_PREVIOUS or
-                PlaybackState.ACTION_SKIP_TO_NEXT or
-                PlaybackState.ACTION_SKIP_TO_QUEUE_ITEM or
-                PlaybackState.ACTION_SEEK_TO or
-                PlaybackState.ACTION_REWIND
-    )
+    private val stateBuilder
+        get() = PlaybackState.Builder().setActions(
+            PlaybackState.ACTION_PLAY or
+                    PlaybackState.ACTION_PAUSE or
+                    PlaybackState.ACTION_PLAY_PAUSE or
+                    PlaybackState.ACTION_STOP or
+                    PlaybackState.ACTION_SKIP_TO_PREVIOUS or
+                    PlaybackState.ACTION_SKIP_TO_NEXT or
+                    PlaybackState.ACTION_SKIP_TO_QUEUE_ITEM or
+                    PlaybackState.ACTION_SEEK_TO or
+                    PlaybackState.ACTION_REWIND
+        ).addCustomAction(
+            /* action = */ "LIKE",
+            /* name   = */ "Like",
+            /* icon   = */ if (isLikedState.value) R.drawable.heart else R.drawable.heart_outline
+        )
+
+    private val playbackStateMutex = Mutex()
 
     private val metadataBuilder = MediaMetadata.Builder()
 
@@ -169,6 +193,14 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
     override val notificationId get() = NOTIFICATION_ID
 
     private lateinit var notificationActionReceiver: NotificationActionReceiver
+
+    private val mediaItemState = MutableStateFlow<MediaItem?>(null)
+    private val isLikedState = mediaItemState
+        .flatMapMerge { item ->
+            item?.mediaId?.let { Database.likedAt(it).distinctUntilChanged() } ?: flowOf(null)
+        }
+        .map { it != null }
+        .stateIn(coroutineScope, SharingStarted.Eagerly, false)
 
     override fun onBind(intent: Intent?): AndroidBinder {
         super.onBind(intent)
@@ -235,6 +267,12 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         mediaSession.setCallback(SessionCallback(player))
         mediaSession.setPlaybackState(stateBuilder.build())
         mediaSession.isActive = true
+
+        coroutineScope.launch {
+            isLikedState
+                .onEach { withContext(Dispatchers.Main) { updatePlaybackState() } }
+                .collect()
+        }
 
         notificationActionReceiver = NotificationActionReceiver(player)
 
@@ -326,6 +364,8 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
         preferenceUpdaterJob?.cancel()
 
+        coroutineScope.cancel()
+
         super.onDestroy()
     }
 
@@ -364,6 +404,8 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
     }
 
     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+        mediaItemState.update { mediaItem }
+
         maybeRecoverPlaybackError()
         maybeNormalizeVolume()
         maybeProcessRadio()
@@ -374,9 +416,8 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                 bitmapProvider.listener?.invoke(bitmapProvider.lastBitmap)
         }
 
-        if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO || reason == Player.MEDIA_ITEM_TRANSITION_REASON_SEEK) {
+        if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO || reason == Player.MEDIA_ITEM_TRANSITION_REASON_SEEK)
             updateMediaSessionQueue(player.currentTimeline)
-        }
     }
 
     override fun onTimelineChanged(timeline: Timeline, reason: Int) {
@@ -587,6 +628,19 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         }
     )
 
+    private fun updatePlaybackState() = coroutineScope.launch {
+        playbackStateMutex.withLock {
+            withContext(Dispatchers.Main) {
+                mediaSession.setPlaybackState(
+                    stateBuilder
+                        .setState(player.androidPlaybackState, player.currentPosition, 1f)
+                        .setBufferedPosition(player.bufferedPosition)
+                        .build()
+                )
+            }
+        }
+    }
+
     private val Player.androidPlaybackState
         get() = when (playbackState) {
             Player.STATE_BUFFERING -> if (playWhenReady) PlaybackState.STATE_BUFFERING else PlaybackState.STATE_PAUSED
@@ -608,11 +662,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             )
         }
 
-        stateBuilder
-            .setState(player.androidPlaybackState, player.currentPosition, 1f)
-            .setBufferedPosition(player.bufferedPosition)
-
-        mediaSession.setPlaybackState(stateBuilder.build())
+        updatePlaybackState()
 
         if (events.containsAny(
                 Player.EVENT_PLAYBACK_STATE_CHANGED,
@@ -965,7 +1015,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             song.contentLength?.let { cache.isCached(song.song.id, 0L, it) } ?: false
     }
 
-    private class SessionCallback(private val player: Player) : MediaSession.Callback() {
+    private inner class SessionCallback(private val player: Player) : MediaSession.Callback() {
         override fun onPlay() = player.play()
         override fun onPause() = player.pause()
         override fun onSkipToPrevious() = runCatching(player::forceSeekToPrevious).let { }
@@ -975,6 +1025,18 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         override fun onRewind() = player.seekToDefaultPosition()
         override fun onSkipToQueueItem(id: Long) =
             runCatching { player.seekToDefaultPosition(id.toInt()) }.let { }
+
+        override fun onCustomAction(action: String, extras: Bundle?) {
+            super.onCustomAction(action, extras)
+            if (action == "LIKE") mediaItemState.value?.let { mediaItem ->
+                transaction {
+                    Database.like(
+                        mediaItem.mediaId,
+                        if (isLikedState.value) null else System.currentTimeMillis()
+                    )
+                }
+            }
+        }
     }
 
     class NotificationActionReceiver internal constructor(
