@@ -85,7 +85,6 @@ import it.vfsfitvnm.vimusic.utils.verticalFadingEdge
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -117,6 +116,7 @@ fun Lyrics(
         var lyrics by remember { mutableStateOf<Lyrics?>(null) }
         val text = if (isShowingSynchronizedLyrics) lyrics?.synced else lyrics?.fixed
         var isError by remember(mediaId, isShowingSynchronizedLyrics) { mutableStateOf(false) }
+        var invalidLrc by remember(mediaId, isShowingSynchronizedLyrics) { mutableStateOf(false) }
 
         LaunchedEffect(mediaId, isShowingSynchronizedLyrics) {
             withContext(Dispatchers.IO) {
@@ -267,8 +267,8 @@ fun Lyrics(
                     },
                     valueText = {
                         "${it.artistName} - ${it.trackName} (${
-                            it.duration.seconds.toComponents { minutes, seconds, _ -> 
-                                "$minutes:${seconds.toString().padStart(2, '0')}" 
+                            it.duration.seconds.toComponents { minutes, seconds, _ ->
+                                "$minutes:${seconds.toString().padStart(2, '0')}"
                             }
                         })"
                     }
@@ -326,6 +326,22 @@ fun Lyrics(
                 )
             }
 
+            AnimatedVisibility(
+                visible = invalidLrc && isShowingSynchronizedLyrics,
+                enter = slideInVertically { -it },
+                exit = slideOutVertically { -it },
+                modifier = Modifier.align(Alignment.TopCenter)
+            ) {
+                BasicText(
+                    text = "Invalid synchronized lyrics, refetch or edit the lyrics and try again",
+                    style = typography.xs.center.medium.color(PureBlackColorPalette.text),
+                    modifier = Modifier
+                        .background(Color.Black.copy(0.4f))
+                        .padding(all = 8.dp)
+                        .fillMaxWidth()
+                )
+            }
+
             if (text?.isNotEmpty() == true) {
                 if (isShowingSynchronizedLyrics) {
                     val density = LocalDensity.current
@@ -333,39 +349,52 @@ fun Lyrics(
                         ?: return@AnimatedVisibility
 
                     val synchronizedLyrics = remember(text) {
-                        SynchronizedLyrics(LrcLib.Lyrics(text).sentences) {
-                            player.currentPosition + 50L - (lyrics?.startTime ?: 0L)
+                        val sentences = LrcLib.Lyrics(text).sentences
+
+                        if (sentences == null) {
+                            invalidLrc = true
+                            null
+                        } else {
+                            invalidLrc = false
+                            SynchronizedLyrics(sentences) {
+                                player.currentPosition + 50L - (lyrics?.startTime ?: 0L)
+                            }
                         }
                     }
 
-                    val lazyListState = rememberLazyListState(
-                        initialFirstVisibleItemIndex = synchronizedLyrics.index,
-                        initialFirstVisibleItemScrollOffset = with(density) { size.roundToPx() } / 6
-                    )
+                    if (synchronizedLyrics != null) {
+                        val lazyListState = rememberLazyListState(
+                            initialFirstVisibleItemIndex = synchronizedLyrics.index,
+                            initialFirstVisibleItemScrollOffset = with(density) { size.roundToPx() } / 6
+                        )
 
-                    LaunchedEffect(synchronizedLyrics) {
-                        val center = with(density) { size.roundToPx() } / 6
+                        LaunchedEffect(synchronizedLyrics) {
+                            val center = with(density) { size.roundToPx() } / 6
 
-                        while (isActive) {
-                            delay(50)
-                            if (synchronizedLyrics.update())
-                                lazyListState.animateScrollToItem(synchronizedLyrics.index, center)
+                            while (isActive) {
+                                delay(50)
+                                if (synchronizedLyrics.update())
+                                    lazyListState.animateScrollToItem(
+                                        synchronizedLyrics.index,
+                                        center
+                                    )
+                            }
                         }
-                    }
 
-                    LazyColumn(
-                        state = lazyListState,
-                        userScrollEnabled = false,
-                        contentPadding = PaddingValues(vertical = size / 2),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.verticalFadingEdge()
-                    ) {
-                        itemsIndexed(items = synchronizedLyrics.sentences.values.toList()) { index, sentence ->
-                            BasicText(
-                                text = sentence,
-                                style = typography.xs.center.medium.color(if (index == synchronizedLyrics.index) PureBlackColorPalette.text else PureBlackColorPalette.textDisabled),
-                                modifier = Modifier.padding(vertical = 4.dp, horizontal = 32.dp)
-                            )
+                        LazyColumn(
+                            state = lazyListState,
+                            userScrollEnabled = false,
+                            contentPadding = PaddingValues(vertical = size / 2),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.verticalFadingEdge()
+                        ) {
+                            itemsIndexed(items = synchronizedLyrics.sentences.values.toList()) { index, sentence ->
+                                BasicText(
+                                    text = sentence,
+                                    style = typography.xs.center.medium.color(if (index == synchronizedLyrics.index) PureBlackColorPalette.text else PureBlackColorPalette.textDisabled),
+                                    modifier = Modifier.padding(vertical = 4.dp, horizontal = 32.dp)
+                                )
+                            }
                         }
                     }
                 } else BasicText(
