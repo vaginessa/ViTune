@@ -28,7 +28,6 @@ import it.vfsfitvnm.vimusic.Database
 import it.vfsfitvnm.vimusic.models.Song
 import it.vfsfitvnm.vimusic.preferences.OrderPreferences
 import it.vfsfitvnm.vimusic.service.LOCAL_KEY_PREFIX
-import it.vfsfitvnm.vimusic.service.isLocal
 import it.vfsfitvnm.vimusic.transaction
 import it.vfsfitvnm.vimusic.ui.components.themed.SecondaryTextButton
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
@@ -47,7 +46,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
@@ -83,7 +81,7 @@ fun HomeLocalSongs(
                 sortBy = localSongSortBy,
                 sortOrder = localSongSortOrder,
                 isLocal = true
-            ).map { songs -> songs.filter { it.isLocal } }
+            )
         },
         sortBy = localSongSortBy,
         setSortBy = { localSongSortBy = it },

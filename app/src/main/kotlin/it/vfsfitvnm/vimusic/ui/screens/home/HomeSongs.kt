@@ -59,7 +59,6 @@ import it.vfsfitvnm.vimusic.enums.SongSortBy
 import it.vfsfitvnm.vimusic.enums.SortOrder
 import it.vfsfitvnm.vimusic.models.Song
 import it.vfsfitvnm.vimusic.preferences.OrderPreferences
-import it.vfsfitvnm.vimusic.service.isLocal
 import it.vfsfitvnm.vimusic.ui.components.LocalMenuState
 import it.vfsfitvnm.vimusic.ui.components.themed.FloatingActionsContainerWithScrollToTop
 import it.vfsfitvnm.vimusic.ui.components.themed.Header
@@ -78,7 +77,6 @@ import it.vfsfitvnm.vimusic.utils.forcePlayAtIndex
 import it.vfsfitvnm.vimusic.utils.secondary
 import it.vfsfitvnm.vimusic.utils.semiBold
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 
 @Composable
 fun HomeSongs(
@@ -87,7 +85,7 @@ fun HomeSongs(
     HomeSongs(
         onSearchClick = onSearchClick,
         songProvider = {
-            Database.songs(songSortBy, songSortOrder).map { songs -> songs.filter { !it.isLocal } }
+            Database.songs(songSortBy, songSortOrder)
         },
         sortBy = songSortBy,
         setSortBy = { songSortBy = it },

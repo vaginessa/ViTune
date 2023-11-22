@@ -62,22 +62,22 @@ interface Database {
     companion object : Database by DatabaseInitializer.instance.database
 
     @Transaction
-    @Query("SELECT * FROM Song WHERE totalPlayTimeMs > 0 ORDER BY ROWID ASC")
+    @Query("SELECT * FROM Song WHERE totalPlayTimeMs > 0 AND id NOT LIKE '$LOCAL_KEY_PREFIX%' ORDER BY ROWID ASC")
     @RewriteQueriesToDropUnusedColumns
     fun songsByRowIdAsc(): Flow<List<Song>>
 
     @Transaction
-    @Query("SELECT * FROM Song WHERE totalPlayTimeMs > 0 ORDER BY ROWID DESC")
+    @Query("SELECT * FROM Song WHERE totalPlayTimeMs > 0 AND id NOT LIKE '$LOCAL_KEY_PREFIX%' ORDER BY ROWID DESC")
     @RewriteQueriesToDropUnusedColumns
     fun songsByRowIdDesc(): Flow<List<Song>>
 
     @Transaction
-    @Query("SELECT * FROM Song WHERE totalPlayTimeMs > 0 ORDER BY title ASC")
+    @Query("SELECT * FROM Song WHERE totalPlayTimeMs > 0 AND id NOT LIKE '$LOCAL_KEY_PREFIX%' ORDER BY title ASC")
     @RewriteQueriesToDropUnusedColumns
     fun songsByTitleAsc(): Flow<List<Song>>
 
     @Transaction
-    @Query("SELECT * FROM Song WHERE totalPlayTimeMs > 0 ORDER BY title DESC")
+    @Query("SELECT * FROM Song WHERE totalPlayTimeMs > 0 AND id NOT LIKE '$LOCAL_KEY_PREFIX%' ORDER BY title DESC")
     @RewriteQueriesToDropUnusedColumns
     fun songsByTitleDesc(): Flow<List<Song>>
 
@@ -92,12 +92,32 @@ interface Database {
     fun songsByPlayTimeDesc(): Flow<List<Song>>
 
     @Transaction
-    @Query("SELECT * FROM Song WHERE totalPlayTimeMs > 0 AND id LIKE '$LOCAL_KEY_PREFIX%' ORDER BY totalPlayTimeMs ASC")
+    @Query("SELECT * FROM Song WHERE id LIKE '$LOCAL_KEY_PREFIX%' ORDER BY ROWID ASC")
+    @RewriteQueriesToDropUnusedColumns
+    fun localSongsByRowIdAsc(): Flow<List<Song>>
+
+    @Transaction
+    @Query("SELECT * FROM Song WHERE id LIKE '$LOCAL_KEY_PREFIX%' ORDER BY ROWID DESC")
+    @RewriteQueriesToDropUnusedColumns
+    fun localSongsByRowIdDesc(): Flow<List<Song>>
+
+    @Transaction
+    @Query("SELECT * FROM Song WHERE id LIKE '$LOCAL_KEY_PREFIX%' ORDER BY title ASC")
+    @RewriteQueriesToDropUnusedColumns
+    fun localSongsByTitleAsc(): Flow<List<Song>>
+
+    @Transaction
+    @Query("SELECT * FROM Song WHERE id LIKE '$LOCAL_KEY_PREFIX%' ORDER BY title DESC")
+    @RewriteQueriesToDropUnusedColumns
+    fun localSongsByTitleDesc(): Flow<List<Song>>
+
+    @Transaction
+    @Query("SELECT * FROM Song WHERE id LIKE '$LOCAL_KEY_PREFIX%' ORDER BY totalPlayTimeMs ASC")
     @RewriteQueriesToDropUnusedColumns
     fun localSongsByPlayTimeAsc(): Flow<List<Song>>
 
     @Transaction
-    @Query("SELECT * FROM Song WHERE totalPlayTimeMs > 0 AND id LIKE '$LOCAL_KEY_PREFIX%' ORDER BY totalPlayTimeMs DESC")
+    @Query("SELECT * FROM Song WHERE id LIKE '$LOCAL_KEY_PREFIX%' ORDER BY totalPlayTimeMs DESC")
     @RewriteQueriesToDropUnusedColumns
     fun localSongsByPlayTimeDesc(): Flow<List<Song>>
 
@@ -108,13 +128,13 @@ interface Database {
         }
 
         SongSortBy.Title -> when (sortOrder) {
-            SortOrder.Ascending -> songsByTitleAsc()
-            SortOrder.Descending -> songsByTitleDesc()
+            SortOrder.Ascending -> if (isLocal) localSongsByTitleAsc() else songsByTitleAsc()
+            SortOrder.Descending -> if (isLocal) localSongsByTitleDesc() else songsByTitleDesc()
         }
 
         SongSortBy.DateAdded -> when (sortOrder) {
-            SortOrder.Ascending -> songsByRowIdAsc()
-            SortOrder.Descending -> songsByRowIdDesc()
+            SortOrder.Ascending -> if (isLocal) localSongsByRowIdAsc() else songsByRowIdAsc()
+            SortOrder.Descending -> if (isLocal) localSongsByRowIdDesc() else songsByRowIdDesc()
         }
     }
 
