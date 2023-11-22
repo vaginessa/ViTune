@@ -125,15 +125,11 @@ fun Lyrics(
                         isShowingSynchronizedLyrics && currentLyrics?.synced == null -> {
                             lyrics = null
                             val mediaMetadata = mediaMetadataProvider()
-                            var duration = withContext(Dispatchers.Main) {
-                                durationProvider()
-                            }
+                            var duration = withContext(Dispatchers.Main) { durationProvider() }
 
                             while (duration == C.TIME_UNSET) {
                                 delay(100)
-                                duration = withContext(Dispatchers.Main) {
-                                    durationProvider()
-                                }
+                                duration = withContext(Dispatchers.Main) { durationProvider() }
                             }
 
                             val album = mediaMetadata.albumTitle?.toString()
@@ -287,9 +283,7 @@ fun Lyrics(
             contentAlignment = Alignment.Center,
             modifier = modifier
                 .pointerInput(Unit) {
-                    detectTapGestures(
-                        onTap = { onDismiss() }
-                    )
+                    detectTapGestures(onTap = { onDismiss() })
                 }
                 .fillMaxSize()
                 .background(Color.Black.copy(0.8f))

@@ -484,112 +484,103 @@ fun MediaItemMenu(
                     )
                 }
 
-                // TODO: find solution to this shit
                 onShowSleepTimer?.let {
                     val binder = LocalPlayerServiceBinder.current
                     val (_, typography) = LocalAppearance.current
 
-                    var isShowingSleepTimerDialog by remember {
-                        mutableStateOf(false)
-                    }
+                    var isShowingSleepTimerDialog by remember { mutableStateOf(false) }
 
                     val sleepTimerMillisLeft by (binder?.sleepTimerMillisLeft ?: flowOf(null))
                         .collectAsState(initial = null)
 
                     if (isShowingSleepTimerDialog) {
-                        if (sleepTimerMillisLeft != null) {
-                            ConfirmationDialog(
-                                text = "Do you want to stop the sleep timer?",
-                                cancelText = "No",
-                                confirmText = "Stop",
-                                onDismiss = { isShowingSleepTimerDialog = false },
-                                onConfirm = {
-                                    binder?.cancelSleepTimer()
-                                    onDismiss()
-                                }
-                            )
-                        } else {
-                            DefaultDialog(
-                                onDismiss = { isShowingSleepTimerDialog = false }
-                            ) {
-                                var amount by remember { mutableIntStateOf(1) }
+                        if (sleepTimerMillisLeft != null) ConfirmationDialog(
+                            text = "Do you want to stop the sleep timer?",
+                            cancelText = "No",
+                            confirmText = "Stop",
+                            onDismiss = { isShowingSleepTimerDialog = false },
+                            onConfirm = {
+                                binder?.cancelSleepTimer()
+                                onDismiss()
+                            }
+                        ) else DefaultDialog(onDismiss = { isShowingSleepTimerDialog = false }) {
+                            var amount by remember { mutableIntStateOf(1) }
 
-                                BasicText(
-                                    text = "Set sleep timer",
-                                    style = typography.s.semiBold,
-                                    modifier = Modifier.padding(vertical = 8.dp, horizontal = 24.dp)
+                            BasicText(
+                                text = "Set sleep timer",
+                                style = typography.s.semiBold,
+                                modifier = Modifier.padding(vertical = 8.dp, horizontal = 24.dp)
+                            )
+
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(
+                                    space = 16.dp,
+                                    alignment = Alignment.CenterHorizontally
+                                ),
+                                modifier = Modifier.padding(vertical = 16.dp)
+                            ) {
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier
+                                        .alpha(if (amount <= 1) 0.5f else 1f)
+                                        .clip(CircleShape)
+                                        .clickable(enabled = amount > 1) { amount-- }
+                                        .size(48.dp)
+                                        .background(colorPalette.background0)
+                                ) {
+                                    BasicText(
+                                        text = "-",
+                                        style = typography.xs.semiBold
+                                    )
+                                }
+
+                                Box(contentAlignment = Alignment.Center) {
+                                    BasicText(
+                                        text = "88h 88m",
+                                        style = typography.s.semiBold,
+                                        modifier = Modifier.alpha(0f)
+                                    )
+                                    BasicText(
+                                        text = "${amount / 6}h ${(amount % 6) * 10}m",
+                                        style = typography.s.semiBold
+                                    )
+                                }
+
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier
+                                        .alpha(if (amount >= 60) 0.5f else 1f)
+                                        .clip(CircleShape)
+                                        .clickable(enabled = amount < 60) { amount++ }
+                                        .size(48.dp)
+                                        .background(colorPalette.background0)
+                                ) {
+                                    BasicText(
+                                        text = "+",
+                                        style = typography.xs.semiBold
+                                    )
+                                }
+                            }
+
+                            Row(
+                                horizontalArrangement = Arrangement.SpaceEvenly,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                DialogTextButton(
+                                    text = "Cancel",
+                                    onClick = { isShowingSleepTimerDialog = false }
                                 )
 
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(
-                                        space = 16.dp,
-                                        alignment = Alignment.CenterHorizontally
-                                    ),
-                                    modifier = Modifier.padding(vertical = 16.dp)
-                                ) {
-                                    Box(
-                                        contentAlignment = Alignment.Center,
-                                        modifier = Modifier
-                                            .alpha(if (amount <= 1) 0.5f else 1f)
-                                            .clip(CircleShape)
-                                            .clickable(enabled = amount > 1) { amount-- }
-                                            .size(48.dp)
-                                            .background(colorPalette.background0)
-                                    ) {
-                                        BasicText(
-                                            text = "-",
-                                            style = typography.xs.semiBold
-                                        )
+                                DialogTextButton(
+                                    text = "Set",
+                                    enabled = amount > 0,
+                                    primary = true,
+                                    onClick = {
+                                        binder?.startSleepTimer(amount * 10 * 60 * 1000L)
+                                        isShowingSleepTimerDialog = false
                                     }
-
-                                    Box(contentAlignment = Alignment.Center) {
-                                        BasicText(
-                                            text = "88h 88m",
-                                            style = typography.s.semiBold,
-                                            modifier = Modifier.alpha(0f)
-                                        )
-                                        BasicText(
-                                            text = "${amount / 6}h ${(amount % 6) * 10}m",
-                                            style = typography.s.semiBold
-                                        )
-                                    }
-
-                                    Box(
-                                        contentAlignment = Alignment.Center,
-                                        modifier = Modifier
-                                            .alpha(if (amount >= 60) 0.5f else 1f)
-                                            .clip(CircleShape)
-                                            .clickable(enabled = amount < 60) { amount++ }
-                                            .size(48.dp)
-                                            .background(colorPalette.background0)
-                                    ) {
-                                        BasicText(
-                                            text = "+",
-                                            style = typography.xs.semiBold
-                                        )
-                                    }
-                                }
-
-                                Row(
-                                    horizontalArrangement = Arrangement.SpaceEvenly,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    DialogTextButton(
-                                        text = "Cancel",
-                                        onClick = { isShowingSleepTimerDialog = false }
-                                    )
-
-                                    DialogTextButton(
-                                        text = "Set",
-                                        enabled = amount > 0,
-                                        primary = true,
-                                        onClick = {
-                                            binder?.startSleepTimer(amount * 10 * 60 * 1000L)
-                                            isShowingSleepTimerDialog = false
-                                        }
-                                    )
-                                }
+                                )
                             }
                         }
                     }

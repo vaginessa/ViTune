@@ -1,7 +1,6 @@
 package it.vfsfitvnm.vimusic.ui.screens.mood
 
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import it.vfsfitvnm.compose.persist.PersistMapCleanup
@@ -11,7 +10,7 @@ import it.vfsfitvnm.vimusic.models.Mood
 import it.vfsfitvnm.vimusic.ui.components.themed.Scaffold
 import it.vfsfitvnm.vimusic.ui.screens.GlobalRoutes
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun MoodScreen(mood: Mood) {
     val saveableStateHolder = rememberSaveableStateHolder()
@@ -21,7 +20,7 @@ fun MoodScreen(mood: Mood) {
     RouteHandler(listenToGlobalEmitter = true) {
         GlobalRoutes()
 
-        host {
+        NavHost {
             Scaffold(
                 topIconButtonId = R.drawable.chevron_back,
                 onTopIconButtonClick = pop,

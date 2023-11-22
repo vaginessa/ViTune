@@ -80,8 +80,7 @@ inline fun <T : Innertube.Item> ItemsPage(
             state = lazyListState,
             contentPadding = LocalPlayerAwareWindowInsets.current
                 .only(WindowInsetsSides.Vertical + WindowInsetsSides.End).asPaddingValues(),
-            modifier = modifier
-                .fillMaxSize()
+            modifier = modifier.fillMaxSize()
         ) {
             item(
                 key = "header",
@@ -111,11 +110,11 @@ inline fun <T : Innertube.Item> ItemsPage(
             if (!(itemsPage != null && itemsPage?.continuation == null)) {
                 item(key = "loading") {
                     val isFirstLoad = itemsPage?.items.isNullOrEmpty()
+
                     ShimmerHost(
-                        modifier = Modifier
-                            .run {
-                                if (isFirstLoad) fillParentMaxSize() else this
-                            }
+                        modifier = Modifier.let {
+                            if (isFirstLoad) it.fillParentMaxSize() else it
+                        }
                     ) {
                         repeat(if (isFirstLoad) initialPlaceholderCount else continuationPlaceholderCount) {
                             itemPlaceholderContent()

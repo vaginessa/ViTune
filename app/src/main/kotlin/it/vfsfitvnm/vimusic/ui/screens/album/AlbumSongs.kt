@@ -94,9 +94,7 @@ fun AlbumSongs(
                             )
                         }
 
-                        if (!isLandscape) {
-                            thumbnailContent()
-                        }
+                        if (!isLandscape) thumbnailContent()
                     }
                 }
 
@@ -120,36 +118,30 @@ fun AlbumSongs(
                                     .align(Alignment.Center)
                             )
                         },
-                        modifier = Modifier
-                            .combinedClickable(
-                                onLongClick = {
-                                    menuState.display {
-                                        NonQueuedMediaItemMenu(
-                                            onDismiss = menuState::hide,
-                                            mediaItem = song.asMediaItem,
-                                        )
-                                    }
-                                },
-                                onClick = {
-                                    binder?.stopRadio()
-                                    binder?.player?.forcePlayAtIndex(
-                                        songs.map(Song::asMediaItem),
-                                        index
+                        modifier = Modifier.combinedClickable(
+                            onLongClick = {
+                                menuState.display {
+                                    NonQueuedMediaItemMenu(
+                                        onDismiss = menuState::hide,
+                                        mediaItem = song.asMediaItem,
                                     )
                                 }
-                            )
+                            },
+                            onClick = {
+                                binder?.stopRadio()
+                                binder?.player?.forcePlayAtIndex(
+                                    songs.map(Song::asMediaItem),
+                                    index
+                                )
+                            }
+                        )
                     )
                 }
 
-                if (songs.isEmpty()) {
-                    item(key = "loading") {
-                        ShimmerHost(
-                            modifier = Modifier
-                                .fillParentMaxSize()
-                        ) {
-                            repeat(4) {
-                                SongItemPlaceholder(thumbnailSizeDp = Dimensions.thumbnails.song)
-                            }
+                if (songs.isEmpty()) item(key = "loading") {
+                    ShimmerHost(modifier = Modifier.fillParentMaxSize()) {
+                        repeat(4) {
+                            SongItemPlaceholder(thumbnailSizeDp = Dimensions.thumbnails.song)
                         }
                     }
                 }

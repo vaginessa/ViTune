@@ -89,83 +89,70 @@ fun PlaylistSongList(
     val songThumbnailSizeDp = Dimensions.thumbnails.song
     val songThumbnailSizePx = songThumbnailSizeDp.px
 
-    var isImportingPlaylist by rememberSaveable {
-        mutableStateOf(false)
-    }
+    var isImportingPlaylist by rememberSaveable { mutableStateOf(false) }
 
-    if (isImportingPlaylist) {
-        TextFieldDialog(
-            hintText = "Enter the playlist name",
-            initialTextInput = playlistPage?.title ?: "",
-            onDismiss = { isImportingPlaylist = false },
-            onDone = { text ->
-                query {
-                    transaction {
-                        val playlistId = Database.insert(Playlist(name = text, browseId = browseId))
+    if (isImportingPlaylist) TextFieldDialog(
+        hintText = "Enter the playlist name",
+        initialTextInput = playlistPage?.title ?: "",
+        onDismiss = { isImportingPlaylist = false },
+        onDone = { text ->
+            query {
+                transaction {
+                    val playlistId = Database.insert(Playlist(name = text, browseId = browseId))
 
-                        playlistPage?.songsPage?.items
-                            ?.map(Innertube.SongItem::asMediaItem)
-                            ?.onEach(Database::insert)
-                            ?.mapIndexed { index, mediaItem ->
-                                SongPlaylistMap(
-                                    songId = mediaItem.mediaId,
-                                    playlistId = playlistId,
-                                    position = index
-                                )
-                            }?.let(Database::insertSongPlaylistMaps)
-                    }
+                    playlistPage?.songsPage?.items
+                        ?.map(Innertube.SongItem::asMediaItem)
+                        ?.onEach(Database::insert)
+                        ?.mapIndexed { index, mediaItem ->
+                            SongPlaylistMap(
+                                songId = mediaItem.mediaId,
+                                playlistId = playlistId,
+                                position = index
+                            )
+                        }?.let(Database::insertSongPlaylistMaps)
                 }
             }
-        )
-    }
+        }
+    )
 
     val headerContent: @Composable () -> Unit = {
-        if (playlistPage == null) {
-            HeaderPlaceholder(
-                modifier = Modifier
-                    .shimmer()
-            )
-        } else {
-            Header(title = playlistPage?.title ?: "Unknown") {
-                SecondaryTextButton(
-                    text = "Enqueue",
-                    enabled = playlistPage?.songsPage?.items?.isNotEmpty() == true,
-                    onClick = {
-                        playlistPage?.songsPage?.items?.map(Innertube.SongItem::asMediaItem)
-                            ?.let { mediaItems ->
-                                binder?.player?.enqueue(mediaItems)
-                            }
-                    }
-                )
-
-                Spacer(
-                    modifier = Modifier
-                        .weight(1f)
-                )
-
-                HeaderIconButton(
-                    icon = R.drawable.add,
-                    color = colorPalette.text,
-                    onClick = { isImportingPlaylist = true }
-                )
-
-                HeaderIconButton(
-                    icon = R.drawable.share_social,
-                    color = colorPalette.text,
-                    onClick = {
-                        (playlistPage?.url
-                            ?: "https://music.youtube.com/playlist?list=${browseId.removePrefix("VL")}").let { url ->
-                            val sendIntent = Intent().apply {
-                                action = Intent.ACTION_SEND
-                                type = "text/plain"
-                                putExtra(Intent.EXTRA_TEXT, url)
-                            }
-
-                            context.startActivity(Intent.createChooser(sendIntent, null))
+        if (playlistPage == null) HeaderPlaceholder(modifier = Modifier.shimmer())
+        else Header(title = playlistPage?.title ?: "Unknown") {
+            SecondaryTextButton(
+                text = "Enqueue",
+                enabled = playlistPage?.songsPage?.items?.isNotEmpty() == true,
+                onClick = {
+                    playlistPage?.songsPage?.items?.map(Innertube.SongItem::asMediaItem)
+                        ?.let { mediaItems ->
+                            binder?.player?.enqueue(mediaItems)
                         }
+                }
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            HeaderIconButton(
+                icon = R.drawable.add,
+                color = colorPalette.text,
+                onClick = { isImportingPlaylist = true }
+            )
+
+            HeaderIconButton(
+                icon = R.drawable.share_social,
+                color = colorPalette.text,
+                onClick = {
+                    (playlistPage?.url
+                        ?: "https://music.youtube.com/playlist?list=${browseId.removePrefix("VL")}").let { url ->
+                        val sendIntent = Intent().apply {
+                            action = Intent.ACTION_SEND
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_TEXT, url)
+                        }
+
+                        context.startActivity(Intent.createChooser(sendIntent, null))
                     }
-                )
-            }
+                }
+            )
         }
     }
 
@@ -220,15 +207,10 @@ fun PlaylistSongList(
                     )
                 }
 
-                if (playlistPage == null) {
-                    item(key = "loading") {
-                        ShimmerHost(
-                            modifier = Modifier
-                                .fillParentMaxSize()
-                        ) {
-                            repeat(4) {
-                                SongItemPlaceholder(thumbnailSizeDp = songThumbnailSizeDp)
-                            }
+                if (playlistPage == null) item(key = "loading") {
+                    ShimmerHost(modifier = Modifier.fillParentMaxSize()) {
+                        repeat(4) {
+                            SongItemPlaceholder(thumbnailSizeDp = songThumbnailSizeDp)
                         }
                     }
                 }

@@ -1,6 +1,5 @@
 package it.vfsfitvnm.vimusic.ui.screens.settings
 
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -20,7 +19,6 @@ import it.vfsfitvnm.vimusic.ui.components.themed.Header
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.utils.secondary
 
-@ExperimentalAnimationApi
 @Composable
 fun About() {
     val (colorPalette, typography) = LocalAppearance.current

@@ -86,8 +86,9 @@ fun HomeSongs(
 ) = with(OrderPreferences) {
     HomeSongs(
         onSearchClick = onSearchClick,
-        songProvider = { Database.songs(songSortBy, songSortOrder).map { songs ->
-            songs.filter { !it.isLocal } } },
+        songProvider = {
+            Database.songs(songSortBy, songSortOrder).map { songs -> songs.filter { !it.isLocal } }
+        },
         sortBy = songSortBy,
         setSortBy = { songSortBy = it },
         sortOrder = songSortOrder,
@@ -123,10 +124,11 @@ fun HomeSongs(
     var items by persistList<Song>("home/songs")
     val filteredItems by remember {
         derivedStateOf {
-            filter?.lowercase()?.ifBlank { null }
-                ?.let { f -> items.filter {
+            filter?.lowercase()?.ifBlank { null }?.let { f ->
+                items.filter {
                     f in it.title.lowercase() || f in it.artistsText?.lowercase().orEmpty()
-                }.sortedBy { it.title } } ?: items
+                }.sortedBy { it.title }
+            } ?: items
         }
     }
 
@@ -240,17 +242,13 @@ fun HomeSongs(
                         onClick = { setSortBy(SongSortBy.DateAdded) }
                     )
 
-                    Spacer(
-                        modifier = Modifier
-                            .width(2.dp)
-                    )
+                    Spacer(modifier = Modifier.width(2.dp))
 
                     HeaderIconButton(
                         icon = R.drawable.arrow_up,
                         color = colorPalette.text,
                         onClick = { setSortOrder(!sortOrder) },
-                        modifier = Modifier
-                            .graphicsLayer { rotationZ = sortOrderIconRotation }
+                        modifier = Modifier.graphicsLayer { rotationZ = sortOrderIconRotation }
                     )
                 }
             }

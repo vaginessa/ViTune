@@ -78,21 +78,20 @@ fun OnlineSearch(
     var history by persistList<SearchQuery>("search/online/history")
 
     LaunchedEffect(textFieldValue.text) {
-        if (!DataPreferences.pauseSearchHistory) {
-            Database.queries("%${textFieldValue.text}%")
-                .distinctUntilChanged { old, new -> old.size == new.size }
-                .collect { history = it }
-        }
+        if (!DataPreferences.pauseSearchHistory) Database.queries("%${textFieldValue.text}%")
+            .distinctUntilChanged { old, new -> old.size == new.size }
+            .collect { history = it }
     }
 
     var suggestionsResult by persist<Result<List<String>?>?>("search/online/suggestionsResult")
 
     LaunchedEffect(textFieldValue.text) {
-        if (textFieldValue.text.isNotEmpty()) {
-            delay(200)
-            suggestionsResult =
-                Innertube.searchSuggestions(SearchSuggestionsBody(input = textFieldValue.text))
-        }
+        if (textFieldValue.text.isEmpty()) return@LaunchedEffect
+
+        delay(200)
+        suggestionsResult = Innertube.searchSuggestions(
+            body = SearchSuggestionsBody(input = textFieldValue.text)
+        )
     }
 
     val playlistId = remember(textFieldValue.text) {
@@ -111,10 +110,7 @@ fun OnlineSearch(
     val closeIconPainter = painterResource(R.drawable.close)
     val arrowForwardIconPainter = painterResource(R.drawable.arrow_forward)
 
-    val focusRequester = remember {
-        FocusRequester()
-    }
-
+    val focusRequester = remember { FocusRequester() }
     val lazyListState = rememberLazyListState()
 
     Box {
@@ -122,8 +118,7 @@ fun OnlineSearch(
             state = lazyListState,
             contentPadding = LocalPlayerAwareWindowInsets.current
                 .only(WindowInsetsSides.Vertical + WindowInsetsSides.End).asPaddingValues(),
-            modifier = Modifier
-                .fillMaxSize()
+            modifier = Modifier.fillMaxSize()
         ) {
             item(
                 key = "header",
@@ -140,15 +135,13 @@ fun OnlineSearch(
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                             keyboardActions = KeyboardActions(
                                 onSearch = {
-                                    if (textFieldValue.text.isNotEmpty()) {
+                                    if (textFieldValue.text.isNotEmpty())
                                         onSearch(textFieldValue.text)
-                                    }
                                 }
                             ),
                             cursorBrush = SolidColor(colorPalette.text),
                             decorationBox = decorationBox,
-                            modifier = Modifier
-                                .focusRequester(focusRequester)
+                            modifier = Modifier.focusRequester(focusRequester)
                         )
                     },
                     actionsContent = {
@@ -161,17 +154,12 @@ fun OnlineSearch(
                             )
                         }
 
-                        Spacer(
-                            modifier = Modifier
-                                .weight(1f)
-                        )
+                        Spacer(modifier = Modifier.weight(1f))
 
-                        if (textFieldValue.text.isNotEmpty()) {
-                            SecondaryTextButton(
-                                text = "Clear",
-                                onClick = { onTextFieldValueChanged(TextFieldValue()) }
-                            )
-                        }
+                        if (textFieldValue.text.isNotEmpty()) SecondaryTextButton(
+                            text = "Clear",
+                            onClick = { onTextFieldValueChanged(TextFieldValue()) }
+                        )
                     }
                 )
             }
@@ -295,10 +283,7 @@ fun OnlineSearch(
                 }
             } ?: suggestionsResult?.exceptionOrNull()?.let {
                 item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                    ) {
+                    Box(modifier = Modifier.fillMaxSize()) {
                         BasicText(
                             text = "An error has occurred.",
                             style = typography.s.secondary.center,

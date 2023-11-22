@@ -53,15 +53,14 @@ fun SearchScreen(
     RouteHandler(listenToGlobalEmitter = true) {
         GlobalRoutes()
 
-        host {
+        NavHost {
             val decorationBox: @Composable (@Composable () -> Unit) -> Unit = { innerTextField ->
                 Box {
                     AnimatedVisibility(
                         visible = textFieldValue.text.isEmpty(),
                         enter = fadeIn(tween(300)),
                         exit = fadeOut(tween(300)),
-                        modifier = Modifier
-                            .align(Alignment.CenterEnd)
+                        modifier = Modifier.align(Alignment.CenterEnd)
                     ) {
                         BasicText(
                             text = "Enter a name",

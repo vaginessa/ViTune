@@ -17,14 +17,15 @@ val clean by tasks.registering(Delete::class) {
 subprojects {
     tasks.withType<KotlinCompile>().configureEach {
         kotlinOptions {
-            if (project.findProperty("enableComposeCompilerReports") == "true")
-                arrayOf("reports", "metrics").forEach {
-                    @Suppress("DEPRECATION")
-                    freeCompilerArgs = freeCompilerArgs + listOf(
-                        "-P",
-                        "plugin:androidx.compose.compiler.plugins.kotlin:${it}Destination=${project.buildDir.absolutePath}/compose_metrics"
-                    )
-                }
+            if (project.findProperty("enableComposeCompilerReports") != "true") return@kotlinOptions
+            arrayOf("reports", "metrics").forEach {
+                freeCompilerArgs = freeCompilerArgs + listOf(
+                    "-P",
+                    "plugin:androidx.compose.compiler.plugins.kotlin:${it}Destination=${
+                        layout.buildDirectory.asFile.get().absolutePath
+                    }/compose_metrics"
+                )
+            }
         }
     }
 }

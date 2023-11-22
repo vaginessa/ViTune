@@ -99,7 +99,7 @@ fun ArtistScreen(browseId: String) {
     RouteHandler(listenToGlobalEmitter = true) {
         GlobalRoutes()
 
-        host {
+        NavHost {
             val thumbnailContent =
                 adaptiveThumbnailContent(
                     artist?.timestamp == null,

@@ -102,6 +102,7 @@ fun Controls(
     LaunchedEffect(media) {
         if (compositionLaunched) animatedPosition.animateTo(0f)
     }
+
     LaunchedEffect(position) {
         if (!isSeeking && !animatedPosition.isRunning) animatedPosition.animateTo(
             targetValue = position.toFloat(),
@@ -111,6 +112,7 @@ fun Controls(
             )
         )
     }
+
     val durationVisible by remember(isSeeking) { derivedStateOf { isSeeking } }
     var likedAt by rememberSaveable { mutableStateOf<Long?>(null) }
 
@@ -151,28 +153,28 @@ fun Controls(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             PlayButton(
-                { playButtonRadius },
-                shouldBePlaying,
-                Modifier
+                radius = playButtonRadius,
+                shouldBePlaying = shouldBePlaying,
+                modifier = Modifier
                     .height(controlHeight)
                     .weight(4f)
             )
             SkipButton(
-                R.drawable.play_skip_forward,
+                iconId = R.drawable.play_skip_forward,
                 onClick = binder.player::forceSeekToNext,
-                Modifier.weight(1f)
+                modifier = Modifier.weight(1f)
             )
         }
-        Spacer(Modifier.weight(1f))
+        Spacer(modifier = Modifier.weight(1f))
         Row(
-            Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             SkipButton(
-                R.drawable.play_skip_back,
+                iconId = R.drawable.play_skip_back,
                 onClick = binder.player::forceSeekToPrevious,
-                Modifier.weight(1f),
+                modifier = Modifier.weight(1f),
                 offsetOnPress = -FORWARD_BACKWARD_OFFSET
             )
 
@@ -209,9 +211,10 @@ fun Controls(
                     shape = RoundedCornerShape(8.dp)
                 )
                 AnimatedVisibility(
-                    durationVisible,
+                    visible = durationVisible,
                     enter = fadeIn() + expandVertically { -it },
-                    exit = fadeOut() + shrinkVertically { -it }) {
+                    exit = fadeOut() + shrinkVertically { -it }
+                ) {
                     Column {
                         Spacer(Modifier.height(8.dp))
                         Duration(animatedPosition.value, media.duration)
@@ -226,7 +229,7 @@ fun Controls(
 
 @Composable
 private fun SkipButton(
-    @DrawableRes id: Int,
+    @DrawableRes iconId: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     offsetOnPress: Float = FORWARD_BACKWARD_OFFSET
@@ -236,14 +239,14 @@ private fun SkipButton(
     val density = LocalDensity.current
 
     BigIconButton(
-        id,
+        iconId = iconId,
         onClick = {
             onClick()
             scope.launch {
                 offsetDp.animateTo(offsetOnPress)
             }
         },
-        modifier.graphicsLayer {
+        modifier = modifier.graphicsLayer {
             with(density) {
                 translationX = offsetDp.value.dp.toPx()
             }
@@ -263,7 +266,7 @@ private fun SkipButton(
 
 @Composable
 private fun PlayButton(
-    playButtonRadius: () -> Dp,
+    radius: Dp,
     shouldBePlaying: Boolean,
     modifier: Modifier = Modifier
 ) {
@@ -272,7 +275,7 @@ private fun PlayButton(
 
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(playButtonRadius()))
+            .clip(RoundedCornerShape(radius))
             .clickable {
                 if (shouldBePlaying) binder?.player?.pause() else {
                     if (binder?.player?.playbackState == Player.STATE_IDLE) binder.player.prepare()

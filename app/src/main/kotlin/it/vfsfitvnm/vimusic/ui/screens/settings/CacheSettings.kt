@@ -1,7 +1,7 @@
 package it.vfsfitvnm.vimusic.ui.screens.settings
 
 import android.text.format.Formatter
-import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -26,12 +26,9 @@ import it.vfsfitvnm.vimusic.enums.ExoPlayerDiskCacheMaxSize
 import it.vfsfitvnm.vimusic.preferences.DataPreferences
 import it.vfsfitvnm.vimusic.ui.components.themed.Header
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
-import kotlin.OptIn
-import androidx.annotation.OptIn as OptInAndroidX
 
-@OptIn(ExperimentalCoilApi::class)
-@OptInAndroidX(UnstableApi::class)
-@ExperimentalAnimationApi
+@kotlin.OptIn(ExperimentalCoilApi::class)
+@OptIn(UnstableApi::class)
 @Composable
 fun CacheSettings() {
     val context = LocalContext.current
@@ -55,9 +52,7 @@ fun CacheSettings() {
             SettingsDescription(text = "When the cache runs out of space, the resources that haven't been accessed for the longest time are cleared")
 
             Coil.imageLoader(context).diskCache?.let { diskCache ->
-                val diskCacheSize = remember(diskCache) {
-                    diskCache.size
-                }
+                val diskCacheSize = remember(diskCache) { diskCache.size }
 
                 SettingsGroupSpacer()
 
@@ -65,10 +60,7 @@ fun CacheSettings() {
 
                 SettingsDescription(
                     text = "${
-                        Formatter.formatShortFileSize(
-                            context,
-                            diskCacheSize
-                        )
+                        Formatter.formatShortFileSize(context, diskCacheSize)
                     } used (${diskCacheSize * 100 / coilDiskCacheMaxSize.bytes.coerceAtLeast(1)}%)"
                 )
 
@@ -80,11 +72,7 @@ fun CacheSettings() {
             }
 
             binder?.cache?.let { cache ->
-                val diskCacheSize by remember {
-                    derivedStateOf {
-                        cache.cacheSpace
-                    }
-                }
+                val diskCacheSize by remember { derivedStateOf { cache.cacheSpace } }
 
                 SettingsGroupSpacer()
 

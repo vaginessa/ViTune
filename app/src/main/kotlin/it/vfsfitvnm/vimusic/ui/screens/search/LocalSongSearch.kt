@@ -57,9 +57,8 @@ fun LocalSongSearch(
     var items by persistList<Song>("search/local/songs")
 
     LaunchedEffect(textFieldValue.text) {
-        if (textFieldValue.text.length > 1) {
+        if (textFieldValue.text.length > 1)
             Database.search("%${textFieldValue.text}%").collect { items = it }
-        }
     }
 
     val thumbnailSizeDp = Dimensions.thumbnails.song
@@ -72,8 +71,7 @@ fun LocalSongSearch(
             state = lazyListState,
             contentPadding = LocalPlayerAwareWindowInsets.current
                 .only(WindowInsetsSides.Vertical + WindowInsetsSides.End).asPaddingValues(),
-            modifier = Modifier
-                .fillMaxSize()
+            modifier = Modifier.fillMaxSize()
         ) {
             item(
                 key = "header",
@@ -93,12 +91,10 @@ fun LocalSongSearch(
                         )
                     },
                     actionsContent = {
-                        if (textFieldValue.text.isNotEmpty()) {
-                            SecondaryTextButton(
-                                text = "Clear",
-                                onClick = { onTextFieldValueChanged(TextFieldValue()) }
-                            )
-                        }
+                        if (textFieldValue.text.isNotEmpty()) SecondaryTextButton(
+                            text = "Clear",
+                            onClick = { onTextFieldValueChanged(TextFieldValue()) }
+                        )
                     }
                 )
             }

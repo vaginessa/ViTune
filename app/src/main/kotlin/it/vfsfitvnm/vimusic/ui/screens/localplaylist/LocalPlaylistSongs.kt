@@ -100,9 +100,7 @@ fun LocalPlaylistSongs(
         extraItemCount = 1
     )
 
-    var isRenaming by rememberSaveable {
-        mutableStateOf(false)
-    }
+    var isRenaming by rememberSaveable { mutableStateOf(false) }
 
     if (isRenaming) TextFieldDialog(
         hintText = "Enter the playlist name",
@@ -115,9 +113,7 @@ fun LocalPlaylistSongs(
         }
     )
 
-    var isDeleting by rememberSaveable {
-        mutableStateOf(false)
-    }
+    var isDeleting by rememberSaveable { mutableStateOf(false) }
 
     if (isDeleting) ConfirmationDialog(
         text = "Do you really want to delete this playlist?",
@@ -150,18 +146,15 @@ fun LocalPlaylistSongs(
             ) {
                 Header(
                     title = playlistWithSongs?.playlist?.name ?: "Unknown",
-                    modifier = Modifier
-                        .padding(bottom = 8.dp)
+                    modifier = Modifier.padding(bottom = 8.dp)
                 ) {
                     SecondaryTextButton(
                         text = "Enqueue",
                         enabled = playlistWithSongs?.songs?.isNotEmpty() == true,
                         onClick = {
-                            playlistWithSongs?.songs
-                                ?.map(Song::asMediaItem)
-                                ?.let { mediaItems ->
-                                    binder?.player?.enqueue(mediaItems)
-                                }
+                            playlistWithSongs?.songs?.map(Song::asMediaItem)?.let { mediaItems ->
+                                binder?.player?.enqueue(mediaItems)
+                            }
                         }
                     )
 
@@ -224,7 +217,8 @@ fun LocalPlaylistSongs(
                                                 onClick = {
                                                     menuState.hide()
                                                     binder?.player?.pause()
-                                                    if (!launchYouTubeMusic(
+                                                    if (
+                                                        !launchYouTubeMusic(
                                                             context = context,
                                                             endpoint = "watch?v=${firstSongId}&list=${
                                                                 playlistWithSongs?.playlist?.browseId

@@ -7,7 +7,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -39,7 +38,6 @@ import it.vfsfitvnm.vimusic.utils.isAtLeastAndroid6
 import it.vfsfitvnm.vimusic.utils.toast
 import kotlin.math.floor
 
-@ExperimentalAnimationApi
 @OptIn(UnstableApi::class)
 @Composable
 fun PlayerSettings() = with(PlayerPreferences) {

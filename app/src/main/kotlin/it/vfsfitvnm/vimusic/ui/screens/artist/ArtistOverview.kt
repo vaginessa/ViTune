@@ -96,10 +96,7 @@ fun ArtistOverview(
                             .asPaddingValues()
                     )
             ) {
-                Box(
-                    modifier = Modifier
-                        .padding(endPaddingValues)
-                ) {
+                Box(modifier = Modifier.padding(endPaddingValues)) {
                     headerContent {
                         youtubeArtistPage?.shuffleEndpoint?.let { endpoint ->
                             SecondaryTextButton(
@@ -134,8 +131,7 @@ fun ArtistOverview(
                                 BasicText(
                                     text = "View all",
                                     style = typography.xs.secondary,
-                                    modifier = sectionTextModifier
-                                        .clickable(onClick = onViewAllSongsClick),
+                                    modifier = sectionTextModifier.clickable(onClick = onViewAllSongsClick),
                                 )
                             }
                         }
@@ -187,8 +183,7 @@ fun ArtistOverview(
                                 BasicText(
                                     text = "View all",
                                     style = typography.xs.secondary,
-                                    modifier = sectionTextModifier
-                                        .clickable(onClick = onViewAllAlbumsClick),
+                                    modifier = sectionTextModifier.clickable(onClick = onViewAllAlbumsClick),
                                 )
                             }
                         }
@@ -207,8 +202,9 @@ fun ArtistOverview(
                                     thumbnailSizePx = albumThumbnailSizePx,
                                     thumbnailSizeDp = albumThumbnailSizeDp,
                                     alternative = true,
-                                    modifier = Modifier
-                                        .clickable(onClick = { onAlbumClick(album.key) })
+                                    modifier = Modifier.clickable(onClick = {
+                                        onAlbumClick(album.key)
+                                    })
                                 )
                             }
                         }
@@ -232,16 +228,14 @@ fun ArtistOverview(
                                 BasicText(
                                     text = "View all",
                                     style = typography.xs.secondary,
-                                    modifier = sectionTextModifier
-                                        .clickable(onClick = onViewAllSinglesClick),
+                                    modifier = sectionTextModifier.clickable(onClick = onViewAllSinglesClick),
                                 )
                             }
                         }
 
                         LazyRow(
                             contentPadding = endPaddingValues,
-                            modifier = Modifier
-                                .fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth()
                         ) {
                             items(
                                 items = singles,
@@ -277,11 +271,8 @@ fun ArtistOverview(
                             )
 
                             BasicText(
-                                text = if (attributionsIndex == -1) {
-                                    description
-                                } else {
-                                    description.substring(0, attributionsIndex)
-                                },
+                                text = if (attributionsIndex == -1) description
+                                else description.substring(0, attributionsIndex),
                                 style = typography.xxs.secondary,
                                 modifier = Modifier
                                     .padding(horizontal = 8.dp)
@@ -297,17 +288,15 @@ fun ArtistOverview(
                             )
                         }
 
-                        if (attributionsIndex != -1) {
-                            BasicText(
-                                text = "From Wikipedia under Creative Commons Attribution CC-BY-SA 3.0",
-                                style = typography.xxs.color(colorPalette.textDisabled)
-                                    .align(TextAlign.End),
-                                modifier = Modifier
-                                    .padding(horizontal = 16.dp)
-                                    .padding(bottom = 16.dp)
-                                    .padding(endPaddingValues)
-                            )
-                        }
+                        if (attributionsIndex != -1) BasicText(
+                            text = "From Wikipedia under Creative Commons Attribution CC-BY-SA 3.0",
+                            style = typography.xxs.color(colorPalette.textDisabled)
+                                .align(TextAlign.End),
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp)
+                                .padding(bottom = 16.dp)
+                                .padding(endPaddingValues)
+                        )
                     }
                 } else {
                     ShimmerHost {

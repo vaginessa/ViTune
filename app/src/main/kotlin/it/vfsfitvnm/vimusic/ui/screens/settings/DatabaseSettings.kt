@@ -1,6 +1,5 @@
 package it.vfsfitvnm.vimusic.ui.screens.settings
 
-import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -37,6 +36,7 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
 import kotlin.system.exitProcess
 
 @ExperimentalAnimationApi
@@ -56,12 +56,11 @@ fun DatabaseSettings() {
             query {
                 Database.checkpoint()
 
-                context.applicationContext.contentResolver.openOutputStream(uri)
-                    ?.use { outputStream ->
-                        FileInputStream(Database.internal.path).use { inputStream ->
-                            inputStream.copyTo(outputStream)
-                        }
+                context.applicationContext.contentResolver.openOutputStream(uri)?.use { output ->
+                    FileInputStream(Database.internal.path).use { input ->
+                        input.copyTo(output)
                     }
+                }
             }
         }
 
@@ -141,8 +140,7 @@ fun DatabaseSettings() {
                 title = "Backup",
                 text = "Export the database to the external storage",
                 onClick = {
-                    @SuppressLint("SimpleDateFormat")
-                    val dateFormat = SimpleDateFormat("yyyyMMddHHmmss")
+                    val dateFormat = SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault())
 
                     try {
                         backupLauncher.launch("vimusic_${dateFormat.format(Date())}.db")

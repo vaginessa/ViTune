@@ -155,13 +155,8 @@ fun Queue(
             mutableIntStateOf(if (player.mediaItemCount == 0) -1 else player.currentMediaItemIndex)
         }
 
-        var windows by remember {
-            mutableStateOf(player.currentTimeline.windows)
-        }
-
-        var shouldBePlaying by remember {
-            mutableStateOf(binder.player.shouldBePlaying)
-        }
+        var windows by remember { mutableStateOf(player.currentTimeline.windows) }
+        var shouldBePlaying by remember { mutableStateOf(binder.player.shouldBePlaying) }
 
         player.DisposableListener {
             object : Player.Listener {
@@ -355,14 +350,10 @@ fun Queue(
                                 var isCreatingNewPlaylist by rememberSaveable { mutableStateOf(false) }
 
                                 val playlistPreviews by remember {
-                                    Database
-                                        .playlistPreviews(
-                                            PlaylistSortBy.DateAdded,
-                                            SortOrder.Descending
-                                        )
-                                        .onFirst {
-                                            isCreatingNewPlaylist = it.isEmpty()
-                                        }
+                                    Database.playlistPreviews(
+                                        sortBy = PlaylistSortBy.DateAdded,
+                                        sortOrder = SortOrder.Descending
+                                    ).onFirst { isCreatingNewPlaylist = it.isEmpty() }
                                 }.collectAsState(initial = null, context = Dispatchers.IO)
 
                                 if (isCreatingNewPlaylist) TextFieldDialog(

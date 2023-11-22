@@ -1,6 +1,5 @@
 package it.vfsfitvnm.compose.routing
 
-import android.annotation.SuppressLint
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 
@@ -11,12 +10,9 @@ class RouteHandlerScope(
     private val push: (Route?) -> Unit,
     val pop: () -> Unit,
 ) {
-    @SuppressLint("ComposableNaming")
     @Composable
-    inline fun host(content: @Composable () -> Unit) {
-        if (route == null) {
-            content()
-        }
+    inline fun NavHost(content: @Composable () -> Unit) {
+        if (route == null) content()
     }
 
     operator fun Route.invoke() {

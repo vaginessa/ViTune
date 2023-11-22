@@ -31,4 +31,4 @@ data class Appearance(
     }
 }
 
-val LocalAppearance by lazy { staticCompositionLocalOf<Appearance> { TODO() } }
+val LocalAppearance by lazy { staticCompositionLocalOf<Appearance> { error("No appearance provided") } }

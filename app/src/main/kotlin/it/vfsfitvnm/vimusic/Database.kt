@@ -501,13 +501,14 @@ abstract class DatabaseInitializer protected constructor() : RoomDatabase() {
     abstract val database: Database
 
     companion object {
+        @Volatile
         lateinit var instance: DatabaseInitializer
 
         private fun buildDatabase() = Room
             .databaseBuilder(
-                Dependencies.application.applicationContext,
-                DatabaseInitializer::class.java,
-                "data.db"
+                context = Dependencies.application.applicationContext,
+                klass = DatabaseInitializer::class.java,
+                name = "data.db"
             )
             .addMigrations(
                 From8To9Migration(),
@@ -519,12 +520,10 @@ abstract class DatabaseInitializer protected constructor() : RoomDatabase() {
             .build()
 
         operator fun invoke() {
-            if (!::instance.isInitialized) {
-                instance = buildDatabase()
-            }
+            if (!::instance.isInitialized) reload()
         }
 
-        fun reload() {
+        fun reload() = synchronized(this) {
             instance = buildDatabase()
         }
     }
@@ -673,42 +672,36 @@ abstract class DatabaseInitializer protected constructor() : RoomDatabase() {
     }
 
     class From23To24Migration : Migration(23, 24) {
-        override fun migrate(db: SupportSQLiteDatabase) {
+        override fun migrate(db: SupportSQLiteDatabase) =
             db.execSQL("ALTER TABLE Song ADD COLUMN loudnessBoost REAL")
-        }
     }
 }
 
 @TypeConverters
-@Suppress("unused")
 object Converters {
     @TypeConverter
     @OptIn(UnstableApi::class)
-    fun mediaItemFromByteArray(value: ByteArray?): MediaItem? {
-        return value?.let { byteArray ->
-            runCatching {
-                val parcel = Parcel.obtain()
-                parcel.unmarshall(byteArray, 0, byteArray.size)
-                parcel.setDataPosition(0)
-                val bundle = parcel.readBundle(MediaItem::class.java.classLoader)
-                parcel.recycle()
+    fun mediaItemFromByteArray(value: ByteArray?): MediaItem? = value?.let { byteArray ->
+        runCatching {
+            val parcel = Parcel.obtain()
+            parcel.unmarshall(byteArray, 0, byteArray.size)
+            parcel.setDataPosition(0)
+            val bundle = parcel.readBundle(MediaItem::class.java.classLoader)
+            parcel.recycle()
 
-                bundle?.let(MediaItem.CREATOR::fromBundle)
-            }.getOrNull()
-        }
+            bundle?.let(MediaItem.CREATOR::fromBundle)
+        }.getOrNull()
     }
 
     @TypeConverter
     @OptIn(UnstableApi::class)
-    fun mediaItemToByteArray(mediaItem: MediaItem?): ByteArray? {
-        return mediaItem?.toBundle()?.let { persistableBundle ->
-            val parcel = Parcel.obtain()
-            parcel.writeBundle(persistableBundle)
-            val bytes = parcel.marshall()
-            parcel.recycle()
+    fun mediaItemToByteArray(mediaItem: MediaItem?): ByteArray? = mediaItem?.toBundle()?.let {
+        val parcel = Parcel.obtain()
+        parcel.writeBundle(it)
+        val bytes = parcel.marshall()
+        parcel.recycle()
 
-            bytes
-        }
+        bytes
     }
 }
 

@@ -101,7 +101,6 @@ private fun onDismiss(binder: PlayerService.Binder) {
 }
 
 @kotlin.OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
-@OptIn(UnstableApi::class)
 @Composable
 fun Player(layoutState: BottomSheetState, modifier: Modifier = Modifier) {
     val menuState = LocalMenuState.current
@@ -475,7 +474,7 @@ fun Player(layoutState: BottomSheetState, modifier: Modifier = Modifier) {
     }
 }
 
-@ExperimentalAnimationApi
+@kotlin.OptIn(ExperimentalAnimationApi::class)
 @Composable
 @OptIn(UnstableApi::class)
 private fun PlayerMenu(

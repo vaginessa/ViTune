@@ -96,17 +96,13 @@ fun HomeAlbums(
                         onClick = { albumSortBy = AlbumSortBy.DateAdded }
                     )
 
-                    Spacer(
-                        modifier = Modifier
-                            .width(2.dp)
-                    )
+                    Spacer(modifier = Modifier.width(2.dp))
 
                     HeaderIconButton(
                         icon = R.drawable.arrow_up,
                         color = colorPalette.text,
                         onClick = { albumSortOrder = !albumSortOrder },
-                        modifier = Modifier
-                            .graphicsLayer { rotationZ = sortOrderIconRotation }
+                        modifier = Modifier.graphicsLayer { rotationZ = sortOrderIconRotation }
                     )
                 }
             }

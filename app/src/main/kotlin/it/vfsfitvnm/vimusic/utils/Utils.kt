@@ -93,17 +93,13 @@ val Song.asMediaItem: MediaItem
         .setCustomCacheKey(id)
         .build()
 
-fun String?.thumbnail(size: Int): String? {
-    return when {
-        this?.startsWith("https://lh3.googleusercontent.com") == true -> "$this-w$size-h$size"
-        this?.startsWith("https://yt3.ggpht.com") == true -> "$this-w$size-h$size-s$size"
-        else -> this
-    }
+fun String?.thumbnail(size: Int) = when {
+    this?.startsWith("https://lh3.googleusercontent.com") == true -> "$this-w$size-h$size"
+    this?.startsWith("https://yt3.ggpht.com") == true -> "$this-w$size-h$size-s$size"
+    else -> this
 }
 
-fun Uri?.thumbnail(size: Int): Uri? {
-    return toString().thumbnail(size)?.toUri()
-}
+fun Uri?.thumbnail(size: Int) = toString().thumbnail(size)?.toUri()
 
 fun formatAsDuration(millis: Long) = DateUtils.formatElapsedTime(millis / 1000).removePrefix("0")
 
@@ -118,8 +114,9 @@ suspend fun Result<Innertube.PlaylistOrAlbumPage>.completed(maxDepth: Int = Int.
 
         if (otherPlaylistPageResult.isFailure) break
         val songs = otherPlaylistPageResult.getOrNull()?.takeIf { result ->
-            result.items?.let { items -> items.isNotEmpty() &&
-                    playlistPage.songsPage?.items?.none { it in items } != false } != false
+            result.items?.let { items ->
+                items.isNotEmpty() && playlistPage.songsPage?.items?.none { it in items } != false
+            } != false
         } ?: break
 
         playlistPage = playlistPage.copy(songsPage = playlistPage.songsPage + songs)

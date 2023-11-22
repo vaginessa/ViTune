@@ -91,7 +91,7 @@ import it.vfsfitvnm.vimusic.utils.RingBuffer
 import it.vfsfitvnm.vimusic.utils.TimerJob
 import it.vfsfitvnm.vimusic.utils.YouTubeRadio
 import it.vfsfitvnm.vimusic.utils.activityPendingIntent
-import it.vfsfitvnm.vimusic.utils.broadCastPendingIntent
+import it.vfsfitvnm.vimusic.utils.broadcastPendingIntent
 import it.vfsfitvnm.vimusic.utils.findNextMediaItemById
 import it.vfsfitvnm.vimusic.utils.forcePlayFromBeginning
 import it.vfsfitvnm.vimusic.utils.forceSeekToNext
@@ -139,7 +139,6 @@ val MediaItem.isLocal get() = mediaId.startsWith(LOCAL_KEY_PREFIX)
 val Song.isLocal get() = id.startsWith(LOCAL_KEY_PREFIX)
 
 @kotlin.OptIn(ExperimentalCoroutinesApi::class)
-@Suppress("DEPRECATION")
 @OptIn(UnstableApi::class)
 class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListener.Callback {
     private lateinit var mediaSession: MediaSession
@@ -225,7 +224,6 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             else -> LeastRecentlyUsedCacheEvictor(size.bytes)
         }
 
-        // TODO: Remove in a future release
         val directory = cacheDir.resolve("exoplayer").also { directory ->
             if (directory.exists()) return@also
 
@@ -239,6 +237,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
             filesDir.resolve("coil").deleteRecursively()
         }
+
         cache = SimpleCache(directory, cacheEvictor, StandaloneDatabaseProvider(this))
 
         player = ExoPlayer.Builder(this, createRendersFactory(), createMediaSourceFactory())
@@ -263,7 +262,6 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         maybeRestorePlayerQueue()
 
         mediaSession = MediaSession(baseContext, "PlayerService")
-        mediaSession.setFlags(MediaSession.FLAG_HANDLES_MEDIA_BUTTONS or MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS)
         mediaSession.setCallback(SessionCallback(player))
         mediaSession.setPlaybackState(stateBuilder.build())
         mediaSession.isActive = true
@@ -340,7 +338,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         if (!player.shouldBePlaying || PlayerPreferences.stopWhenClosed)
-            broadCastPendingIntent<NotificationDismissReceiver>().send()
+            broadcastPendingIntent<NotificationDismissReceiver>().send()
         super.onTaskRemoved(rootIntent)
     }
 
@@ -583,34 +581,35 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         mediaSession.setMetadata(metadataBuilder.build())
     }
 
-    @SuppressLint("NewApi")
     private fun maybeResumePlaybackWhenDeviceConnected() {
-        if (!isAtLeastAndroid6) return
+        if (isAtLeastAndroid6) { // to all never-nesters, I'm sorry, to Google, please fix lint
+            if (PlayerPreferences.resumePlaybackWhenDeviceConnected) {
+                if (audioManager == null) audioManager = getSystemService<AudioManager>()
 
-        if (PlayerPreferences.resumePlaybackWhenDeviceConnected) {
-            if (audioManager == null) audioManager = getSystemService<AudioManager>()
+                audioDeviceCallback = object : AudioDeviceCallback() {
+                    private fun canPlayMusic(audioDeviceInfo: AudioDeviceInfo): Boolean {
+                        if (!audioDeviceInfo.isSink) return false
 
-            audioDeviceCallback = object : AudioDeviceCallback() {
-                private fun canPlayMusic(audioDeviceInfo: AudioDeviceInfo): Boolean {
-                    if (!audioDeviceInfo.isSink) return false
+                        return (audioDeviceInfo.type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP ||
+                                audioDeviceInfo.type == AudioDeviceInfo.TYPE_WIRED_HEADSET ||
+                                audioDeviceInfo.type == AudioDeviceInfo.TYPE_WIRED_HEADPHONES).let {
+                            if (isAtLeastAndroid8) it || audioDeviceInfo.type == AudioDeviceInfo.TYPE_USB_HEADSET else it
+                        }
+                    }
 
-                    return audioDeviceInfo.type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP ||
-                            audioDeviceInfo.type == AudioDeviceInfo.TYPE_WIRED_HEADSET ||
-                            audioDeviceInfo.type == AudioDeviceInfo.TYPE_WIRED_HEADPHONES ||
-                            audioDeviceInfo.type == AudioDeviceInfo.TYPE_USB_HEADSET
+                    override fun onAudioDevicesAdded(addedDevices: Array<AudioDeviceInfo>) {
+                        if (!player.isPlaying && addedDevices.any(::canPlayMusic)) player.play()
+                    }
+
+                    override fun onAudioDevicesRemoved(removedDevices: Array<AudioDeviceInfo>) =
+                        Unit
                 }
 
-                override fun onAudioDevicesAdded(addedDevices: Array<AudioDeviceInfo>) {
-                    if (!player.isPlaying && addedDevices.any(::canPlayMusic)) player.play()
-                }
-
-                override fun onAudioDevicesRemoved(removedDevices: Array<AudioDeviceInfo>) = Unit
+                audioManager?.registerAudioDeviceCallback(audioDeviceCallback, handler)
+            } else {
+                audioManager?.unregisterAudioDeviceCallback(audioDeviceCallback)
+                audioDeviceCallback = null
             }
-
-            audioManager?.registerAudioDeviceCallback(audioDeviceCallback, handler)
-        } else {
-            audioManager?.unregisterAudioDeviceCallback(audioDeviceCallback)
-            audioDeviceCallback = null
         }
     }
 
@@ -650,17 +649,17 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             else -> PlaybackState.STATE_NONE
         }
 
+    // legacy behavior may cause inconsistencies, but not available on sdk 24 or lower
+    @Suppress("DEPRECATION")
     override fun onEvents(player: Player, events: Player.Events) {
-        if (player.duration != C.TIME_UNSET) {
-            mediaSession.setMetadata(
-                metadataBuilder
-                    .putText(MediaMetadata.METADATA_KEY_TITLE, player.mediaMetadata.title)
-                    .putText(MediaMetadata.METADATA_KEY_ARTIST, player.mediaMetadata.artist)
-                    .putText(MediaMetadata.METADATA_KEY_ALBUM, player.mediaMetadata.albumTitle)
-                    .putLong(MediaMetadata.METADATA_KEY_DURATION, player.duration)
-                    .build()
-            )
-        }
+        if (player.duration != C.TIME_UNSET) mediaSession.setMetadata(
+            metadataBuilder
+                .putText(MediaMetadata.METADATA_KEY_TITLE, player.mediaMetadata.title)
+                .putText(MediaMetadata.METADATA_KEY_ARTIST, player.mediaMetadata.artist)
+                .putText(MediaMetadata.METADATA_KEY_ALBUM, player.mediaMetadata.albumTitle)
+                .putLong(MediaMetadata.METADATA_KEY_DURATION, player.duration)
+                .build()
+        )
 
         updatePlaybackState()
 
@@ -710,6 +709,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
         val mediaMetadata = player.mediaMetadata
 
+        @Suppress("DEPRECATION") // support for SDK < 26
         val builder = if (isAtLeastAndroid8) {
             Notification.Builder(applicationContext, NOTIFICATION_CHANNEL_ID)
         } else {
@@ -722,15 +722,14 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             .setAutoCancel(false)
             .setOnlyAlertOnce(true)
             .setShowWhen(false)
-            .setSmallIcon(player.playerError?.let { R.drawable.alert_circle }
-                ?: R.drawable.app_icon)
+            .setSmallIcon(player.playerError?.let { R.drawable.alert_circle } ?: R.drawable.app_icon)
             .setOngoing(false)
             .setContentIntent(activityPendingIntent<MainActivity>(
                 flags = PendingIntent.FLAG_UPDATE_CURRENT
             ) {
                 putExtra("expandPlayerBottomSheet", true)
             })
-            .setDeleteIntent(broadCastPendingIntent<NotificationDismissReceiver>())
+            .setDeleteIntent(broadcastPendingIntent<NotificationDismissReceiver>())
             .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setCategory(NotificationCompat.CATEGORY_TRANSPORT)
             .setStyle(
@@ -884,7 +883,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
     private fun createRendersFactory(): RenderersFactory {
         val minimumSilenceDuration = PlayerPreferences.minimumSilence.coerceIn(1000L..2_000_000L)
-        val audioSink = DefaultAudioSink.Builder()
+        val audioSink = DefaultAudioSink.Builder(applicationContext)
             .setEnableFloatOutput(false)
             .setEnableAudioTrackPlaybackParams(false)
             .setOffloadMode(DefaultAudioSink.OFFLOAD_MODE_DISABLED)

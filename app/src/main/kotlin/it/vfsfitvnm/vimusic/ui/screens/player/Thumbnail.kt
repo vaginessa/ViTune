@@ -68,13 +68,8 @@ fun Thumbnail(
         it to (it - 64.dp).px
     }
 
-    var nullableWindow by remember {
-        mutableStateOf(player.currentWindow)
-    }
-
-    var error by remember {
-        mutableStateOf<PlaybackException?>(player.playerError)
-    }
+    var nullableWindow by remember { mutableStateOf(player.currentWindow) }
+    var error by remember { mutableStateOf<PlaybackException?>(player.playerError) }
 
     player.DisposableListener {
         object : Player.Listener {

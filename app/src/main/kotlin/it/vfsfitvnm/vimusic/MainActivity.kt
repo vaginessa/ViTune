@@ -55,7 +55,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.coerceAtLeast
-import androidx.compose.ui.unit.coerceIn
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
@@ -103,14 +102,12 @@ import kotlinx.coroutines.withContext
 class MainActivity : ComponentActivity() {
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            if (service is PlayerService.Binder) {
-                this@MainActivity.binder = service
-            }
+            if (service is PlayerService.Binder) this@MainActivity.binder = service
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
             binder = null
-            // Try to rebind, otherwise die
+            // Try to rebind, otherwise fail
             unbindService(this)
             bindService(intent<PlayerService>(), this, Context.BIND_AUTO_CREATE)
         }
@@ -173,9 +170,9 @@ class MainActivity : ComponentActivity() {
                     binder?.setBitmapListener { bitmap: Bitmap? ->
                         if (bitmap == null) {
                             val colorPalette = colorPaletteOf(
-                                ColorPaletteName.Dynamic,
-                                colorPaletteMode,
-                                isSystemInDarkTheme
+                                colorPaletteName = ColorPaletteName.Dynamic,
+                                colorPaletteMode = colorPaletteMode,
+                                isSystemInDarkMode = isSystemInDarkTheme
                             )
 
                             setSystemBarAppearance(colorPalette.isDark)
@@ -212,8 +209,11 @@ class MainActivity : ComponentActivity() {
                                     bitmapListenerJob?.cancel()
                                     binder?.setBitmapListener(null)
 
-                                    val colorPalette =
-                                        colorPaletteOf(name, mode, isSystemInDarkTheme)
+                                    val colorPalette = colorPaletteOf(
+                                        colorPaletteName = name,
+                                        colorPaletteMode = mode,
+                                        isSystemInDarkMode = isSystemInDarkTheme
+                                    )
 
                                     setSystemBarAppearance(colorPalette.isDark)
 
@@ -225,10 +225,9 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                         launch {
-                            snapshotFlow { thumbnailRoundness }
-                                .collectLatest {
-                                    appearance = appearance.copy(thumbnailShapeCorners = it.dp)
-                                }
+                            snapshotFlow { thumbnailRoundness }.collectLatest {
+                                appearance = appearance.copy(thumbnailShapeCorners = it.dp)
+                            }
                         }
                         launch {
                             snapshotFlow { useSystemFont to applyFontPadding }.collectLatest { (system, padding) ->
@@ -319,8 +318,7 @@ class MainActivity : ComponentActivity() {
                         val bottom =
                             if (imeVisible) imeBottomDp.coerceAtLeast(playerBottomSheetState.value)
                             else playerBottomSheetState.value.coerceIn(
-                                animatedBottomDp,
-                                playerBottomSheetState.collapsedBound
+                                animatedBottomDp..playerBottomSheetState.collapsedBound
                             )
 
                         windowsInsets
@@ -460,18 +458,15 @@ class MainActivity : ComponentActivity() {
             isAppearanceLightNavigationBars = !isDark
         }
 
-        if (!isAtLeastAndroid6) {
-            window.statusBarColor =
-                (if (isDark) Color.Transparent else Color.Black.copy(alpha = 0.2f)).toArgb()
-        }
+        if (!isAtLeastAndroid6) window.statusBarColor =
+            (if (isDark) Color.Transparent else Color.Black.copy(alpha = 0.2f)).toArgb()
 
-        if (!isAtLeastAndroid8) {
-            window.navigationBarColor =
-                (if (isDark) Color.Transparent else Color.Black.copy(alpha = 0.2f)).toArgb()
-        }
+        if (!isAtLeastAndroid8) window.navigationBarColor =
+            (if (isDark) Color.Transparent else Color.Black.copy(alpha = 0.2f)).toArgb()
     }
 }
 
 val LocalPlayerServiceBinder = staticCompositionLocalOf<PlayerService.Binder?> { null }
 
-val LocalPlayerAwareWindowInsets = staticCompositionLocalOf<WindowInsets> { TODO() }
+val LocalPlayerAwareWindowInsets =
+    staticCompositionLocalOf<WindowInsets> { error("No player insets provided") }

@@ -101,17 +101,13 @@ fun HomeArtistList(
                         onClick = { artistSortBy = ArtistSortBy.DateAdded }
                     )
 
-                    Spacer(
-                        modifier = Modifier
-                            .width(2.dp)
-                    )
+                    Spacer(modifier = Modifier.width(2.dp))
 
                     HeaderIconButton(
                         icon = R.drawable.arrow_up,
                         color = colorPalette.text,
                         onClick = { artistSortOrder = !artistSortOrder },
-                        modifier = Modifier
-                            .graphicsLayer { rotationZ = sortOrderIconRotation }
+                        modifier = Modifier.graphicsLayer { rotationZ = sortOrderIconRotation }
                     )
                 }
             }

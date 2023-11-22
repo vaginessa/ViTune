@@ -1,7 +1,5 @@
 package it.vfsfitvnm.vimusic.ui.screens.mood
 
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -51,8 +49,6 @@ import it.vfsfitvnm.vimusic.utils.semiBold
 
 internal const val defaultBrowseId = "FEmusic_moods_and_genres_category"
 
-@ExperimentalFoundationApi
-@ExperimentalAnimationApi
 @Composable
 fun MoodList(mood: Mood) {
     val (colorPalette, typography) = LocalAppearance.current

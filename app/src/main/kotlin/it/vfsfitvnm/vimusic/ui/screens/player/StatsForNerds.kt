@@ -69,39 +69,33 @@ fun StatsForNerds(
             mutableLongStateOf(binder.cache.getCachedBytes(mediaId, 0, -1))
         }
 
-        var format by remember {
-            mutableStateOf<Format?>(null)
-        }
+        var format by remember { mutableStateOf<Format?>(null) }
 
         LaunchedEffect(mediaId) {
             Database.format(mediaId).distinctUntilChanged().collectLatest { currentFormat ->
-                if (currentFormat?.itag == null) {
-                    binder.player.currentMediaItem?.takeIf { it.mediaId == mediaId }
-                        ?.let { mediaItem ->
-                            withContext(Dispatchers.IO) {
-                                delay(2000)
-                                Innertube.player(PlayerBody(videoId = mediaId))
-                                    ?.onSuccess { response ->
-                                        response.streamingData?.highestQualityFormat?.let { format ->
-                                            Database.insert(mediaItem)
-                                            Database.insert(
-                                                Format(
-                                                    songId = mediaId,
-                                                    itag = format.itag,
-                                                    mimeType = format.mimeType,
-                                                    bitrate = format.bitrate,
-                                                    loudnessDb = response.playerConfig?.audioConfig?.normalizedLoudnessDb,
-                                                    contentLength = format.contentLength,
-                                                    lastModified = format.lastModified
-                                                )
-                                            )
-                                        }
-                                    }
+                if (currentFormat?.itag == null) binder.player.currentMediaItem
+                    ?.takeIf { it.mediaId == mediaId }
+                    ?.let { mediaItem ->
+                        withContext(Dispatchers.IO) {
+                            delay(2000)
+                            Innertube.player(PlayerBody(videoId = mediaId))?.onSuccess { response ->
+                                response.streamingData?.highestQualityFormat?.let { format ->
+                                    Database.insert(mediaItem)
+                                    Database.insert(
+                                        Format(
+                                            songId = mediaId,
+                                            itag = format.itag,
+                                            mimeType = format.mimeType,
+                                            bitrate = format.bitrate,
+                                            loudnessDb = response.playerConfig?.audioConfig?.normalizedLoudnessDb,
+                                            contentLength = format.contentLength,
+                                            lastModified = format.lastModified
+                                        )
+                                    )
+                                }
                             }
                         }
-                } else {
-                    format = currentFormat
-                }
+                    } else format = currentFormat
             }
         }
 
@@ -129,11 +123,7 @@ fun StatsForNerds(
         Box(
             modifier = modifier
                 .pointerInput(Unit) {
-                    detectTapGestures(
-                        onTap = {
-                            onDismiss()
-                        }
-                    )
+                    detectTapGestures(onTap = { onDismiss() })
                 }
                 .background(colorPalette.overlay)
                 .fillMaxSize()

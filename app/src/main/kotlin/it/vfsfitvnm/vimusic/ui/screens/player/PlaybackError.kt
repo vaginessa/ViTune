@@ -32,44 +32,41 @@ fun PlaybackError(
     messageProvider: () -> String,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
-) {
+) = Box {
     val (_, typography) = LocalAppearance.current
 
-    Box {
-        AnimatedVisibility(
-            visible = isDisplayed,
-            enter = fadeIn(),
-            exit = fadeOut(),
-        ) {
-            Spacer(
-                modifier = modifier
-                    .pointerInput(Unit) {
-                        detectTapGestures(
-                            onTap = {
-                                onDismiss()
-                            }
-                        )
-                    }
-                    .fillMaxSize()
-                    .background(Color.Black.copy(0.8f))
-            )
-        }
+    AnimatedVisibility(
+        visible = isDisplayed,
+        enter = fadeIn(),
+        exit = fadeOut(),
+    ) {
+        Spacer(
+            modifier = modifier
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onTap = {
+                            onDismiss()
+                        }
+                    )
+                }
+                .fillMaxSize()
+                .background(Color.Black.copy(0.8f))
+        )
+    }
 
-        AnimatedVisibility(
-            visible = isDisplayed,
-            enter = slideInVertically { -it },
-            exit = slideOutVertically { -it },
+    AnimatedVisibility(
+        visible = isDisplayed,
+        enter = slideInVertically { -it },
+        exit = slideOutVertically { -it },
+        modifier = Modifier.align(Alignment.TopCenter)
+    ) {
+        BasicText(
+            text = remember { messageProvider() },
+            style = typography.xs.center.medium.color(PureBlackColorPalette.text),
             modifier = Modifier
-                .align(Alignment.TopCenter)
-        ) {
-            BasicText(
-                text = remember { messageProvider() },
-                style = typography.xs.center.medium.color(PureBlackColorPalette.text),
-                modifier = Modifier
-                    .background(Color.Black.copy(0.4f))
-                    .padding(all = 8.dp)
-                    .fillMaxWidth()
-            )
-        }
+                .background(Color.Black.copy(0.4f))
+                .padding(all = 8.dp)
+                .fillMaxWidth()
+        )
     }
 }

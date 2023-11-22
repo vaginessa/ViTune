@@ -100,7 +100,7 @@ fun HomeScreen(onPlaylistUrl: (String) -> Unit) {
             )
         }
 
-        host {
+        NavHost {
             Scaffold(
                 topIconButtonId = R.drawable.equalizer,
                 onTopIconButtonClick = { settingsRoute() },

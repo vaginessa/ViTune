@@ -61,23 +61,17 @@ fun HomePlaylists(
 ) = with(OrderPreferences) {
     val (colorPalette) = LocalAppearance.current
 
-    var isCreatingANewPlaylist by rememberSaveable {
-        mutableStateOf(false)
-    }
+    var isCreatingANewPlaylist by rememberSaveable { mutableStateOf(false) }
 
-    if (isCreatingANewPlaylist) {
-        TextFieldDialog(
-            hintText = "Enter the playlist name",
-            onDismiss = {
-                isCreatingANewPlaylist = false
-            },
-            onDone = { text ->
-                query {
-                    Database.insert(Playlist(name = text))
-                }
+    if (isCreatingANewPlaylist) TextFieldDialog(
+        hintText = "Enter the playlist name",
+        onDismiss = { isCreatingANewPlaylist = false },
+        onDone = { text ->
+            query {
+                Database.insert(Playlist(name = text))
             }
-        )
-    }
+        }
+    )
     var items by persistList<PlaylistPreview>("home/playlists")
 
     LaunchedEffect(playlistSortBy, playlistSortOrder) {
@@ -117,10 +111,7 @@ fun HomePlaylists(
                         onClick = { isCreatingANewPlaylist = true }
                     )
 
-                    Spacer(
-                        modifier = Modifier
-                            .weight(1f)
-                    )
+                    Spacer(modifier = Modifier.weight(1f))
 
                     HeaderIconButton(
                         icon = R.drawable.medical,
@@ -140,17 +131,13 @@ fun HomePlaylists(
                         onClick = { playlistSortBy = PlaylistSortBy.DateAdded }
                     )
 
-                    Spacer(
-                        modifier = Modifier
-                            .width(2.dp)
-                    )
+                    Spacer(modifier = Modifier.width(2.dp))
 
                     HeaderIconButton(
                         icon = R.drawable.arrow_up,
                         color = colorPalette.text,
                         onClick = { playlistSortOrder = !playlistSortOrder },
-                        modifier = Modifier
-                            .graphicsLayer { rotationZ = sortOrderIconRotation }
+                        modifier = Modifier.graphicsLayer { rotationZ = sortOrderIconRotation }
                     )
                 }
             }

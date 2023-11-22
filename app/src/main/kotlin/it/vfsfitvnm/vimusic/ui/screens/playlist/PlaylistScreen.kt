@@ -23,7 +23,7 @@ fun PlaylistScreen(
     RouteHandler(listenToGlobalEmitter = true) {
         GlobalRoutes()
 
-        host {
+        NavHost {
             Scaffold(
                 topIconButtonId = R.drawable.chevron_back,
                 onTopIconButtonClick = pop,

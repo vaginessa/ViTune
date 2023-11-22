@@ -99,24 +99,23 @@ fun ArtistLocalSongs(
                         key = { _, song -> song.id }
                     ) { index, song ->
                         SongItem(
-                            modifier = Modifier
-                                .combinedClickable(
-                                    onLongClick = {
-                                        menuState.display {
-                                            NonQueuedMediaItemMenu(
-                                                onDismiss = menuState::hide,
-                                                mediaItem = song.asMediaItem,
-                                            )
-                                        }
-                                    },
-                                    onClick = {
-                                        binder?.stopRadio()
-                                        binder?.player?.forcePlayAtIndex(
-                                            songs.map(Song::asMediaItem),
-                                            index
+                            modifier = Modifier.combinedClickable(
+                                onLongClick = {
+                                    menuState.display {
+                                        NonQueuedMediaItemMenu(
+                                            onDismiss = menuState::hide,
+                                            mediaItem = song.asMediaItem,
                                         )
                                     }
-                                ),
+                                },
+                                onClick = {
+                                    binder?.stopRadio()
+                                    binder?.player?.forcePlayAtIndex(
+                                        songs.map(Song::asMediaItem),
+                                        index
+                                    )
+                                }
+                            ),
                             song = song,
                             thumbnailSizePx = songThumbnailSizePx,
                             thumbnailSizeDp = songThumbnailSizeDp

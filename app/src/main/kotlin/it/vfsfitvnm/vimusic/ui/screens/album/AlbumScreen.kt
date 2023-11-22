@@ -9,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
@@ -65,7 +64,7 @@ fun AlbumScreen(browseId: String) {
             .collect { (currentAlbum, tabIndex) ->
                 album = currentAlbum
 
-                if (albumPage == null && (currentAlbum?.timestamp == null || tabIndex == 1)) {
+                if (albumPage == null && (currentAlbum?.timestamp == null || tabIndex == 1))
                     withContext(Dispatchers.IO) {
                         Innertube.albumPage(BrowseBody(browseId = browseId))
                             ?.onSuccess { currentAlbumPage ->
@@ -74,7 +73,7 @@ fun AlbumScreen(browseId: String) {
                                 Database.clearAlbum(browseId)
 
                                 Database.upsert(
-                                    Album(
+                                    album = Album(
                                         id = browseId,
                                         title = currentAlbumPage.title,
                                         thumbnailUrl = currentAlbumPage.thumbnail?.url,
@@ -85,7 +84,7 @@ fun AlbumScreen(browseId: String) {
                                         timestamp = System.currentTimeMillis(),
                                         bookmarkedAt = album?.bookmarkedAt
                                     ),
-                                    currentAlbumPage
+                                    songAlbumMaps = currentAlbumPage
                                         .songsPage
                                         ?.items
                                         ?.map(Innertube.SongItem::asMediaItem)
@@ -100,40 +99,27 @@ fun AlbumScreen(browseId: String) {
                                 )
                             }
                     }
-
-                }
             }
     }
 
     RouteHandler(listenToGlobalEmitter = true) {
         GlobalRoutes()
 
-        host {
+        NavHost {
             val headerContent: @Composable (textButton: (@Composable () -> Unit)?) -> Unit =
                 { textButton ->
-                    if (album?.timestamp == null) {
-                        HeaderPlaceholder(
-                            modifier = Modifier
-                                .shimmer()
-                        )
-                    } else {
+                    if (album?.timestamp == null) HeaderPlaceholder(modifier = Modifier.shimmer())
+                    else {
                         val (colorPalette) = LocalAppearance.current
                         val context = LocalContext.current
 
                         Header(title = album?.title ?: "Unknown") {
                             textButton?.invoke()
 
-                            Spacer(
-                                modifier = Modifier
-                                    .weight(1f)
-                            )
+                            Spacer(modifier = Modifier.weight(1f))
 
                             HeaderIconButton(
-                                icon = if (album?.bookmarkedAt == null) {
-                                    R.drawable.bookmark_outline
-                                } else {
-                                    R.drawable.bookmark
-                                },
+                                icon = if (album?.bookmarkedAt == null) R.drawable.bookmark_outline else R.drawable.bookmark,
                                 color = colorPalette.accent,
                                 onClick = {
                                     val bookmarkedAt =
@@ -159,10 +145,7 @@ fun AlbumScreen(browseId: String) {
                                         }
 
                                         context.startActivity(
-                                            Intent.createChooser(
-                                                sendIntent,
-                                                null
-                                            )
+                                            Intent.createChooser(sendIntent, null)
                                         )
                                     }
                                 }
@@ -203,22 +186,21 @@ fun AlbumScreen(browseId: String) {
                                 continuationPlaceholderCount = 1,
                                 emptyItemsText = "This album doesn't have any alternative version",
                                 itemsPageProvider = albumPage?.let {
-                                    ({
+                                    {
                                         Result.success(
                                             Innertube.ItemsPage(
                                                 items = albumPage?.otherVersions,
                                                 continuation = null
                                             )
                                         )
-                                    })
+                                    }
                                 },
                                 itemContent = { album ->
                                     AlbumItem(
                                         album = album,
                                         thumbnailSizePx = thumbnailSizePx,
                                         thumbnailSizeDp = thumbnailSizeDp,
-                                        modifier = Modifier
-                                            .clickable { albumRoute(album.key) }
+                                        modifier = Modifier.clickable { albumRoute(album.key) }
                                     )
                                 },
                                 itemPlaceholderContent = {

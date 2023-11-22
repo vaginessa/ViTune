@@ -56,7 +56,7 @@ fun SearchResultScreen(query: String, onSearchAgain: () -> Unit) {
     RouteHandler(listenToGlobalEmitter = true) {
         GlobalRoutes()
 
-        host {
+        NavHost {
             val headerContent: @Composable (textButton: (@Composable () -> Unit)?) -> Unit = {
                 Header(
                     title = query,
@@ -121,22 +121,21 @@ fun SearchResultScreen(query: String, onSearchAgain: () -> Unit) {
                                         song = song,
                                         thumbnailSizePx = thumbnailSizePx,
                                         thumbnailSizeDp = thumbnailSizeDp,
-                                        modifier = Modifier
-                                            .combinedClickable(
-                                                onLongClick = {
-                                                    menuState.display {
-                                                        NonQueuedMediaItemMenu(
-                                                            onDismiss = menuState::hide,
-                                                            mediaItem = song.asMediaItem,
-                                                        )
-                                                    }
-                                                },
-                                                onClick = {
-                                                    binder?.stopRadio()
-                                                    binder?.player?.forcePlay(song.asMediaItem)
-                                                    binder?.setupRadio(song.info?.endpoint)
+                                        modifier = Modifier.combinedClickable(
+                                            onLongClick = {
+                                                menuState.display {
+                                                    NonQueuedMediaItemMenu(
+                                                        onDismiss = menuState::hide,
+                                                        mediaItem = song.asMediaItem,
+                                                    )
                                                 }
-                                            )
+                                            },
+                                            onClick = {
+                                                binder?.stopRadio()
+                                                binder?.player?.forcePlay(song.asMediaItem)
+                                                binder?.setupRadio(song.info?.endpoint)
+                                            }
+                                        )
                                     )
                                 },
                                 itemPlaceholderContent = {
@@ -255,22 +254,21 @@ fun SearchResultScreen(query: String, onSearchAgain: () -> Unit) {
                                         video = video,
                                         thumbnailWidthDp = thumbnailWidthDp,
                                         thumbnailHeightDp = thumbnailHeightDp,
-                                        modifier = Modifier
-                                            .combinedClickable(
-                                                onLongClick = {
-                                                    menuState.display {
-                                                        NonQueuedMediaItemMenu(
-                                                            mediaItem = video.asMediaItem,
-                                                            onDismiss = menuState::hide
-                                                        )
-                                                    }
-                                                },
-                                                onClick = {
-                                                    binder?.stopRadio()
-                                                    binder?.player?.forcePlay(video.asMediaItem)
-                                                    binder?.setupRadio(video.info?.endpoint)
+                                        modifier = Modifier.combinedClickable(
+                                            onLongClick = {
+                                                menuState.display {
+                                                    NonQueuedMediaItemMenu(
+                                                        mediaItem = video.asMediaItem,
+                                                        onDismiss = menuState::hide
+                                                    )
                                                 }
-                                            )
+                                            },
+                                            onClick = {
+                                                binder?.stopRadio()
+                                                binder?.player?.forcePlay(video.asMediaItem)
+                                                binder?.setupRadio(video.info?.endpoint)
+                                            }
+                                        )
                                     )
                                 },
                                 itemPlaceholderContent = {
@@ -314,8 +312,9 @@ fun SearchResultScreen(query: String, onSearchAgain: () -> Unit) {
                                         playlist = playlist,
                                         thumbnailSizePx = thumbnailSizePx,
                                         thumbnailSizeDp = thumbnailSizeDp,
-                                        modifier = Modifier
-                                            .clickable(onClick = { playlistRoute(playlist.key) })
+                                        modifier = Modifier.clickable(onClick = {
+                                            playlistRoute(playlist.key)
+                                        })
                                     )
                                 },
                                 itemPlaceholderContent = {

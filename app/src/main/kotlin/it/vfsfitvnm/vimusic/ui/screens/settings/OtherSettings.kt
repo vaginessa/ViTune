@@ -69,6 +69,9 @@ fun OtherSettings() {
     val uriHandler = LocalUriHandler.current
     val (colorPalette) = LocalAppearance.current
 
+    val scrollState = rememberScrollState()
+    val coroutineScope = rememberCoroutineScope()
+
     var isAndroidAutoEnabled by remember {
         val component = ComponentName(context, PlayerMediaBrowserService::class.java)
         val disabledFlag = PackageManager.COMPONENT_ENABLED_STATE_DISABLED
@@ -93,10 +96,10 @@ fun OtherSettings() {
         mutableStateOf(context.isIgnoringBatteryOptimizations)
     }
 
-    val activityResultLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-            isIgnoringBatteryOptimizations = context.isIgnoringBatteryOptimizations
-        }
+    val activityResultLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+        onResult = { isIgnoringBatteryOptimizations = context.isIgnoringBatteryOptimizations }
+    )
 
     val queriesCount by remember {
         Database.queriesCount().distinctUntilChanged()
@@ -106,7 +109,7 @@ fun OtherSettings() {
         modifier = Modifier
             .background(colorPalette.background0)
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(scrollState)
             .padding(
                 LocalPlayerAwareWindowInsets.current
                     .only(WindowInsetsSides.Vertical + WindowInsetsSides.End)
@@ -178,11 +181,7 @@ fun OtherSettings() {
 
         SettingsEntry(
             title = "Ignore battery optimizations",
-            text = if (isIgnoringBatteryOptimizations) {
-                "Restriction already lifted"
-            } else {
-                "Disable background restrictions"
-            },
+            text = if (isIgnoringBatteryOptimizations) "Restriction already lifted" else "Disable background restrictions",
             onClick = {
                 if (!isAtLeastAndroid6) return@SettingsEntry
 
@@ -217,7 +216,7 @@ fun OtherSettings() {
         SettingsEntry(
             title = "Need help?",
             text = "Most of the time, it is not the developer's fault (even after turning on invincible service) that the app stops working properly in the background.\n" +
-                    "Check if your device manufacturer kills your apps / hates you (click to redirect)",
+                    "Check if your device manufacturer kills your apps (click to redirect)",
             onClick = {
                 uriHandler.openUri("https://dontkillmyapp.com/")
             }
@@ -281,6 +280,10 @@ fun OtherSettings() {
                 SecondaryTextButton(
                     text = "Show troubleshoot section",
                     onClick = {
+                        coroutineScope.launch {
+                            delay(500)
+                            scrollState.animateScrollTo(scrollState.maxValue)
+                        }
                         showTroubleshoot = true
                     },
                     modifier = Modifier

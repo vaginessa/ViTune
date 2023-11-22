@@ -96,7 +96,8 @@ fun QuickPicks(
         Database.trending().distinctUntilChanged().collect { songs ->
             val song = songs.firstOrNull()
             if (relatedPageResult == null || trending?.id != song?.id) {
-                relatedPageResult = Innertube.relatedPage(NextBody(videoId = (song?.id ?: "J7p4bzqLvCw")))
+                relatedPageResult =
+                    Innertube.relatedPage(NextBody(videoId = (song?.id ?: "J7p4bzqLvCw")))
             }
             trending = song
         }
@@ -122,11 +123,8 @@ fun QuickPicks(
         .padding(endPaddingValues)
 
     BoxWithConstraints {
-        val quickPicksLazyGridItemWidthFactor = if (isLandscape && maxWidth * 0.475f >= 320.dp) {
-            0.475f
-        } else {
-            0.9f
-        }
+        val quickPicksLazyGridItemWidthFactor =
+            if (isLandscape && maxWidth * 0.475f >= 320.dp) 0.475f else 0.9f
 
         val snapLayoutInfoProvider = remember(quickPicksLazyGridState) {
             SnapLayoutInfoProvider(
@@ -152,8 +150,7 @@ fun QuickPicks(
         ) {
             Header(
                 title = "Quick picks",
-                modifier = Modifier
-                    .padding(endPaddingValues)
+                modifier = Modifier.padding(endPaddingValues)
             )
 
             relatedPageResult?.getOrNull()?.let { related ->
@@ -203,8 +200,7 @@ fun QuickPicks(
                                     painter = painterResource(R.drawable.star),
                                     contentDescription = null,
                                     colorFilter = ColorFilter.tint(colorPalette.accent),
-                                    modifier = Modifier
-                                        .size(16.dp)
+                                    modifier = Modifier.size(16.dp)
                                 )
                             }
                         }
@@ -261,8 +257,7 @@ fun QuickPicks(
                                 thumbnailSizePx = albumThumbnailSizePx,
                                 thumbnailSizeDp = albumThumbnailSizeDp,
                                 alternative = true,
-                                modifier = Modifier
-                                    .clickable(onClick = { onAlbumClick(album.key) })
+                                modifier = Modifier.clickable(onClick = { onAlbumClick(album.key) })
                             )
                         }
                     }
@@ -285,8 +280,7 @@ fun QuickPicks(
                                 thumbnailSizePx = artistThumbnailSizePx,
                                 thumbnailSizeDp = artistThumbnailSizeDp,
                                 alternative = true,
-                                modifier = Modifier
-                                    .clickable(onClick = { onArtistClick(artist.key) })
+                                modifier = Modifier.clickable(onClick = { onArtistClick(artist.key) })
                             )
                         }
                     }
@@ -311,8 +305,7 @@ fun QuickPicks(
                                 thumbnailSizePx = playlistThumbnailSizePx,
                                 thumbnailSizeDp = playlistThumbnailSizeDp,
                                 alternative = true,
-                                modifier = Modifier
-                                    .clickable(onClick = { onPlaylistClick(playlist.key) })
+                                modifier = Modifier.clickable(onClick = { onPlaylistClick(playlist.key) })
                             )
                         }
                     }
@@ -329,9 +322,7 @@ fun QuickPicks(
                 )
             } ?: ShimmerHost {
                 repeat(4) {
-                    SongItemPlaceholder(
-                        thumbnailSizeDp = songThumbnailSizeDp,
-                    )
+                    SongItemPlaceholder(thumbnailSizeDp = songThumbnailSizeDp)
                 }
 
                 TextPlaceholder(modifier = sectionTextModifier)
