@@ -124,8 +124,9 @@ fun HomeSongs(
     val filteredItems by remember {
         derivedStateOf {
             filter?.lowercase()?.ifBlank { null }
-                ?.let { f -> items.filter { f in it.title.lowercase() }.sortedBy { it.title } }
-                ?: items
+                ?.let { f -> items.filter {
+                    f in it.title.lowercase() || f in it.artistsText?.lowercase().orEmpty()
+                }.sortedBy { it.title } } ?: items
         }
     }
 
