@@ -322,6 +322,24 @@ fun Queue(
                     .padding(horizontalBottomPaddingValues)
                     .height(64.dp)
             ) {
+                TextToggle(
+                    modifier = Modifier.align(Alignment.CenterStart),
+                    state = PlayerPreferences.queueLoopEnabled,
+                    toggleState = {
+                        PlayerPreferences.queueLoopEnabled = !PlayerPreferences.queueLoopEnabled
+                    },
+                    name = "Queue loop"
+                )
+
+                Image(
+                    painter = painterResource(R.drawable.chevron_down),
+                    contentDescription = null,
+                    colorFilter = ColorFilter.tint(colorPalette.text),
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(18.dp)
+                )
+
                 BasicText(
                     text = "${windows.size} songs",
                     style = typography.xxs.medium,
@@ -350,10 +368,12 @@ fun Queue(
                                 var isCreatingNewPlaylist by rememberSaveable { mutableStateOf(false) }
 
                                 val playlistPreviews by remember {
-                                    Database.playlistPreviews(
-                                        sortBy = PlaylistSortBy.DateAdded,
-                                        sortOrder = SortOrder.Descending
-                                    ).onFirst { isCreatingNewPlaylist = it.isEmpty() }
+                                    Database
+                                        .playlistPreviews(
+                                            sortBy = PlaylistSortBy.DateAdded,
+                                            sortOrder = SortOrder.Descending
+                                        )
+                                        .onFirst { isCreatingNewPlaylist = it.isEmpty() }
                                 }.collectAsState(initial = null, context = Dispatchers.IO)
 
                                 if (isCreatingNewPlaylist) TextFieldDialog(
@@ -410,26 +430,8 @@ fun Queue(
                             }
                         }
                         .background(colorPalette.background1)
-                        .align(Alignment.CenterStart)
+                        .align(Alignment.CenterEnd)
                         .padding(horizontal = 16.dp, vertical = 8.dp)
-                )
-
-                Image(
-                    painter = painterResource(R.drawable.chevron_down),
-                    contentDescription = null,
-                    colorFilter = ColorFilter.tint(colorPalette.text),
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .size(18.dp)
-                )
-
-                TextToggle(
-                    modifier = Modifier.align(Alignment.CenterEnd),
-                    state = PlayerPreferences.queueLoopEnabled,
-                    toggleState = {
-                        PlayerPreferences.queueLoopEnabled = !PlayerPreferences.queueLoopEnabled
-                    },
-                    name = "Queue loop"
                 )
             }
         }
