@@ -61,6 +61,8 @@ import it.vfsfitvnm.vimusic.LocalPlayerServiceBinder
 import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.models.Info
 import it.vfsfitvnm.vimusic.models.ui.UiMedia
+import it.vfsfitvnm.vimusic.preferences.PlayerPreferences
+import it.vfsfitvnm.vimusic.transaction
 import it.vfsfitvnm.vimusic.ui.components.SeekBar
 import it.vfsfitvnm.vimusic.ui.components.themed.BigIconButton
 import it.vfsfitvnm.vimusic.ui.screens.artistRoute
@@ -152,12 +154,24 @@ fun Controls(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            if (PlayerPreferences.showLike) BigIconButton(
+                iconId = if (likedAt == null) R.drawable.heart_outline else R.drawable.heart,
+                onClick = {
+                    transaction {
+                        Database.like(
+                            songId = media.id,
+                            likedAt = if (likedAt == null) System.currentTimeMillis() else null
+                        )
+                    }
+                },
+                modifier = Modifier.weight(1f)
+            )
             PlayButton(
                 radius = playButtonRadius,
                 shouldBePlaying = shouldBePlaying,
                 modifier = Modifier
                     .height(controlHeight)
-                    .weight(4f)
+                    .weight(if (PlayerPreferences.showLike) 3f else 4f)
             )
             SkipButton(
                 iconId = R.drawable.play_skip_forward,
@@ -358,7 +372,9 @@ private fun MediaInfo(media: UiMedia) {
     var maxHeight by rememberSaveable { mutableIntStateOf(0) }
 
     LaunchedEffect(media) {
-        artistInfo = withContext(Dispatchers.IO) { Database.songArtistInfo(media.id).takeIf { it.isNotEmpty() } }
+        artistInfo = withContext(Dispatchers.IO) {
+            Database.songArtistInfo(media.id).takeIf { it.isNotEmpty() }
+        }
     }
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {

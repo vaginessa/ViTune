@@ -130,6 +130,13 @@ fun AppearanceSettings() {
                 isChecked = PlayerPreferences.horizontalSwipeToClose,
                 onCheckedChange = { PlayerPreferences.horizontalSwipeToClose = it }
             )
+
+            SwitchSettingEntry(
+                title = "Show like button",
+                text = "Show the like button directly in the player",
+                isChecked = PlayerPreferences.showLike,
+                onCheckedChange = { PlayerPreferences.showLike = it }
+            )
         }
     }
 }

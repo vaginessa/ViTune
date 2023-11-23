@@ -3,6 +3,7 @@ package it.vfsfitvnm.vimusic.ui.components.themed
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -24,19 +25,22 @@ fun BigIconButton(
     @DrawableRes iconId: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    onPress: () -> Unit = {},
-    onCancel: () -> Unit = {},
+    onPress: (() -> Unit)? = null,
+    onCancel: (() -> Unit)? = null,
     backgroundColor: Color = LocalAppearance.current.colorPalette.background2,
     contentColor: Color = LocalAppearance.current.colorPalette.text,
     shape: Shape = RoundedCornerShape(32.dp)
 ) = Box(
     modifier
         .clip(shape)
-        .pressable(
-            onPress = onPress,
-            onCancel = onCancel,
-            onRelease = onClick
-        )
+        .let {
+            if (onPress == null && onCancel == null) it.clickable(onClick = onClick)
+            else it.pressable(
+                onPress = { onPress?.invoke() },
+                onCancel = { onCancel?.invoke() },
+                onRelease = onClick
+            )
+        }
         .background(backgroundColor)
         .height(64.dp),
     contentAlignment = Alignment.Center
