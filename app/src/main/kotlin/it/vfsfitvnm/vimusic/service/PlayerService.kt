@@ -267,18 +267,32 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         mediaSession.isActive = true
 
         coroutineScope.launch {
-            isLikedState
-                .onEach { withContext(Dispatchers.Main) { updatePlaybackState() } }
-                .collect()
+            var first = true
+            isLikedState.onEach {
+                // work around NPE in other processes
+                if (first) {
+                    first = false
+                    return@onEach
+                }
+                withContext(Dispatchers.Main) {
+                    updatePlaybackState()
+                    // work around NPE in other processes
+                    handler.post {
+                        applicationContext.getSystemService<NotificationManager>()
+                            ?.notify(NOTIFICATION_ID, notification())
+                    }
+                }
+            }.collect()
         }
 
-        notificationActionReceiver = NotificationActionReceiver(player)
+        notificationActionReceiver = NotificationActionReceiver()
 
         val filter = IntentFilter().apply {
             addAction(Action.play.value)
             addAction(Action.pause.value)
             addAction(Action.next.value)
             addAction(Action.previous.value)
+            addAction(Action.like.value)
         }
 
         registerReceiver(notificationActionReceiver, filter)
@@ -706,6 +720,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         val pauseIntent = Action.pause.pendingIntent
         val nextIntent = Action.next.pendingIntent
         val prevIntent = Action.previous.pendingIntent
+        val likeIntent = Action.like.pendingIntent
 
         val mediaMetadata = player.mediaMetadata
 
@@ -722,7 +737,8 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             .setAutoCancel(false)
             .setOnlyAlertOnce(true)
             .setShowWhen(false)
-            .setSmallIcon(player.playerError?.let { R.drawable.alert_circle } ?: R.drawable.app_icon)
+            .setSmallIcon(player.playerError?.let { R.drawable.alert_circle }
+                ?: R.drawable.app_icon)
             .setOngoing(false)
             .setContentIntent(activityPendingIntent<MainActivity>(
                 flags = PendingIntent.FLAG_UPDATE_CURRENT
@@ -744,6 +760,11 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                 if (player.shouldBePlaying) pauseIntent else playIntent
             )
             .addAction(R.drawable.play_skip_forward, "Skip forward", nextIntent)
+            .addAction(
+                if (isLikedState.value) R.drawable.heart else R.drawable.heart_outline,
+                "Like",
+                likeIntent
+            )
 
         bitmapProvider.load(mediaMetadata.artworkUri) { bitmap ->
             maybeShowSongCoverInLockScreen()
@@ -1014,6 +1035,15 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             song.contentLength?.let { cache.isCached(song.song.id, 0L, it) } ?: false
     }
 
+    private fun likeAction() = mediaItemState.value?.let { mediaItem ->
+        transaction {
+            Database.like(
+                mediaItem.mediaId,
+                if (isLikedState.value) null else System.currentTimeMillis()
+            )
+        }
+    }.let { }
+
     private inner class SessionCallback(private val player: Player) : MediaSession.Callback() {
         override fun onPlay() = player.play()
         override fun onPause() = player.pause()
@@ -1027,26 +1057,18 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
         override fun onCustomAction(action: String, extras: Bundle?) {
             super.onCustomAction(action, extras)
-            if (action == "LIKE") mediaItemState.value?.let { mediaItem ->
-                transaction {
-                    Database.like(
-                        mediaItem.mediaId,
-                        if (isLikedState.value) null else System.currentTimeMillis()
-                    )
-                }
-            }
+            if (action == "LIKE") likeAction()
         }
     }
 
-    class NotificationActionReceiver internal constructor(
-        private val player: Player
-    ) : BroadcastReceiver() {
+    inner class NotificationActionReceiver internal constructor() : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
                 Action.pause.value -> player.pause()
                 Action.play.value -> player.play()
                 Action.next.value -> player.forceSeekToNext()
                 Action.previous.value -> player.forceSeekToPrevious()
+                Action.like.value -> likeAction()
             }
         }
     }
@@ -1073,6 +1095,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             val play = Action("it.vfsfitvnm.vimusic.play")
             val next = Action("it.vfsfitvnm.vimusic.next")
             val previous = Action("it.vfsfitvnm.vimusic.previous")
+            val like = Action("it.vfsfitvnm.vimusic.like")
         }
     }
 
