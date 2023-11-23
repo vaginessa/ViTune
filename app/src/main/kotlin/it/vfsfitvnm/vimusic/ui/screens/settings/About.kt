@@ -70,7 +70,7 @@ fun About() {
             title = "Request a feature or suggest an idea",
             text = "You will be redirected to GitHub",
             onClick = {
-                uriHandler.openUri("https://github.com/25huizengek1/ViMusic/issues/new?assignees=&labels=enhancement&template=feature_request.yaml")
+                uriHandler.openUri("https://github.com/25huizengek1/ViMusic/issues/new?assignees=&labels=enhancement&template=feature_request.md")
             }
         )
     }
