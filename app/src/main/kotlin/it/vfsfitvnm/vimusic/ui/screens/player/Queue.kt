@@ -30,7 +30,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
@@ -83,6 +83,7 @@ import it.vfsfitvnm.vimusic.ui.components.themed.TextFieldDialog
 import it.vfsfitvnm.vimusic.ui.components.themed.TextToggle
 import it.vfsfitvnm.vimusic.ui.items.SongItem
 import it.vfsfitvnm.vimusic.ui.items.SongItemPlaceholder
+import it.vfsfitvnm.vimusic.ui.modifiers.swipeToClose
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.ui.styling.onOverlay
@@ -97,6 +98,7 @@ import it.vfsfitvnm.vimusic.utils.smoothScrollToTop
 import it.vfsfitvnm.vimusic.utils.windows
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 @ExperimentalFoundationApi
 @ExperimentalAnimationApi
@@ -156,7 +158,7 @@ fun Queue(
         }
 
         var windows by remember { mutableStateOf(player.currentTimeline.windows) }
-        var shouldBePlaying by remember { mutableStateOf(binder.player.shouldBePlaying) }
+        var shouldBePlaying by remember { mutableStateOf(player.shouldBePlaying) }
 
         player.DisposableListener {
             object : Player.Listener {
@@ -206,10 +208,10 @@ fun Queue(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.nestedScroll(layoutState.preUpPostDownNestedScrollConnection)
                 ) {
-                    items(
+                    itemsIndexed(
                         items = windows,
-                        key = { it.uid.hashCode() }
-                    ) { window ->
+                        key = { i, window -> i to window.uid.hashCode() }
+                    ) { i, window ->
                         val isPlayingThisMediaItem = mediaItemIndex == window.firstPeriodIndex
 
                         SongItem(
@@ -252,7 +254,7 @@ fun Queue(
                                     modifier = Modifier
                                         .reorder(
                                             reorderingState = reorderingState,
-                                            index = window.firstPeriodIndex
+                                            index = i
                                         )
                                         .size(18.dp)
                                 )
@@ -279,8 +281,16 @@ fun Queue(
                                 )
                                 .draggedItem(
                                     reorderingState = reorderingState,
-                                    index = window.firstPeriodIndex
+                                    index = i
                                 )
+                                .let {
+                                    if (!PlayerPreferences.horizontalSwipeToRemoveItem || isPlayingThisMediaItem) it else it.swipeToClose(
+                                        delay = 100.milliseconds,
+                                        onClose = {
+                                            player.removeMediaItem(window.firstPeriodIndex)
+                                        }
+                                    )
+                                }
                         )
                     }
 

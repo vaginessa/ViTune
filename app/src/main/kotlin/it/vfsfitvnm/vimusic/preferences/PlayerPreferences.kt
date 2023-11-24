@@ -20,6 +20,7 @@ object PlayerPreferences : GlobalPreferencesHolder() {
     var isShowingPrevButtonCollapsed by boolean(false)
     var stopWhenClosed by boolean(false)
     var horizontalSwipeToClose by boolean(false)
+    var horizontalSwipeToRemoveItem by boolean(false)
     var showLike by boolean(true)
 
     val volumeNormalizationBaseGainRounded get() = (volumeNormalizationBaseGain * 100).toInt()

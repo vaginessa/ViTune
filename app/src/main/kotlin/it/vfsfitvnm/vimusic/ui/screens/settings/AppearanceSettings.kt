@@ -137,6 +137,13 @@ fun AppearanceSettings() {
                 isChecked = PlayerPreferences.showLike,
                 onCheckedChange = { PlayerPreferences.showLike = it }
             )
+
+            SwitchSettingEntry(
+                title = "Swipe to remove item",
+                text = "Swipe left to remove an item from the queue",
+                isChecked = PlayerPreferences.horizontalSwipeToRemoveItem,
+                onCheckedChange = { PlayerPreferences.horizontalSwipeToRemoveItem = it }
+            )
         }
     }
 }
