@@ -21,7 +21,7 @@ object PlayerPreferences : GlobalPreferencesHolder() {
     var stopWhenClosed by boolean(false)
     var horizontalSwipeToClose by boolean(false)
     var horizontalSwipeToRemoveItem by boolean(false)
-    var showLike by boolean(true)
+    var showLike by boolean(false)
 
     val volumeNormalizationBaseGainRounded get() = (volumeNormalizationBaseGain * 100).toInt()
 }
