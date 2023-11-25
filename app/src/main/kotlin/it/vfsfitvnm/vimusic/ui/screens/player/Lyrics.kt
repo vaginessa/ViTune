@@ -235,7 +235,10 @@ fun Lyrics(
             }
 
             when {
-                loading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+                loading -> CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    color = colorPalette.accent
+                )
                 error || tracks.isEmpty() -> BasicText(
                     text = "No lyric tracks could be found",
                     style = typography.s.semiBold.center,
