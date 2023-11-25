@@ -20,7 +20,7 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.BasicTextField
@@ -114,6 +114,8 @@ fun HomeSongs(
     val (colorPalette, typography, _, thumbnailShape) = LocalAppearance.current
     val binder = LocalPlayerServiceBinder.current
     val menuState = LocalMenuState.current
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     val thumbnailSizeDp = Dimensions.thumbnails.song
     val thumbnailSizePx = thumbnailSizeDp.px
@@ -160,8 +162,6 @@ fun HomeSongs(
 
                     if (searching) {
                         val focusRequester = remember { FocusRequester() }
-                        val focusManager = LocalFocusManager.current
-                        val keyboardController = LocalSoftwareKeyboardController.current
 
                         LaunchedEffect(searching) {
                             focusRequester.requestFocus()
@@ -251,14 +251,15 @@ fun HomeSongs(
                 }
             }
 
-            itemsIndexed(
+            items(
                 items = filteredItems,
-                key = { _, song -> song.id }
-            ) { index, song ->
+                key = { song -> song.id }
+            ) { song ->
                 SongItem(
                     modifier = Modifier
                         .combinedClickable(
                             onLongClick = {
+                                keyboardController?.hide()
                                 menuState.display {
                                     InHistoryMediaItemMenu(
                                         song = song,
@@ -267,10 +268,11 @@ fun HomeSongs(
                                 }
                             },
                             onClick = {
+                                keyboardController?.hide()
                                 binder?.stopRadio()
                                 binder?.player?.forcePlayAtIndex(
                                     items.map(Song::asMediaItem),
-                                    index
+                                    items.indexOf(song)
                                 )
                             }
                         )
