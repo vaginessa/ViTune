@@ -19,7 +19,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -36,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import it.vfsfitvnm.vimusic.utils.px
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -105,10 +105,9 @@ fun Modifier.onSwipe(
     disposable: Boolean = false
 ) = this.composed {
     val swipeState = state ?: rememberSwipeState(Unit)
-    val coroutineScope = rememberCoroutineScope()
 
     pointerInput(Unit) {
-        coroutineScope.launch {
+        coroutineScope {
             // fling loop, doesn't really offset anything but simulates the animation beforehand
             while (isActive) {
                 val velocityTracker = VelocityTracker()
