@@ -8,11 +8,14 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "it.vfsfitvnm.vimusic"
+        applicationId = project.group.toString()
+
         minSdk = 21
         targetSdk = 34
+
         versionCode = 25
-        versionName = "0.5.9"
+        versionName = project.version.toString()
+
         multiDexEnabled = true
     }
 
@@ -86,6 +89,8 @@ dependencies {
 
     implementation(libs.exoplayer)
 
+    implementation(libs.kotlin.immutable)
+
     implementation(libs.room)
     ksp(libs.room.compiler)
 
@@ -96,4 +101,7 @@ dependencies {
     implementation(projects.core.ui)
 
     coreLibraryDesugaring(libs.desugaring)
+
+    detektPlugins(libs.detekt.compose)
+    detektPlugins(libs.detekt.formatting)
 }

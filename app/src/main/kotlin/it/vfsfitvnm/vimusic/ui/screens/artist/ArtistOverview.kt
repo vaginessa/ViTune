@@ -63,6 +63,7 @@ fun ArtistOverview(
     onAlbumClick: (String) -> Unit,
     thumbnailContent: @Composable () -> Unit,
     headerContent: @Composable (textButton: (@Composable () -> Unit)?) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val (colorPalette, typography) = LocalAppearance.current
     val binder = LocalPlayerServiceBinder.current
@@ -82,7 +83,10 @@ fun ArtistOverview(
 
     val scrollState = rememberScrollState()
 
-    LayoutWithAdaptiveThumbnail(thumbnailContent = thumbnailContent) {
+    LayoutWithAdaptiveThumbnail(
+        thumbnailContent = thumbnailContent,
+        modifier = modifier
+    ) {
         Box {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -131,7 +135,7 @@ fun ArtistOverview(
                                 BasicText(
                                     text = "View all",
                                     style = typography.xs.secondary,
-                                    modifier = sectionTextModifier.clickable(onClick = onViewAllSongsClick),
+                                    modifier = sectionTextModifier.clickable(onClick = onViewAllSongsClick)
                                 )
                             }
                         }
@@ -147,7 +151,7 @@ fun ArtistOverview(
                                             menuState.display {
                                                 NonQueuedMediaItemMenu(
                                                     onDismiss = menuState::hide,
-                                                    mediaItem = song.asMediaItem,
+                                                    mediaItem = song.asMediaItem
                                                 )
                                             }
                                         },
@@ -183,7 +187,7 @@ fun ArtistOverview(
                                 BasicText(
                                     text = "View all",
                                     style = typography.xs.secondary,
-                                    modifier = sectionTextModifier.clickable(onClick = onViewAllAlbumsClick),
+                                    modifier = sectionTextModifier.clickable(onClick = onViewAllAlbumsClick)
                                 )
                             }
                         }
@@ -228,7 +232,7 @@ fun ArtistOverview(
                                 BasicText(
                                     text = "View all",
                                     style = typography.xs.secondary,
-                                    modifier = sectionTextModifier.clickable(onClick = onViewAllSinglesClick),
+                                    modifier = sectionTextModifier.clickable(onClick = onViewAllSinglesClick)
                                 )
                             }
                         }
@@ -246,8 +250,7 @@ fun ArtistOverview(
                                     thumbnailSizePx = albumThumbnailSizePx,
                                     thumbnailSizeDp = albumThumbnailSizeDp,
                                     alternative = true,
-                                    modifier = Modifier
-                                        .clickable(onClick = { onAlbumClick(album.key) })
+                                    modifier = Modifier.clickable(onClick = { onAlbumClick(album.key) })
                                 )
                             }
                         }
@@ -303,9 +306,7 @@ fun ArtistOverview(
                         TextPlaceholder(modifier = sectionTextModifier)
 
                         repeat(5) {
-                            SongItemPlaceholder(
-                                thumbnailSizeDp = songThumbnailSizeDp,
-                            )
+                            SongItemPlaceholder(thumbnailSizeDp = songThumbnailSizeDp)
                         }
 
                         repeat(2) {

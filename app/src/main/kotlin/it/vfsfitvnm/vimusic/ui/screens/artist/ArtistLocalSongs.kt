@@ -48,6 +48,7 @@ fun ArtistLocalSongs(
     browseId: String,
     headerContent: @Composable (textButton: (@Composable () -> Unit)?) -> Unit,
     thumbnailContent: @Composable () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val binder = LocalPlayerServiceBinder.current
     val (colorPalette) = LocalAppearance.current
@@ -64,7 +65,10 @@ fun ArtistLocalSongs(
 
     val lazyListState = rememberLazyListState()
 
-    LayoutWithAdaptiveThumbnail(thumbnailContent = thumbnailContent) {
+    LayoutWithAdaptiveThumbnail(
+        thumbnailContent = thumbnailContent,
+        modifier = modifier
+    ) {
         Box {
             LazyColumn(
                 state = lazyListState,
@@ -104,15 +108,15 @@ fun ArtistLocalSongs(
                                     menuState.display {
                                         NonQueuedMediaItemMenu(
                                             onDismiss = menuState::hide,
-                                            mediaItem = song.asMediaItem,
+                                            mediaItem = song.asMediaItem
                                         )
                                     }
                                 },
                                 onClick = {
                                     binder?.stopRadio()
                                     binder?.player?.forcePlayAtIndex(
-                                        songs.map(Song::asMediaItem),
-                                        index
+                                        items = songs.map(Song::asMediaItem),
+                                        index = index
                                     )
                                 }
                             ),

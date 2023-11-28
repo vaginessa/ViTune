@@ -22,13 +22,15 @@ import coil.Coil
 import coil.annotation.ExperimentalCoilApi
 import it.vfsfitvnm.vimusic.LocalPlayerAwareWindowInsets
 import it.vfsfitvnm.vimusic.LocalPlayerServiceBinder
-import it.vfsfitvnm.vimusic.enums.ExoPlayerDiskCacheMaxSize
+import it.vfsfitvnm.vimusic.enums.ExoPlayerDiskCacheSize
 import it.vfsfitvnm.vimusic.preferences.DataPreferences
 import it.vfsfitvnm.vimusic.ui.components.themed.Header
+import it.vfsfitvnm.vimusic.ui.screens.Route
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 
 @kotlin.OptIn(ExperimentalCoilApi::class)
 @OptIn(UnstableApi::class)
+@Route
 @Composable
 fun CacheSettings() {
     val context = LocalContext.current
@@ -83,7 +85,7 @@ fun CacheSettings() {
                         append(Formatter.formatShortFileSize(context, diskCacheSize))
                         append(" used")
                         when (val size = exoPlayerDiskCacheMaxSize) {
-                            ExoPlayerDiskCacheMaxSize.Unlimited -> {}
+                            ExoPlayerDiskCacheSize.Unlimited -> {}
                             else -> append(" (${diskCacheSize * 100 / size.bytes}%)")
                         }
                     }

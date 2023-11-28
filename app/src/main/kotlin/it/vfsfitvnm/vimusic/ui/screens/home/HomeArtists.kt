@@ -40,15 +40,17 @@ import it.vfsfitvnm.vimusic.ui.components.themed.FloatingActionsContainerWithScr
 import it.vfsfitvnm.vimusic.ui.components.themed.Header
 import it.vfsfitvnm.vimusic.ui.components.themed.HeaderIconButton
 import it.vfsfitvnm.vimusic.ui.items.ArtistItem
+import it.vfsfitvnm.vimusic.ui.screens.Route
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.ui.styling.px
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
+@Route
 @Composable
 fun HomeArtistList(
     onArtistClick: (Artist) -> Unit,
-    onSearchClick: () -> Unit,
+    onSearchClick: () -> Unit
 ) = with(OrderPreferences) {
     val (colorPalette) = LocalAppearance.current
 
@@ -63,7 +65,8 @@ fun HomeArtistList(
 
     val sortOrderIconRotation by animateFloatAsState(
         targetValue = if (artistSortOrder == SortOrder.Ascending) 0f else 180f,
-        animationSpec = tween(durationMillis = 400, easing = LinearEasing), label = ""
+        animationSpec = tween(durationMillis = 400, easing = LinearEasing),
+        label = ""
     )
 
     val lazyGridState = rememberLazyGridState()
@@ -97,7 +100,8 @@ fun HomeArtistList(
 
                     HeaderIconButton(
                         icon = R.drawable.time,
-                        color = if (artistSortBy == ArtistSortBy.DateAdded) colorPalette.text else colorPalette.textDisabled,
+                        color = if (artistSortBy == ArtistSortBy.DateAdded) colorPalette.text
+                        else colorPalette.textDisabled,
                         onClick = { artistSortBy = ArtistSortBy.DateAdded }
                     )
 

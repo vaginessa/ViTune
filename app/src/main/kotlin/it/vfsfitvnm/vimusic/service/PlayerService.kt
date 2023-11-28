@@ -75,7 +75,7 @@ import it.vfsfitvnm.innertube.requests.player
 import it.vfsfitvnm.vimusic.Database
 import it.vfsfitvnm.vimusic.MainActivity
 import it.vfsfitvnm.vimusic.R
-import it.vfsfitvnm.vimusic.enums.ExoPlayerDiskCacheMaxSize
+import it.vfsfitvnm.vimusic.enums.ExoPlayerDiskCacheSize
 import it.vfsfitvnm.vimusic.models.Event
 import it.vfsfitvnm.vimusic.models.QueuedMediaItem
 import it.vfsfitvnm.vimusic.models.Song
@@ -139,6 +139,7 @@ val MediaItem.isLocal get() = mediaId.startsWith(LOCAL_KEY_PREFIX)
 val Song.isLocal get() = id.startsWith(LOCAL_KEY_PREFIX)
 
 @kotlin.OptIn(ExperimentalCoroutinesApi::class)
+@Suppress("LargeClass", "TooManyFunctions") // intended in this class: it is a service
 @OptIn(UnstableApi::class)
 class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListener.Callback {
     private lateinit var mediaSession: MediaSession
@@ -206,6 +207,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         return binder
     }
 
+    @Suppress("CyclomaticComplexMethod")
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     override fun onCreate() {
         super.onCreate()
@@ -220,7 +222,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         createNotificationChannel()
 
         val cacheEvictor = when (val size = DataPreferences.exoPlayerDiskCacheMaxSize) {
-            ExoPlayerDiskCacheMaxSize.Unlimited -> NoOpCacheEvictor()
+            ExoPlayerDiskCacheSize.Unlimited -> NoOpCacheEvictor()
             else -> LeastRecentlyUsedCacheEvictor(size.bytes)
         }
 
@@ -230,9 +232,11 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             directory.mkdir()
 
             cacheDir.listFiles()?.forEach {
-                if (it.isDirectory && it.name.length == 1 && it.name.isDigitsOnly() || it.extension == "uid") {
-                    if (!it.renameTo(directory.resolve(it.name))) it.deleteRecursively()
-                }
+                @Suppress("ComplexCondition")
+                if (
+                    (it.isDirectory && it.name.length == 1 && it.name.isDigitsOnly() || it.extension == "uid") &&
+                    !it.renameTo(directory.resolve(it.name))
+                ) it.deleteRecursively()
             }
 
             filesDir.resolve("coil").deleteRecursively()
@@ -326,7 +330,8 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                 stateCallback(state = { bassBoostLevel }, callback = ::maybeBassBoost)
                 stateCallback(
                     state = { speed },
-                    callback = { player.setPlaybackSpeed(speed.coerceAtLeast(0.01f)) })
+                    callback = { player.setPlaybackSpeed(speed.coerceAtLeast(0.01f)) }
+                )
                 stateCallback(
                     state = { isInvincibilityEnabled },
                     callback = {
@@ -492,12 +497,14 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
         query {
             Database.clearQueue()
-            Database.insert(mediaItems.mapIndexed { index, mediaItem ->
-                QueuedMediaItem(
-                    mediaItem = mediaItem,
-                    position = if (index == mediaItemIndex) mediaItemPosition else null
-                )
-            })
+            Database.insert(
+                mediaItems.mapIndexed { index, mediaItem ->
+                    QueuedMediaItem(
+                        mediaItem = mediaItem,
+                        position = if (index == mediaItemIndex) mediaItemPosition else null
+                    )
+                }
+            )
         }
     }
 
@@ -596,35 +603,37 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
     }
 
     private fun maybeResumePlaybackWhenDeviceConnected() {
-        if (isAtLeastAndroid6) { // to all never-nesters, I'm sorry, to Google, please fix lint
-            if (PlayerPreferences.resumePlaybackWhenDeviceConnected) {
-                if (audioManager == null) audioManager = getSystemService<AudioManager>()
+        if (!isAtLeastAndroid6) return
 
-                audioDeviceCallback = object : AudioDeviceCallback() {
-                    private fun canPlayMusic(audioDeviceInfo: AudioDeviceInfo): Boolean {
-                        if (!audioDeviceInfo.isSink) return false
+        if (!PlayerPreferences.resumePlaybackWhenDeviceConnected) {
+            audioManager?.unregisterAudioDeviceCallback(audioDeviceCallback)
+            audioDeviceCallback = null
+            return
+        }
+        if (audioManager == null) audioManager = getSystemService<AudioManager>()
 
-                        return (audioDeviceInfo.type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP ||
-                                audioDeviceInfo.type == AudioDeviceInfo.TYPE_WIRED_HEADSET ||
-                                audioDeviceInfo.type == AudioDeviceInfo.TYPE_WIRED_HEADPHONES).let {
-                            if (isAtLeastAndroid8) it || audioDeviceInfo.type == AudioDeviceInfo.TYPE_USB_HEADSET else it
+        audioDeviceCallback =
+            @SuppressLint("NewApi")
+            object : AudioDeviceCallback() {
+                private fun canPlayMusic(audioDeviceInfo: AudioDeviceInfo) =
+                    audioDeviceInfo.isSink && (
+                            audioDeviceInfo.type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP ||
+                                    audioDeviceInfo.type == AudioDeviceInfo.TYPE_WIRED_HEADSET ||
+                                    audioDeviceInfo.type == AudioDeviceInfo.TYPE_WIRED_HEADPHONES
+                            )
+                        .let {
+                            if (!isAtLeastAndroid8) it else
+                                it || audioDeviceInfo.type == AudioDeviceInfo.TYPE_USB_HEADSET
                         }
-                    }
 
-                    override fun onAudioDevicesAdded(addedDevices: Array<AudioDeviceInfo>) {
-                        if (!player.isPlaying && addedDevices.any(::canPlayMusic)) player.play()
-                    }
-
-                    override fun onAudioDevicesRemoved(removedDevices: Array<AudioDeviceInfo>) =
-                        Unit
+                override fun onAudioDevicesAdded(addedDevices: Array<AudioDeviceInfo>) {
+                    if (!player.isPlaying && addedDevices.any(::canPlayMusic)) player.play()
                 }
 
-                audioManager?.registerAudioDeviceCallback(audioDeviceCallback, handler)
-            } else {
-                audioManager?.unregisterAudioDeviceCallback(audioDeviceCallback)
-                audioDeviceCallback = null
+                override fun onAudioDevicesRemoved(removedDevices: Array<AudioDeviceInfo>) = Unit
             }
-        }
+
+        audioManager?.registerAudioDeviceCallback(audioDeviceCallback, handler)
     }
 
     private fun sendOpenEqualizerIntent() = sendBroadcast(
@@ -737,14 +746,17 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             .setAutoCancel(false)
             .setOnlyAlertOnce(true)
             .setShowWhen(false)
-            .setSmallIcon(player.playerError?.let { R.drawable.alert_circle }
-                ?: R.drawable.app_icon)
+            .setSmallIcon(
+                player.playerError?.let { R.drawable.alert_circle } ?: R.drawable.app_icon
+            )
             .setOngoing(false)
-            .setContentIntent(activityPendingIntent<MainActivity>(
-                flags = PendingIntent.FLAG_UPDATE_CURRENT
-            ) {
-                putExtra("expandPlayerBottomSheet", true)
-            })
+            .setContentIntent(
+                activityPendingIntent<MainActivity>(
+                    flags = PendingIntent.FLAG_UPDATE_CURRENT
+                ) {
+                    putExtra("expandPlayerBottomSheet", true)
+                }
+            )
             .setDeleteIntent(broadcastPendingIntent<NotificationDismissReceiver>())
             .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setCategory(NotificationCompat.CATEGORY_TRANSPORT)
@@ -818,6 +830,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         )
     ) { !it.isLocal }
 
+    @Suppress("CyclomaticComplexMethod")
     private fun createDataSourceFactory(): DataSource.Factory {
         val chunkLength = 512 * 1024L
         val ringBuffer = RingBuffer<Pair<String, Uri>?>(2) { null }

@@ -28,6 +28,7 @@ import it.vfsfitvnm.vimusic.preferences.DataPreferences
 import it.vfsfitvnm.vimusic.query
 import it.vfsfitvnm.vimusic.service.PlayerService
 import it.vfsfitvnm.vimusic.ui.components.themed.Header
+import it.vfsfitvnm.vimusic.ui.screens.Route
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.utils.intent
 import it.vfsfitvnm.vimusic.utils.toast
@@ -40,6 +41,7 @@ import java.util.Locale
 import kotlin.system.exitProcess
 
 @ExperimentalAnimationApi
+@Route
 @Composable
 fun DatabaseSettings() {
     val context = LocalContext.current

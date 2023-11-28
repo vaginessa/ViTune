@@ -36,15 +36,17 @@ import it.vfsfitvnm.vimusic.ui.components.themed.FloatingActionsContainerWithScr
 import it.vfsfitvnm.vimusic.ui.components.themed.Header
 import it.vfsfitvnm.vimusic.ui.components.themed.HeaderIconButton
 import it.vfsfitvnm.vimusic.ui.items.AlbumItem
+import it.vfsfitvnm.vimusic.ui.screens.Route
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.ui.styling.px
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
+@Route
 @Composable
 fun HomeAlbums(
     onAlbumClick: (Album) -> Unit,
-    onSearchClick: () -> Unit,
+    onSearchClick: () -> Unit
 ) = with(OrderPreferences) {
     val (colorPalette) = LocalAppearance.current
 
@@ -59,7 +61,8 @@ fun HomeAlbums(
 
     val sortOrderIconRotation by animateFloatAsState(
         targetValue = if (albumSortOrder == SortOrder.Ascending) 0f else 180f,
-        animationSpec = tween(durationMillis = 400, easing = LinearEasing), label = ""
+        animationSpec = tween(durationMillis = 400, easing = LinearEasing),
+        label = ""
     )
 
     val lazyListState = rememberLazyListState()
@@ -92,7 +95,8 @@ fun HomeAlbums(
 
                     HeaderIconButton(
                         icon = R.drawable.time,
-                        color = if (albumSortBy == AlbumSortBy.DateAdded) colorPalette.text else colorPalette.textDisabled,
+                        color = if (albumSortBy == AlbumSortBy.DateAdded) colorPalette.text
+                        else colorPalette.textDisabled,
                         onClick = { albumSortBy = AlbumSortBy.DateAdded }
                     )
 

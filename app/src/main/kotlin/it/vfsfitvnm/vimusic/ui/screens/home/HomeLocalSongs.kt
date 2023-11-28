@@ -30,6 +30,7 @@ import it.vfsfitvnm.vimusic.preferences.OrderPreferences
 import it.vfsfitvnm.vimusic.service.LOCAL_KEY_PREFIX
 import it.vfsfitvnm.vimusic.transaction
 import it.vfsfitvnm.vimusic.ui.components.themed.SecondaryTextButton
+import it.vfsfitvnm.vimusic.ui.screens.Route
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.utils.get
 import it.vfsfitvnm.vimusic.utils.hasPermission
@@ -55,10 +56,9 @@ import kotlin.time.Duration.Companion.seconds
 private val permission = if (isAtLeastAndroid13) Manifest.permission.READ_MEDIA_AUDIO
 else Manifest.permission.READ_EXTERNAL_STORAGE
 
+@Route
 @Composable
-fun HomeLocalSongs(
-    onSearchClick: () -> Unit
-) = with(OrderPreferences) {
+fun HomeLocalSongs(onSearchClick: () -> Unit) = with(OrderPreferences) {
     val context = LocalContext.current
     val (_, typography) = LocalAppearance.current
 
@@ -104,9 +104,11 @@ fun HomeLocalSongs(
             SecondaryTextButton(
                 text = "Open settings",
                 onClick = {
-                    context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                        setData(Uri.fromParts("package", context.packageName, null))
-                    })
+                    context.startActivity(
+                        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                            setData(Uri.fromParts("package", context.packageName, null))
+                        }
+                    )
                 }
             )
         }

@@ -20,6 +20,7 @@ import it.vfsfitvnm.vimusic.preferences.UIStatePreferences
 import it.vfsfitvnm.vimusic.query
 import it.vfsfitvnm.vimusic.ui.components.themed.Scaffold
 import it.vfsfitvnm.vimusic.ui.screens.GlobalRoutes
+import it.vfsfitvnm.vimusic.ui.screens.Route
 import it.vfsfitvnm.vimusic.ui.screens.albumRoute
 import it.vfsfitvnm.vimusic.ui.screens.artistRoute
 import it.vfsfitvnm.vimusic.ui.screens.builtInPlaylistRoute
@@ -36,6 +37,7 @@ import it.vfsfitvnm.vimusic.ui.screens.settings.SettingsScreen
 import it.vfsfitvnm.vimusic.ui.screens.settingsRoute
 
 @OptIn(ExperimentalAnimationApi::class)
+@Route
 @Composable
 fun HomeScreen(onPlaylistUrl: (String) -> Unit) {
     val saveableStateHolder = rememberSaveableStateHolder()
@@ -90,10 +92,8 @@ fun HomeScreen(onPlaylistUrl: (String) -> Unit) {
                     pop()
                     searchResultRoute(query)
 
-                    if (!DataPreferences.pauseSearchHistory) {
-                        query {
-                            Database.insert(SearchQuery(query = query))
-                        }
+                    if (!DataPreferences.pauseSearchHistory) query {
+                        Database.insert(SearchQuery(query = query))
                     }
                 },
                 onViewPlaylist = onPlaylistUrl

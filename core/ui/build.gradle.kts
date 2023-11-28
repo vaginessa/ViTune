@@ -29,11 +29,14 @@ android {
 }
 
 dependencies {
+    implementation(projects.core.data)
+
     implementation(libs.bundles.compose)
     implementation(libs.compose.material3)
     implementation(libs.palette)
 
-    implementation(projects.core.data)
+    detektPlugins(libs.detekt.compose)
+    detektPlugins(libs.detekt.formatting)
 }
 
 kotlin {

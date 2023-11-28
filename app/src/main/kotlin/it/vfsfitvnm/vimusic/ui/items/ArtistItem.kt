@@ -30,7 +30,7 @@ fun ArtistItem(
     thumbnailSizePx: Int,
     thumbnailSizeDp: Dp,
     modifier: Modifier = Modifier,
-    alternative: Boolean = false,
+    alternative: Boolean = false
 ) {
     ArtistItem(
         thumbnailUrl = artist.thumbnailUrl,
@@ -49,7 +49,7 @@ fun ArtistItem(
     thumbnailSizePx: Int,
     thumbnailSizeDp: Dp,
     modifier: Modifier = Modifier,
-    alternative: Boolean = false,
+    alternative: Boolean = false
 ) {
     ArtistItem(
         thumbnailUrl = artist.thumbnail?.url,
@@ -70,7 +70,7 @@ fun ArtistItem(
     thumbnailSizePx: Int,
     thumbnailSizeDp: Dp,
     modifier: Modifier = Modifier,
-    alternative: Boolean = false,
+    alternative: Boolean = false
 ) {
     val (_, typography) = LocalAppearance.current
 
@@ -89,7 +89,7 @@ fun ArtistItem(
         )
 
         ItemInfoContainer(
-            horizontalAlignment = if (alternative) Alignment.CenterHorizontally else Alignment.Start,
+            horizontalAlignment = if (alternative) Alignment.CenterHorizontally else Alignment.Start
         ) {
             BasicText(
                 text = name ?: "",
@@ -116,7 +116,7 @@ fun ArtistItem(
 fun ArtistItemPlaceholder(
     thumbnailSizeDp: Dp,
     modifier: Modifier = Modifier,
-    alternative: Boolean = false,
+    alternative: Boolean = false
 ) {
     val (colorPalette) = LocalAppearance.current
 
@@ -133,7 +133,7 @@ fun ArtistItemPlaceholder(
         )
 
         ItemInfoContainer(
-            horizontalAlignment = if (alternative) Alignment.CenterHorizontally else Alignment.Start,
+            horizontalAlignment = if (alternative) Alignment.CenterHorizontally else Alignment.Start
         ) {
             TextPlaceholder()
             TextPlaceholder(

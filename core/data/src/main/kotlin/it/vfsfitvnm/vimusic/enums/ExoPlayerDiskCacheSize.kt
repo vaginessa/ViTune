@@ -1,7 +1,7 @@
 package it.vfsfitvnm.vimusic.enums
 
 @Suppress("EnumEntryName", "unused")
-enum class ExoPlayerDiskCacheMaxSize(val bytes: Long) {
+enum class ExoPlayerDiskCacheSize(val bytes: Long) {
     `32MB`(bytes = 32.mb),
     `64MB`(bytes = 64.mb),
     `128MB`(bytes = 128.mb),

@@ -13,6 +13,7 @@ import it.vfsfitvnm.innertube.utils.runCatchingNonCancellable
 suspend fun Innertube.lyrics(body: NextBody) = runCatchingNonCancellable {
     val nextResponse = client.post(NEXT) {
         setBody(body)
+        @Suppress("all")
         mask("contents.singleColumnMusicWatchNextResultsRenderer.tabbedRenderer.watchNextTabbedResultsRenderer.tabs.tabRenderer(endpoint,title)")
     }.body<NextResponse>()
 

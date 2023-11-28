@@ -120,6 +120,7 @@ class MainActivity : ComponentActivity() {
         bindService(intent<PlayerService>(), serviceConnection, Context.BIND_AUTO_CREATE)
     }
 
+    @Suppress("CyclomaticComplexMethod")
     @OptIn(ExperimentalLayoutApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -133,13 +134,14 @@ class MainActivity : ComponentActivity() {
             val isSystemInDarkTheme = isSystemInDarkTheme()
 
             var appearance by rememberSaveable(
-                isSystemInDarkTheme, isCompositionLaunched(),
+                isSystemInDarkTheme,
+                isCompositionLaunched(),
                 stateSaver = Appearance.AppearanceSaver
             ) {
                 with(AppearancePreferences) {
                     val colorPalette = colorPaletteOf(
-                        colorPaletteName = colorPaletteName,
-                        colorPaletteMode = colorPaletteMode,
+                        name = colorPaletteName,
+                        mode = colorPaletteMode,
                         isSystemInDarkMode = isSystemInDarkTheme
                     )
 
@@ -165,13 +167,13 @@ class MainActivity : ComponentActivity() {
 
                 fun setDynamicPalette(colorPaletteMode: ColorPaletteMode) {
                     val isDark = colorPaletteMode == ColorPaletteMode.Dark ||
-                            (colorPaletteMode == ColorPaletteMode.System && isSystemInDarkTheme)
+                        colorPaletteMode == ColorPaletteMode.System && isSystemInDarkTheme
 
                     binder?.setBitmapListener { bitmap: Bitmap? ->
                         if (bitmap == null) {
                             val colorPalette = colorPaletteOf(
-                                colorPaletteName = ColorPaletteName.Dynamic,
-                                colorPaletteMode = colorPaletteMode,
+                                name = ColorPaletteName.Dynamic,
+                                mode = colorPaletteMode,
                                 isSystemInDarkMode = isSystemInDarkTheme
                             )
 
@@ -210,8 +212,8 @@ class MainActivity : ComponentActivity() {
                                     binder?.setBitmapListener(null)
 
                                     val colorPalette = colorPaletteOf(
-                                        colorPaletteName = name,
-                                        colorPaletteMode = mode,
+                                        name = name,
+                                        mode = mode,
                                         isSystemInDarkMode = isSystemInDarkTheme
                                     )
 
@@ -219,7 +221,7 @@ class MainActivity : ComponentActivity() {
 
                                     appearance = appearance.copy(
                                         colorPalette = colorPalette,
-                                        typography = appearance.typography.copy(colorPalette.text),
+                                        typography = appearance.typography.copy(colorPalette.text)
                                     )
                                 }
                             }
@@ -250,22 +252,24 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            val rippleTheme =
-                remember(appearance.colorPalette.text, appearance.colorPalette.isDark) {
-                    object : RippleTheme {
-                        @Composable
-                        override fun defaultColor(): Color = RippleTheme.defaultRippleColor(
-                            contentColor = appearance.colorPalette.text,
-                            lightTheme = !appearance.colorPalette.isDark
-                        )
+            val rippleTheme = remember(
+                appearance.colorPalette.text,
+                appearance.colorPalette.isDark
+            ) {
+                object : RippleTheme {
+                    @Composable
+                    override fun defaultColor(): Color = RippleTheme.defaultRippleColor(
+                        contentColor = appearance.colorPalette.text,
+                        lightTheme = !appearance.colorPalette.isDark
+                    )
 
-                        @Composable
-                        override fun rippleAlpha(): RippleAlpha = RippleTheme.defaultRippleAlpha(
-                            contentColor = appearance.colorPalette.text,
-                            lightTheme = !appearance.colorPalette.isDark
-                        )
-                    }
+                    @Composable
+                    override fun rippleAlpha(): RippleAlpha = RippleTheme.defaultRippleAlpha(
+                        contentColor = appearance.colorPalette.text,
+                        lightTheme = !appearance.colorPalette.isDark
+                    )
                 }
+            }
 
             val shimmerTheme = remember {
                 defaultShimmerTheme.copy(
@@ -273,14 +277,14 @@ class MainActivity : ComponentActivity() {
                         animation = tween(
                             durationMillis = 800,
                             easing = LinearEasing,
-                            delayMillis = 250,
+                            delayMillis = 250
                         ),
                         repeatMode = RepeatMode.Restart
                     ),
                     shaderColors = listOf(
                         Color.Unspecified.copy(alpha = 0.25f),
                         Color.White.copy(alpha = 0.50f),
-                        Color.Unspecified.copy(alpha = 0.25f),
+                        Color.Unspecified.copy(alpha = 0.25f)
                     )
                 )
             }
@@ -304,7 +308,7 @@ class MainActivity : ComponentActivity() {
                 val playerBottomSheetState = rememberBottomSheetState(
                     dismissedBound = 0.dp,
                     collapsedBound = Dimensions.collapsedPlayer + bottomDp,
-                    expandedBound = maxHeight,
+                    expandedBound = maxHeight
                 )
 
                 val playerAwareWindowInsets by remember(
@@ -361,17 +365,13 @@ class MainActivity : ComponentActivity() {
                     val player = binder?.player ?: return@DisposableEffect onDispose { }
 
                     if (player.currentMediaItem == null) {
-                        if (!playerBottomSheetState.isDismissed) {
-                            playerBottomSheetState.dismiss()
-                        }
+                        if (!playerBottomSheetState.isDismissed) playerBottomSheetState.dismiss()
                     } else {
                         if (playerBottomSheetState.isDismissed) {
                             if (launchedFromNotification) {
                                 intent.replaceExtras(Bundle())
                                 playerBottomSheetState.expand(tween(700))
-                            } else {
-                                playerBottomSheetState.collapse(tween(700))
-                            }
+                            } else playerBottomSheetState.collapse(tween(700))
                         }
                     }
 
@@ -380,9 +380,7 @@ class MainActivity : ComponentActivity() {
                             if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED && mediaItem != null) {
                                 if (mediaItem.mediaMetadata.extras?.getBoolean("isFromPersistentQueue") != true) {
                                     playerBottomSheetState.expand(tween(500))
-                                } else {
-                                    playerBottomSheetState.collapse(tween(700))
-                                }
+                                } else playerBottomSheetState.collapse(tween(700))
                             }
                         }
                     }
@@ -397,6 +395,7 @@ class MainActivity : ComponentActivity() {
         onNewIntent(intent)
     }
 
+    @Suppress("CyclomaticComplexMethod")
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
 

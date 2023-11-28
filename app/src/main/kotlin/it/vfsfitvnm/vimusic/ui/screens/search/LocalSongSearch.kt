@@ -48,7 +48,8 @@ import it.vfsfitvnm.vimusic.utils.medium
 fun LocalSongSearch(
     textFieldValue: TextFieldValue,
     onTextFieldValueChanged: (TextFieldValue) -> Unit,
-    decorationBox: @Composable (@Composable () -> Unit) -> Unit
+    decorationBox: @Composable (@Composable () -> Unit) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val (colorPalette, typography) = LocalAppearance.current
     val binder = LocalPlayerServiceBinder.current
@@ -66,7 +67,7 @@ fun LocalSongSearch(
 
     val lazyListState = rememberLazyListState()
 
-    Box {
+    Box(modifier = modifier) {
         LazyColumn(
             state = lazyListState,
             contentPadding = LocalPlayerAwareWindowInsets.current
@@ -101,7 +102,7 @@ fun LocalSongSearch(
 
             items(
                 items = items,
-                key = Song::id,
+                key = Song::id
             ) { song ->
                 SongItem(
                     modifier = Modifier

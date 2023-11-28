@@ -20,7 +20,7 @@ import it.vfsfitvnm.vimusic.utils.drawCircle
 @Composable
 fun Switch(
     isChecked: Boolean,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     val (colorPalette) = LocalAppearance.current
 
@@ -44,7 +44,7 @@ fun Switch(
     ) {
         drawRoundRect(
             color = backgroundColor,
-            cornerRadius = CornerRadius(x = 12.dp.toPx(), y = 12.dp.toPx()),
+            cornerRadius = CornerRadius(x = 12.dp.toPx(), y = 12.dp.toPx())
         )
 
         drawCircle(

@@ -125,7 +125,7 @@ fun Thumbnail(
                 sizeTransform = SizeTransform(clip = false)
             )
         },
-        modifier = Modifier.onSwipe(
+        modifier = modifier.onSwipe(
             onSwipeLeft = binder.player::forceSeekToNext,
             onSwipeRight = {
                 binder.player.seekToDefaultPosition()
@@ -136,7 +136,7 @@ fun Thumbnail(
         label = ""
     ) { currentWindow ->
         Box(
-            modifier = modifier
+            modifier = Modifier
                 .aspectRatio(1f)
                 .clip(LocalAppearance.current.thumbnailShape)
                 .size(thumbnailSizeDp)
@@ -170,7 +170,7 @@ fun Thumbnail(
                 ensureSongInserted = { Database.insert(currentWindow.mediaItem) },
                 size = thumbnailSizeDp,
                 mediaMetadataProvider = currentWindow.mediaItem::mediaMetadata,
-                durationProvider = player::getDuration,
+                durationProvider = player::getDuration
             )
 
             StatsForNerds(

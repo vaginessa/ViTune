@@ -102,7 +102,10 @@ private fun onDismiss(binder: PlayerService.Binder) {
 
 @kotlin.OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
 @Composable
-fun Player(layoutState: BottomSheetState, modifier: Modifier = Modifier) {
+fun Player(
+    layoutState: BottomSheetState,
+    modifier: Modifier = Modifier
+) {
     val menuState = LocalMenuState.current
 
     val (colorPalette, typography, thumbnailCornerSize) = LocalAppearance.current
@@ -212,7 +215,7 @@ fun Player(layoutState: BottomSheetState, modifier: Modifier = Modifier) {
                             text = text,
                             style = typography.xs.semiBold,
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                     AnimatedVisibility(visible = mediaItem.mediaMetadata.artist != null) {
@@ -225,7 +228,7 @@ fun Player(layoutState: BottomSheetState, modifier: Modifier = Modifier) {
                                 text = text,
                                 style = typography.xs.semiBold.secondary,
                                 maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -253,12 +256,8 @@ fun Player(layoutState: BottomSheetState, modifier: Modifier = Modifier) {
                         icon = if (shouldBePlaying) R.drawable.pause else R.drawable.play,
                         color = colorPalette.text,
                         onClick = {
-                            if (shouldBePlaying) {
-                                binder.player.pause()
-                            } else {
-                                if (binder.player.playbackState == Player.STATE_IDLE) {
-                                    binder.player.prepare()
-                                }
+                            if (shouldBePlaying) binder.player.pause() else {
+                                if (binder.player.playbackState == Player.STATE_IDLE) binder.player.prepare()
                                 binder.player.play()
                             }
                         },
@@ -284,8 +283,8 @@ fun Player(layoutState: BottomSheetState, modifier: Modifier = Modifier) {
         var isShowingStatsForNerds by rememberSaveable { mutableStateOf(false) }
 
         val playerBottomSheetState = rememberBottomSheetState(
-            64.dp + horizontalBottomPaddingValues.calculateBottomPadding(),
-            layoutState.expandedBound
+            dismissedBound = 64.dp + horizontalBottomPaddingValues.calculateBottomPadding(),
+            expandedBound = layoutState.expandedBound
         )
 
         val containerModifier = Modifier
@@ -297,22 +296,22 @@ fun Player(layoutState: BottomSheetState, modifier: Modifier = Modifier) {
             )
             .padding(bottom = playerBottomSheetState.collapsedBound)
 
-        val thumbnailContent: @Composable (modifier: Modifier) -> Unit = { modifier ->
+        val thumbnailContent: @Composable (modifier: Modifier) -> Unit = { innerModifier ->
             Thumbnail(
                 isShowingLyrics = PlayerPreferences.isShowingLyrics,
                 onShowLyrics = { PlayerPreferences.isShowingLyrics = it },
                 isShowingStatsForNerds = isShowingStatsForNerds,
                 onShowStatsForNerds = { isShowingStatsForNerds = it },
-                modifier = modifier.nestedScroll(layoutState.preUpPostDownNestedScrollConnection)
+                modifier = innerModifier.nestedScroll(layoutState.preUpPostDownNestedScrollConnection)
             )
         }
 
-        val controlsContent: @Composable (modifier: Modifier) -> Unit = { modifier ->
+        val controlsContent: @Composable (modifier: Modifier) -> Unit = { innerModifier ->
             Controls(
                 media = mediaItem.toUiMedia(positionAndDuration.second),
                 shouldBePlaying = shouldBePlaying,
                 position = positionAndDuration.first,
-                modifier = modifier
+                modifier = innerModifier
             )
         }
 

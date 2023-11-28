@@ -9,13 +9,15 @@ import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.models.Mood
 import it.vfsfitvnm.vimusic.ui.components.themed.Scaffold
 import it.vfsfitvnm.vimusic.ui.screens.GlobalRoutes
+import it.vfsfitvnm.vimusic.ui.screens.Route
 
 @OptIn(ExperimentalAnimationApi::class)
+@Route
 @Composable
 fun MoodScreen(mood: Mood) {
     val saveableStateHolder = rememberSaveableStateHolder()
 
-    PersistMapCleanup(tagPrefix = "playlist/$defaultBrowseId")
+    PersistMapCleanup(tagPrefix = "playlist/$DEFAULT_BROWSE_ID")
 
     RouteHandler(listenToGlobalEmitter = true) {
         GlobalRoutes()

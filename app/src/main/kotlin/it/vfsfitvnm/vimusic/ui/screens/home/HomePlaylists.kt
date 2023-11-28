@@ -48,16 +48,18 @@ import it.vfsfitvnm.vimusic.ui.components.themed.HeaderIconButton
 import it.vfsfitvnm.vimusic.ui.components.themed.SecondaryTextButton
 import it.vfsfitvnm.vimusic.ui.components.themed.TextFieldDialog
 import it.vfsfitvnm.vimusic.ui.items.PlaylistItem
+import it.vfsfitvnm.vimusic.ui.screens.Route
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.ui.styling.px
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
+@Route
 @Composable
 fun HomePlaylists(
     onBuiltInPlaylist: (BuiltInPlaylist) -> Unit,
     onPlaylistClick: (Playlist) -> Unit,
-    onSearchClick: () -> Unit,
+    onSearchClick: () -> Unit
 ) = with(OrderPreferences) {
     val (colorPalette) = LocalAppearance.current
 
@@ -115,19 +117,22 @@ fun HomePlaylists(
 
                     HeaderIconButton(
                         icon = R.drawable.medical,
-                        color = if (playlistSortBy == PlaylistSortBy.SongCount) colorPalette.text else colorPalette.textDisabled,
+                        color = if (playlistSortBy == PlaylistSortBy.SongCount) colorPalette.text
+                        else colorPalette.textDisabled,
                         onClick = { playlistSortBy = PlaylistSortBy.SongCount }
                     )
 
                     HeaderIconButton(
                         icon = R.drawable.text,
-                        color = if (playlistSortBy == PlaylistSortBy.Name) colorPalette.text else colorPalette.textDisabled,
+                        color = if (playlistSortBy == PlaylistSortBy.Name) colorPalette.text
+                        else colorPalette.textDisabled,
                         onClick = { playlistSortBy = PlaylistSortBy.Name }
                     )
 
                     HeaderIconButton(
                         icon = R.drawable.time,
-                        color = if (playlistSortBy == PlaylistSortBy.DateAdded) colorPalette.text else colorPalette.textDisabled,
+                        color = if (playlistSortBy == PlaylistSortBy.DateAdded) colorPalette.text
+                        else colorPalette.textDisabled,
                         onClick = { playlistSortBy = PlaylistSortBy.DateAdded }
                     )
 

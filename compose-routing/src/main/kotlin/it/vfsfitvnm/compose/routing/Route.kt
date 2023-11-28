@@ -78,7 +78,6 @@ class Route2<P0, P1>(tag: String) : Route(tag) {
     }
 }
 
-
 @Immutable
 class Route3<P0, P1, P2>(tag: String) : Route(tag) {
     context(RouteHandlerScope)

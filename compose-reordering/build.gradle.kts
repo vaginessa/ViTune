@@ -37,4 +37,7 @@ kotlin {
 
 dependencies {
     implementation(libs.compose.foundation)
+
+    detektPlugins(libs.detekt.compose)
+    detektPlugins(libs.detekt.formatting)
 }

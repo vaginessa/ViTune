@@ -1,3 +1,4 @@
+import io.gitlab.arturbosch.detekt.Detekt
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -8,6 +9,7 @@ plugins {
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.android.lint) apply false
     alias(libs.plugins.ksp) apply false
+    alias(libs.plugins.detekt)
 }
 
 val clean by tasks.registering(Delete::class) {
@@ -26,6 +28,26 @@ subprojects {
                     }/compose_metrics"
                 )
             }
+        }
+    }
+}
+
+allprojects {
+    group = "it.vfsfitvnm.vimusic"
+    version = "0.5.9"
+
+    apply(plugin = "io.gitlab.arturbosch.detekt")
+
+    detekt {
+        buildUponDefaultConfig = true
+        allRules = false
+        config.setFrom("$rootDir/detekt.yml")
+    }
+
+    tasks.withType<Detekt>().configureEach {
+        jvmTarget = "11"
+        reports {
+            html.required = true
         }
     }
 }

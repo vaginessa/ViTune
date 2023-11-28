@@ -54,6 +54,7 @@ fun AlbumSongs(
     browseId: String,
     headerContent: @Composable (textButton: (@Composable () -> Unit)?) -> Unit,
     thumbnailContent: @Composable () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val (colorPalette, typography) = LocalAppearance.current
     val binder = LocalPlayerServiceBinder.current
@@ -69,7 +70,10 @@ fun AlbumSongs(
 
     val lazyListState = rememberLazyListState()
 
-    LayoutWithAdaptiveThumbnail(thumbnailContent = thumbnailContent) {
+    LayoutWithAdaptiveThumbnail(
+        thumbnailContent = thumbnailContent,
+        modifier = modifier
+    ) {
         Box {
             LazyColumn(
                 state = lazyListState,
@@ -123,15 +127,15 @@ fun AlbumSongs(
                                 menuState.display {
                                     NonQueuedMediaItemMenu(
                                         onDismiss = menuState::hide,
-                                        mediaItem = song.asMediaItem,
+                                        mediaItem = song.asMediaItem
                                     )
                                 }
                             },
                             onClick = {
                                 binder?.stopRadio()
                                 binder?.player?.forcePlayAtIndex(
-                                    songs.map(Song::asMediaItem),
-                                    index
+                                    items = songs.map(Song::asMediaItem),
+                                    index = index
                                 )
                             }
                         )

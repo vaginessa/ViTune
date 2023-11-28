@@ -82,6 +82,7 @@ import it.vfsfitvnm.vimusic.utils.medium
 import it.vfsfitvnm.vimusic.utils.semiBold
 import it.vfsfitvnm.vimusic.utils.toast
 import it.vfsfitvnm.vimusic.utils.verticalFadingEdge
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -103,7 +104,7 @@ fun Lyrics(
     AnimatedVisibility(
         visible = isDisplayed,
         enter = fadeIn(),
-        exit = fadeOut(),
+        exit = fadeOut()
     ) {
         val (colorPalette, typography) = LocalAppearance.current
         val context = LocalContext.current
@@ -203,7 +204,7 @@ fun Lyrics(
                         Lyrics(
                             songId = mediaId,
                             fixed = if (isShowingSynchronizedLyrics) lyrics?.fixed else it,
-                            synced = if (isShowingSynchronizedLyrics) it else lyrics?.synced,
+                            synced = if (isShowingSynchronizedLyrics) it else lyrics?.synced
                         )
                     )
                 }
@@ -239,6 +240,7 @@ fun Lyrics(
                     modifier = Modifier.align(Alignment.CenterHorizontally),
                     color = colorPalette.accent
                 )
+
                 error || tracks.isEmpty() -> BasicText(
                     text = "No lyric tracks could be found",
                     style = typography.s.semiBold.center,
@@ -251,7 +253,7 @@ fun Lyrics(
                     onDismiss = { isPicking = false },
                     title = "Choose lyric track",
                     selectedValue = null,
-                    values = tracks,
+                    values = tracks.toImmutableList(),
                     onValueSelected = {
                         transaction {
                             Database.upsert(
@@ -342,8 +344,8 @@ fun Lyrics(
             if (text?.isNotEmpty() == true) {
                 if (isShowingSynchronizedLyrics) {
                     val density = LocalDensity.current
-                    val player = LocalPlayerServiceBinder.current?.player
-                        ?: return@AnimatedVisibility
+                    val player =
+                        LocalPlayerServiceBinder.current?.player ?: return@AnimatedVisibility
 
                     val synchronizedLyrics = remember(text) {
                         val sentences = LrcLib.Lyrics(text).sentences
@@ -370,11 +372,10 @@ fun Lyrics(
 
                             while (isActive) {
                                 delay(50)
-                                if (synchronizedLyrics.update())
-                                    lazyListState.animateScrollToItem(
-                                        synchronizedLyrics.index,
-                                        center
-                                    )
+                                if (synchronizedLyrics.update()) lazyListState.animateScrollToItem(
+                                    index = synchronizedLyrics.index,
+                                    scrollOffset = center
+                                )
                             }
                         }
 
@@ -388,7 +389,10 @@ fun Lyrics(
                             itemsIndexed(items = synchronizedLyrics.sentences.values.toList()) { index, sentence ->
                                 BasicText(
                                     text = sentence,
-                                    style = typography.xs.center.medium.color(if (index == synchronizedLyrics.index) PureBlackColorPalette.text else PureBlackColorPalette.textDisabled),
+                                    style = typography.xs.center.medium.color(
+                                        if (index == synchronizedLyrics.index) PureBlackColorPalette.text
+                                        else PureBlackColorPalette.textDisabled
+                                    ),
                                     modifier = Modifier.padding(vertical = 4.dp, horizontal = 32.dp)
                                 )
                             }
@@ -477,12 +481,17 @@ fun Lyrics(
                                         enabled = lyrics != null,
                                         onClick = {
                                             menuState.hide()
+                                            val fixed =
+                                                if (isShowingSynchronizedLyrics) lyrics?.fixed else null
+                                            val synced =
+                                                if (isShowingSynchronizedLyrics) null else lyrics?.synced
+
                                             query {
                                                 Database.upsert(
                                                     Lyrics(
                                                         songId = mediaId,
-                                                        fixed = if (isShowingSynchronizedLyrics) lyrics?.fixed else null,
-                                                        synced = if (isShowingSynchronizedLyrics) null else lyrics?.synced,
+                                                        fixed = fixed,
+                                                        synced = synced
                                                     )
                                                 )
                                             }

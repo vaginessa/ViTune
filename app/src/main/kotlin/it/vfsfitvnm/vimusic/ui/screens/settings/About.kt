@@ -16,9 +16,11 @@ import androidx.compose.ui.platform.LocalUriHandler
 import it.vfsfitvnm.vimusic.BuildConfig
 import it.vfsfitvnm.vimusic.LocalPlayerAwareWindowInsets
 import it.vfsfitvnm.vimusic.ui.components.themed.Header
+import it.vfsfitvnm.vimusic.ui.screens.Route
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.utils.secondary
 
+@Route
 @Composable
 fun About() {
     val (colorPalette, typography) = LocalAppearance.current

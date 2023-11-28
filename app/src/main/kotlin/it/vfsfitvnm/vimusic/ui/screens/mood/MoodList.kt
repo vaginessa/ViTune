@@ -47,14 +47,17 @@ import it.vfsfitvnm.vimusic.utils.center
 import it.vfsfitvnm.vimusic.utils.secondary
 import it.vfsfitvnm.vimusic.utils.semiBold
 
-internal const val defaultBrowseId = "FEmusic_moods_and_genres_category"
+internal const val DEFAULT_BROWSE_ID = "FEmusic_moods_and_genres_category"
 
 @Composable
-fun MoodList(mood: Mood) {
+fun MoodList(
+    mood: Mood,
+    modifier: Modifier = Modifier
+) {
     val (colorPalette, typography) = LocalAppearance.current
     val windowInsets = LocalPlayerAwareWindowInsets.current
 
-    val browseId = mood.browseId ?: defaultBrowseId
+    val browseId = mood.browseId ?: DEFAULT_BROWSE_ID
     var moodPage by persist<Result<BrowseResult>>("playlist/$browseId${mood.params?.let { "/$it" } ?: ""}")
 
     LaunchedEffect(Unit) {
@@ -73,7 +76,7 @@ fun MoodList(mood: Mood) {
         .padding(top = 24.dp, bottom = 8.dp)
         .padding(endPaddingValues)
 
-    Column {
+    Column(modifier = modifier) {
         moodPage?.getOrNull()?.let { moodResult ->
             LazyColumn(
                 state = lazyListState,
@@ -103,7 +106,7 @@ fun MoodList(mood: Mood) {
                     item {
                         LazyRow {
                             items(items = item.items, key = { it.key }) { childItem ->
-                                if (childItem.key == defaultBrowseId) return@items
+                                if (childItem.key == DEFAULT_BROWSE_ID) return@items
                                 when (childItem) {
                                     is Innertube.AlbumItem -> AlbumItem(
                                         album = childItem,
@@ -112,9 +115,7 @@ fun MoodList(mood: Mood) {
                                         alternative = true,
                                         modifier = Modifier.clickable {
                                             childItem.info?.endpoint?.browseId?.let {
-                                                albumRoute.global(
-                                                    it
-                                                )
+                                                albumRoute.global(it)
                                             }
                                         }
                                     )
@@ -126,9 +127,7 @@ fun MoodList(mood: Mood) {
                                         alternative = true,
                                         modifier = Modifier.clickable {
                                             childItem.info?.endpoint?.browseId?.let {
-                                                artistRoute.global(
-                                                    it
-                                                )
+                                                artistRoute.global(it)
                                             }
                                         }
                                     )
@@ -140,11 +139,7 @@ fun MoodList(mood: Mood) {
                                         alternative = true,
                                         modifier = Modifier.clickable {
                                             childItem.info?.endpoint?.browseId?.let {
-                                                playlistRoute.global(
-                                                    it,
-                                                    null,
-                                                    1
-                                                )
+                                                playlistRoute.global(it, null, 1)
                                             }
                                         }
                                     )

@@ -26,7 +26,7 @@ data class Runs(
     @Serializable
     data class Run(
         val text: String?,
-        val navigationEndpoint: NavigationEndpoint?,
+        val navigationEndpoint: NavigationEndpoint?
     )
 }
 
@@ -45,6 +45,4 @@ fun List<Runs.Run>.splitBySeparator(): List<List<Runs.Run>> {
     return res
 }
 
-fun <T> List<T>.oddElements() = filterIndexed { index, _ ->
-    index % 2 == 0
-}
+fun <T> List<T>.oddElements() = filterIndexed { index, _ -> index % 2 == 0 }

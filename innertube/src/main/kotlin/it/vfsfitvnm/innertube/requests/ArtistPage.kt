@@ -46,14 +46,16 @@ suspend fun Innertube.artistPage(body: BrowseBody) = runCatchingNonCancellable {
             ?.musicImmersiveHeaderRenderer
             ?.description
             ?.text,
-        thumbnail = (response
-            .header
-            ?.musicImmersiveHeaderRenderer
-            ?.foregroundThumbnail
-            ?: response
-                .header
-                ?.musicImmersiveHeaderRenderer
-                ?.thumbnail)
+        thumbnail = (
+                response
+                    .header
+                    ?.musicImmersiveHeaderRenderer
+                    ?.foregroundThumbnail
+                    ?: response
+                        .header
+                        ?.musicImmersiveHeaderRenderer
+                        ?.thumbnail
+                )
             ?.musicThumbnailRenderer
             ?.thumbnail
             ?.thumbnails
@@ -100,6 +102,6 @@ suspend fun Innertube.artistPage(body: BrowseBody) = runCatchingNonCancellable {
             ?.moreContentButton
             ?.buttonRenderer
             ?.navigationEndpoint
-            ?.browseEndpoint,
+            ?.browseEndpoint
     )
 }

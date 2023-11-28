@@ -65,6 +65,7 @@ import it.vfsfitvnm.vimusic.ui.components.themed.Header
 import it.vfsfitvnm.vimusic.ui.components.themed.HeaderIconButton
 import it.vfsfitvnm.vimusic.ui.components.themed.InHistoryMediaItemMenu
 import it.vfsfitvnm.vimusic.ui.items.SongItem
+import it.vfsfitvnm.vimusic.ui.screens.Route
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.ui.styling.onOverlay
@@ -101,6 +102,7 @@ fun HomeSongs(
     ExperimentalAnimationApi::class
 )
 @OptIn(UnstableApi::class)
+@Route
 @Composable
 fun HomeSongs(
     onSearchClick: () -> Unit,
@@ -111,7 +113,10 @@ fun HomeSongs(
     setSortOrder: (SortOrder) -> Unit,
     title: String
 ) {
-    val (colorPalette, typography, _, thumbnailShape) = LocalAppearance.current
+    val colorPalette = LocalAppearance.current.colorPalette
+    val typography = LocalAppearance.current.typography
+    val thumbnailShape = LocalAppearance.current.thumbnailShape
+
     val binder = LocalPlayerServiceBinder.current
     val menuState = LocalMenuState.current
     val focusManager = LocalFocusManager.current
@@ -138,7 +143,8 @@ fun HomeSongs(
 
     val sortOrderIconRotation by animateFloatAsState(
         targetValue = if (sortOrder == SortOrder.Ascending) 0f else 180f,
-        animationSpec = tween(durationMillis = 400, easing = LinearEasing), label = ""
+        animationSpec = tween(durationMillis = 400, easing = LinearEasing),
+        label = ""
     )
 
     val lazyListState = rememberLazyListState()
@@ -151,7 +157,7 @@ fun HomeSongs(
         LazyColumn(
             state = lazyListState,
             contentPadding = LocalPlayerAwareWindowInsets.current
-                .only(WindowInsetsSides.Vertical + WindowInsetsSides.End).asPaddingValues(),
+                .only(WindowInsetsSides.Vertical + WindowInsetsSides.End).asPaddingValues()
         ) {
             item(
                 key = "header",
@@ -187,13 +193,14 @@ fun HomeSongs(
                                     androidx.compose.animation.AnimatedVisibility(
                                         visible = filter?.isEmpty() ?: true,
                                         enter = fadeIn(tween(100)),
-                                        exit = fadeOut(tween(100)),
+                                        exit = fadeOut(tween(100))
                                     ) {
                                         BasicText(
                                             text = "Filter...",
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis,
-                                            style = typography.xs.semiBold.secondary.copy(color = colorPalette.textDisabled)
+                                            style = typography.xs.semiBold.secondary
+                                                .copy(color = colorPalette.textDisabled)
                                         )
                                     }
 
@@ -280,24 +287,26 @@ fun HomeSongs(
                     song = song,
                     thumbnailSizePx = thumbnailSizePx,
                     thumbnailSizeDp = thumbnailSizeDp,
-                    onThumbnailContent = if (sortBy == SongSortBy.PlayTime) ({
-                        BasicText(
-                            text = song.formattedTotalPlayTime,
-                            style = typography.xxs.semiBold.center.color(colorPalette.onOverlay),
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(
-                                    brush = Brush.verticalGradient(
-                                        colors = listOf(Color.Transparent, colorPalette.overlay)
-                                    ),
-                                    shape = thumbnailShape
-                                )
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                                .align(Alignment.BottomCenter)
-                        )
-                    }) else null
+                    onThumbnailContent = if (sortBy == SongSortBy.PlayTime) {
+                        {
+                            BasicText(
+                                text = song.formattedTotalPlayTime,
+                                style = typography.xxs.semiBold.center.color(colorPalette.onOverlay),
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(
+                                        brush = Brush.verticalGradient(
+                                            colors = listOf(Color.Transparent, colorPalette.overlay)
+                                        ),
+                                        shape = thumbnailShape
+                                    )
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                                    .align(Alignment.BottomCenter)
+                            )
+                        }
+                    } else null
                 )
             }
         }

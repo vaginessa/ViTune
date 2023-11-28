@@ -72,51 +72,48 @@ fun AlbumItem(
     thumbnailSizeDp: Dp,
     modifier: Modifier = Modifier,
     alternative: Boolean = false
+) = ItemContainer(
+    alternative = alternative,
+    thumbnailSizeDp = thumbnailSizeDp,
+    modifier = modifier
 ) {
-    val (_, typography, _, thumbnailShape) = LocalAppearance.current
+    val typography = LocalAppearance.current.typography
+    val thumbnailShape = LocalAppearance.current.thumbnailShape
 
-    ItemContainer(
-        alternative = alternative,
-        thumbnailSizeDp = thumbnailSizeDp,
-        modifier = modifier
-    ) {
-        AsyncImage(
-            model = thumbnailUrl?.thumbnail(thumbnailSizePx),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .clip(thumbnailShape)
-                .size(thumbnailSizeDp)
+    AsyncImage(
+        model = thumbnailUrl?.thumbnail(thumbnailSizePx),
+        contentDescription = null,
+        contentScale = ContentScale.Crop,
+        modifier = Modifier
+            .clip(thumbnailShape)
+            .size(thumbnailSizeDp)
+    )
+
+    ItemInfoContainer {
+        BasicText(
+            text = title ?: "",
+            style = typography.xs.semiBold,
+            maxLines = if (alternative) 1 else 2,
+            overflow = TextOverflow.Ellipsis
         )
 
-        ItemInfoContainer {
+        if (!alternative) authors?.let {
             BasicText(
-                text = title ?: "",
-                style = typography.xs.semiBold,
-                maxLines = if (alternative) 1 else 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-
-            if (!alternative) {
-                authors?.let {
-                    BasicText(
-                        text = authors,
-                        style = typography.xs.semiBold.secondary,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
-
-            BasicText(
-                text = year ?: "",
-                style = typography.xxs.semiBold.secondary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier
-                    .padding(top = 4.dp)
+                text = authors,
+                style = typography.xs.semiBold.secondary,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
         }
+
+        BasicText(
+            text = year ?: "",
+            style = typography.xxs.semiBold.secondary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier
+                .padding(top = 4.dp)
+        )
     }
 }
 
@@ -125,31 +122,23 @@ fun AlbumItemPlaceholder(
     thumbnailSizeDp: Dp,
     modifier: Modifier = Modifier,
     alternative: Boolean = false
+) = ItemContainer(
+    alternative = alternative,
+    thumbnailSizeDp = thumbnailSizeDp,
+    modifier = modifier
 ) {
-    val (colorPalette, _, _, thumbnailShape) = LocalAppearance.current
+    val colorPalette = LocalAppearance.current.colorPalette
+    val thumbnailShape = LocalAppearance.current.thumbnailShape
 
-    ItemContainer(
-        alternative = alternative,
-        thumbnailSizeDp = thumbnailSizeDp,
-        modifier = modifier
-    ) {
-        Spacer(
-            modifier = Modifier
-                .background(color = colorPalette.shimmer, shape = thumbnailShape)
-                .size(thumbnailSizeDp)
-        )
+    Spacer(
+        modifier = Modifier
+            .background(color = colorPalette.shimmer, shape = thumbnailShape)
+            .size(thumbnailSizeDp)
+    )
 
-        ItemInfoContainer {
-            TextPlaceholder()
-
-            if (!alternative) {
-                TextPlaceholder()
-            }
-
-            TextPlaceholder(
-                modifier = Modifier
-                    .padding(top = 4.dp)
-            )
-        }
+    ItemInfoContainer {
+        TextPlaceholder()
+        if (!alternative) TextPlaceholder()
+        TextPlaceholder(modifier = Modifier.padding(top = 4.dp))
     }
 }

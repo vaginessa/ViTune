@@ -38,7 +38,7 @@ fun PlaybackError(
     AnimatedVisibility(
         visible = isDisplayed,
         enter = fadeIn(),
-        exit = fadeOut(),
+        exit = fadeOut()
     ) {
         Spacer(
             modifier = modifier

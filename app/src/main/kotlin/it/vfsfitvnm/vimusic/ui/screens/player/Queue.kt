@@ -106,11 +106,13 @@ import kotlin.time.Duration.Companion.milliseconds
 fun Queue(
     backgroundColorProvider: () -> Color,
     layoutState: BottomSheetState,
-    modifier: Modifier = Modifier,
     beforeContent: @Composable RowScope.() -> Unit,
     afterContent: @Composable RowScope.() -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    val (colorPalette, typography, _, thumbnailShape) = LocalAppearance.current
+    val colorPalette = LocalAppearance.current.colorPalette
+    val typography = LocalAppearance.current.typography
+    val thumbnailShape = LocalAppearance.current.thumbnailShape
 
     val windowInsets = WindowInsets.systemBars
 
@@ -222,7 +224,7 @@ fun Queue(
                                 musicBarsTransition.AnimatedVisibility(
                                     visible = { it == window.firstPeriodIndex },
                                     enter = fadeIn(tween(800)),
-                                    exit = fadeOut(tween(800)),
+                                    exit = fadeOut(tween(800))
                                 ) {
                                     Box(
                                         contentAlignment = Alignment.Center,
@@ -265,7 +267,8 @@ fun Queue(
                                         menuState.display {
                                             QueuedMediaItemMenu(
                                                 mediaItem = window.mediaItem,
-                                                indexInQueue = if (isPlayingThisMediaItem) null else window.firstPeriodIndex,
+                                                indexInQueue = if (isPlayingThisMediaItem) null
+                                                else window.firstPeriodIndex,
                                                 onDismiss = menuState::hide
                                             )
                                         }
@@ -284,7 +287,8 @@ fun Queue(
                                     index = i
                                 )
                                 .let {
-                                    if (!PlayerPreferences.horizontalSwipeToRemoveItem || isPlayingThisMediaItem) it else it.swipeToClose(
+                                    if (!PlayerPreferences.horizontalSwipeToRemoveItem || isPlayingThisMediaItem) it
+                                    else it.swipeToClose(
                                         delay = 100.milliseconds,
                                         onClose = {
                                             player.removeMediaItem(window.firstPeriodIndex)
@@ -361,8 +365,9 @@ fun Queue(
                                     .insert(playlist)
                                     .takeIf { it != -1L } ?: playlist.id
 
-                                windows.forEachIndexed { i, it ->
-                                    val mediaItem = it.mediaItem
+                                windows.forEachIndexed { i, window ->
+                                    val mediaItem = window.mediaItem
+
                                     Database.insert(mediaItem)
                                     Database.insert(
                                         SongPlaylistMap(

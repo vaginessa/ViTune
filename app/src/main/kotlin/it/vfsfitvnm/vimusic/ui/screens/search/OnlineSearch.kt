@@ -71,7 +71,8 @@ fun OnlineSearch(
     onTextFieldValueChanged: (TextFieldValue) -> Unit,
     onSearch: (String) -> Unit,
     onViewPlaylist: (String) -> Unit,
-    decorationBox: @Composable (@Composable () -> Unit) -> Unit
+    decorationBox: @Composable (@Composable () -> Unit) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val (colorPalette, typography) = LocalAppearance.current
 
@@ -113,7 +114,7 @@ fun OnlineSearch(
     val focusRequester = remember { FocusRequester() }
     val lazyListState = rememberLazyListState()
 
-    Box {
+    Box(modifier = modifier) {
         LazyColumn(
             state = lazyListState,
             contentPadding = LocalPlayerAwareWindowInsets.current

@@ -18,10 +18,12 @@ object LrcLib {
     private val client by lazy {
         HttpClient(CIO) {
             install(ContentNegotiation) {
-                json(Json {
-                    isLenient = true
-                    ignoreUnknownKeys = true
-                })
+                json(
+                    Json {
+                        isLenient = true
+                        ignoreUnknownKeys = true
+                    }
+                )
             }
 
             defaultRequest {

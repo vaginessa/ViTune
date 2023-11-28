@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions")
+
 package it.vfsfitvnm.vimusic.ui.screens.settings
 
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -32,12 +34,16 @@ import it.vfsfitvnm.vimusic.ui.components.themed.Scaffold
 import it.vfsfitvnm.vimusic.ui.components.themed.Switch
 import it.vfsfitvnm.vimusic.ui.components.themed.ValueSelectorDialog
 import it.vfsfitvnm.vimusic.ui.screens.GlobalRoutes
+import it.vfsfitvnm.vimusic.ui.screens.Route
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.utils.color
 import it.vfsfitvnm.vimusic.utils.secondary
 import it.vfsfitvnm.vimusic.utils.semiBold
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
 @OptIn(ExperimentalAnimationApi::class)
+@Route
 @Composable
 fun SettingsScreen() {
     val saveableStateHolder = rememberSaveableStateHolder()
@@ -90,12 +96,12 @@ inline fun <reified T : Enum<T>> EnumValueSelectorSettingsEntry(
     ValueSelectorSettingsEntry(
         title = title,
         selectedValue = selectedValue,
-        values = enumValues<T>().toList(),
+        values = enumValues<T>().toList().toImmutableList(),
         onValueSelected = onValueSelected,
         modifier = modifier,
         isEnabled = isEnabled,
         valueText = valueText,
-        trailingContent = trailingContent,
+        trailingContent = trailingContent
     )
 }
 
@@ -103,16 +109,14 @@ inline fun <reified T : Enum<T>> EnumValueSelectorSettingsEntry(
 inline fun <T> ValueSelectorSettingsEntry(
     title: String,
     selectedValue: T,
-    values: List<T>,
+    values: ImmutableList<T>,
     crossinline onValueSelected: (T) -> Unit,
     modifier: Modifier = Modifier,
     isEnabled: Boolean = true,
     crossinline valueText: (T) -> String = { it.toString() },
     noinline trailingContent: (@Composable () -> Unit)? = null
 ) {
-    var isShowingDialog by remember {
-        mutableStateOf(false)
-    }
+    var isShowingDialog by remember { mutableStateOf(false) }
 
     if (isShowingDialog) ValueSelectorDialog(
         onDismiss = { isShowingDialog = false },
@@ -135,11 +139,11 @@ inline fun <T> ValueSelectorSettingsEntry(
 
 @Composable
 fun SwitchSettingEntry(
-    modifier: Modifier = Modifier,
     title: String,
-    text: String? = null,
+    text: String,
     isChecked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
     isEnabled: Boolean = true
 ) = SettingsEntry(
     modifier = modifier,
@@ -147,73 +151,70 @@ fun SwitchSettingEntry(
     text = text,
     onClick = { onCheckedChange(!isChecked) },
     isEnabled = isEnabled
-) { Switch(isChecked = isChecked) }
+) {
+    Switch(isChecked = isChecked)
+}
 
 @Composable
 fun SliderSettingEntry(
-    modifier: Modifier = Modifier,
     title: String,
     text: String,
     initialValue: Float,
+    min: Float,
+    max: Float,
+    modifier: Modifier = Modifier,
     onSlide: (Float) -> Unit = { },
     onSlideCompleted: (Float) -> Unit = { },
     toDisplay: (Float) -> String = { it.toString() },
-    min: Float,
-    max: Float,
     steps: Int = 0,
     isEnabled: Boolean = true
-) {
+) = Column(modifier = modifier) {
     val (colorPalette) = LocalAppearance.current
 
     var state by rememberSaveable { mutableFloatStateOf(initialValue) }
 
-    Column {
-        SettingsEntry(
-            modifier = modifier,
-            title = title,
-            text = "$text (${toDisplay(state)})",
-            onClick = {},
-            isEnabled = isEnabled
-        )
+    SettingsEntry(
+        title = title,
+        text = "$text (${toDisplay(state)})",
+        onClick = {},
+        isEnabled = isEnabled
+    )
 
-        Slider(
-            value = state,
-            onValueChange = {
-                state = it
-                onSlide(it)
-            },
-            onValueChangeFinished = { onSlideCompleted(state) },
-            modifier = Modifier
-                .height(36.dp)
-                .alpha(if (isEnabled) 1f else 0.5f)
-                .padding(start = 16.dp)
-                .padding(all = 16.dp)
-                .fillMaxWidth(),
-            colors = SliderDefaults.colors(
-                thumbColor = colorPalette.onAccent,
-                activeTrackColor = colorPalette.accent,
-                inactiveTrackColor = colorPalette.text.copy(alpha = 0.75f)
-            ),
-            valueRange = min..max,
-            steps = steps
-        )
-    }
+    Slider(
+        value = state,
+        onValueChange = {
+            state = it
+            onSlide(it)
+        },
+        onValueChangeFinished = { onSlideCompleted(state) },
+        modifier = Modifier
+            .height(36.dp)
+            .alpha(if (isEnabled) 1f else 0.5f)
+            .padding(start = 16.dp)
+            .padding(all = 16.dp)
+            .fillMaxWidth(),
+        colors = SliderDefaults.colors(
+            thumbColor = colorPalette.onAccent,
+            activeTrackColor = colorPalette.accent,
+            inactiveTrackColor = colorPalette.text.copy(alpha = 0.75f)
+        ),
+        valueRange = min..max,
+        steps = steps
+    )
 }
 
 @Composable
 inline fun IntSettingEntry(
-    modifier: Modifier = Modifier,
     title: String,
     text: String,
     currentValue: Int,
-    defaultValue: Int = 0,
     crossinline setValue: (Int) -> Unit,
     range: IntRange,
+    modifier: Modifier = Modifier,
+    defaultValue: Int = 0,
     isEnabled: Boolean = true
 ) {
-    var isShowingDialog by remember {
-        mutableStateOf(false)
-    }
+    var isShowingDialog by remember { mutableStateOf(false) }
 
     if (isShowingDialog) NumberFieldDialog(
         onDismiss = { isShowingDialog = false },
@@ -238,10 +239,10 @@ inline fun IntSettingEntry(
 
 @Composable
 fun SettingsEntry(
-    modifier: Modifier = Modifier,
     title: String,
-    text: String? = null,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    text: String? = null,
     isEnabled: Boolean = true,
     trailingContent: @Composable (() -> Unit)? = null
 ) {
@@ -260,12 +261,12 @@ fun SettingsEntry(
         Column(modifier = Modifier.weight(1f)) {
             BasicText(
                 text = title,
-                style = typography.xs.semiBold.copy(color = colorPalette.text),
+                style = typography.xs.semiBold.copy(color = colorPalette.text)
             )
 
             if (text != null) BasicText(
                 text = text,
-                style = typography.xs.semiBold.copy(color = colorPalette.textSecondary),
+                style = typography.xs.semiBold.copy(color = colorPalette.textSecondary)
             )
         }
 
@@ -276,7 +277,7 @@ fun SettingsEntry(
 @Composable
 fun SettingsDescription(
     text: String,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     val (_, typography) = LocalAppearance.current
 
@@ -292,7 +293,7 @@ fun SettingsDescription(
 @Composable
 fun ImportantSettingsDescription(
     text: String,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     val (colorPalette, typography) = LocalAppearance.current
 
@@ -308,7 +309,7 @@ fun ImportantSettingsDescription(
 @Composable
 fun SettingsEntryGroupText(
     title: String,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     val (colorPalette, typography) = LocalAppearance.current
 

@@ -65,9 +65,7 @@ class SwipeState internal constructor() {
 }
 
 @Composable
-fun rememberSwipeState(key: Any?) = remember(key) {
-    SwipeState()
-}
+fun rememberSwipeState(key: Any?) = remember(key) { SwipeState() }
 
 fun Modifier.onSwipe(
     state: SwipeState? = null,
@@ -92,6 +90,7 @@ fun Modifier.onSwipe(
     disposable = disposable
 )
 
+@Suppress("CyclomaticComplexMethod")
 fun Modifier.onSwipe(
     state: SwipeState? = null,
     animateOffset: Boolean = false,
@@ -146,7 +145,7 @@ fun Modifier.onSwipe(
                 )
                 val size = if (orientation == Orientation.Horizontal) size.width else size.height
 
-                launch animationEnd@ {
+                launch animationEnd@{
                     when {
                         targetOffset >= size / 2 -> {
                             launch {

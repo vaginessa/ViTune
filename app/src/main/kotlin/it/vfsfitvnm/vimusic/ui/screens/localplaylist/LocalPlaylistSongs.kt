@@ -74,6 +74,7 @@ import kotlinx.coroutines.runBlocking
 fun LocalPlaylistSongs(
     playlistId: Long,
     onDelete: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val (colorPalette) = LocalAppearance.current
     val binder = LocalPlayerServiceBinder.current
@@ -131,7 +132,7 @@ fun LocalPlaylistSongs(
 
     val rippleIndication = rememberRipple(bounded = false)
 
-    Box {
+    Box(modifier = modifier) {
         LazyColumn(
             state = reorderingState.lazyListState,
             contentPadding = LocalPlayerAwareWindowInsets.current
@@ -203,7 +204,7 @@ fun LocalPlaylistSongs(
                                                     menuState.hide()
                                                     binder?.player?.pause()
                                                     uriHandler.openUri(
-                                                        "https://youtube.com/watch?v=${firstSongId}&list=${
+                                                        "https://youtube.com/watch?v=$firstSongId&list=${
                                                             playlistWithSongs?.playlist?.browseId
                                                                 ?.drop(2)
                                                         }"
@@ -220,7 +221,7 @@ fun LocalPlaylistSongs(
                                                     if (
                                                         !launchYouTubeMusic(
                                                             context = context,
-                                                            endpoint = "watch?v=${firstSongId}&list=${
+                                                            endpoint = "watch?v=$firstSongId&list=${
                                                                 playlistWithSongs?.playlist?.browseId
                                                                     ?.drop(2)
                                                             }"
@@ -258,7 +259,7 @@ fun LocalPlaylistSongs(
             itemsIndexed(
                 items = playlistWithSongs?.songs ?: emptyList(),
                 key = { _, song -> song.id },
-                contentType = { _, song -> song },
+                contentType = { _, song -> song }
             ) { index, song ->
                 SongItem(
                     modifier = Modifier

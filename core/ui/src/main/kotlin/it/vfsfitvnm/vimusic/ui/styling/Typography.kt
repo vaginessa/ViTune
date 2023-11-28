@@ -19,7 +19,7 @@ data class Typography(
     val s: TextStyle,
     val m: TextStyle,
     val l: TextStyle,
-    val xxl: TextStyle,
+    val xxl: TextStyle
 ) {
     fun copy(color: Color) = Typography(
         xxs = xxs.copy(color = color),
@@ -67,7 +67,7 @@ fun typographyOf(color: Color, useSystemFont: Boolean, applyFontPadding: Boolean
             Font(
                 resId = R.font.poppins_w700,
                 weight = FontWeight.Bold
-            ),
+            )
         ),
         fontWeight = FontWeight.Normal,
         color = color,

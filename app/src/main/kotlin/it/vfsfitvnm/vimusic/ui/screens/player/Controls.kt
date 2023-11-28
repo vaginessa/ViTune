@@ -312,7 +312,7 @@ private fun PlayButton(
 @Composable
 private fun Duration(
     position: Float,
-    duration: Long,
+    duration: Long
 ) {
     val typography = LocalAppearance.current.typography
 
@@ -325,14 +325,14 @@ private fun Duration(
             text = formatAsDuration(position.toLong()),
             style = typography.xxs.semiBold,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+            overflow = TextOverflow.Ellipsis
         )
 
         if (duration != C.TIME_UNSET) BasicText(
             text = formatAsDuration(duration),
             style = typography.xxs.semiBold,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }

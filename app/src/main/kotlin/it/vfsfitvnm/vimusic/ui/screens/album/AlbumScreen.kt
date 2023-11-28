@@ -36,6 +36,7 @@ import it.vfsfitvnm.vimusic.ui.components.themed.adaptiveThumbnailContent
 import it.vfsfitvnm.vimusic.ui.items.AlbumItem
 import it.vfsfitvnm.vimusic.ui.items.AlbumItemPlaceholder
 import it.vfsfitvnm.vimusic.ui.screens.GlobalRoutes
+import it.vfsfitvnm.vimusic.ui.screens.Route
 import it.vfsfitvnm.vimusic.ui.screens.albumRoute
 import it.vfsfitvnm.vimusic.ui.screens.searchresult.ItemsPage
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
@@ -46,6 +47,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
+@Route
 @Composable
 fun AlbumScreen(browseId: String) {
     val saveableStateHolder = rememberSaveableStateHolder()
@@ -119,7 +121,8 @@ fun AlbumScreen(browseId: String) {
                             Spacer(modifier = Modifier.weight(1f))
 
                             HeaderIconButton(
-                                icon = if (album?.bookmarkedAt == null) R.drawable.bookmark_outline else R.drawable.bookmark,
+                                icon = if (album?.bookmarkedAt == null) R.drawable.bookmark_outline
+                                else R.drawable.bookmark,
                                 color = colorPalette.accent,
                                 onClick = {
                                     val bookmarkedAt =
@@ -172,7 +175,7 @@ fun AlbumScreen(browseId: String) {
                         0 -> AlbumSongs(
                             browseId = browseId,
                             headerContent = headerContent,
-                            thumbnailContent = thumbnailContent,
+                            thumbnailContent = thumbnailContent
                         )
 
                         1 -> {

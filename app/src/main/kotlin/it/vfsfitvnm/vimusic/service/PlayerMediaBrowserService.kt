@@ -59,8 +59,8 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
         clientPackageName: String,
         clientUid: Int,
         rootHints: Bundle?
-    ) = if (clientUid == Process.myUid() || clientUid == Process.SYSTEM_UID
-        || clientPackageName == "com.google.android.projection.gearhead"
+    ) = if (clientUid == Process.myUid() || clientUid == Process.SYSTEM_UID ||
+        clientPackageName == "com.google.android.projection.gearhead"
     ) {
         bindService(intent<PlayerService>(), this, Context.BIND_AUTO_CREATE)
         BrowserRoot(
@@ -81,32 +81,35 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
                     albumsBrowserMediaItem
                 )
 
-                MediaId.SONGS -> Database
-                    .songsByPlayTimeDesc()
-                    .first()
-                    .take(30)
-                    .also { lastSongs = it }
-                    .map { it.asBrowserMediaItem }
-                    .toMutableList()
-                    .apply {
-                        if (isNotEmpty()) add(0, shuffleBrowserMediaItem)
-                    }
+                MediaId.SONGS ->
+                    Database
+                        .songsByPlayTimeDesc()
+                        .first()
+                        .take(30)
+                        .also { lastSongs = it }
+                        .map { it.asBrowserMediaItem }
+                        .toMutableList()
+                        .apply {
+                            if (isNotEmpty()) add(0, shuffleBrowserMediaItem)
+                        }
 
-                MediaId.PLAYLISTS -> Database
-                    .playlistPreviewsByDateAddedDesc()
-                    .first()
-                    .map { it.asBrowserMediaItem }
-                    .toMutableList()
-                    .apply {
-                        add(0, favoritesBrowserMediaItem)
-                        add(1, offlineBrowserMediaItem)
-                    }
+                MediaId.PLAYLISTS ->
+                    Database
+                        .playlistPreviewsByDateAddedDesc()
+                        .first()
+                        .map { it.asBrowserMediaItem }
+                        .toMutableList()
+                        .apply {
+                            add(0, favoritesBrowserMediaItem)
+                            add(1, offlineBrowserMediaItem)
+                        }
 
-                MediaId.ALBUMS -> Database
-                    .albumsByRowIdDesc()
-                    .first()
-                    .map { it.asBrowserMediaItem }
-                    .toMutableList()
+                MediaId.ALBUMS ->
+                    Database
+                        .albumsByRowIdDesc()
+                        .first()
+                        .map { it.asBrowserMediaItem }
+                        .toMutableList()
 
                 else -> mutableListOf()
             }
@@ -139,7 +142,6 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
                 .build(),
             BrowserMediaItem.FLAG_BROWSABLE
         )
-
 
     private val playlistsBrowserMediaItem
         inline get() = BrowserMediaItem(
@@ -234,37 +236,42 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
                 val mediaItems = when (data.getOrNull(0)) {
                     MediaId.SHUFFLE -> lastSongs
 
-                    MediaId.SONGS -> data
-                        .getOrNull(1)
-                        ?.let { songId ->
-                            index = lastSongs.indexOfFirst { it.id == songId }
-                            lastSongs
-                        }
+                    MediaId.SONGS ->
+                        data
+                            .getOrNull(1)
+                            ?.let { songId ->
+                                index = lastSongs.indexOfFirst { it.id == songId }
+                                lastSongs
+                            }
 
-                    MediaId.FAVORITES -> Database
-                        .favorites()
-                        .first()
-                        .shuffled()
+                    MediaId.FAVORITES ->
+                        Database
+                            .favorites()
+                            .first()
+                            .shuffled()
 
-                    MediaId.OFFLINE -> Database
-                        .songsWithContentLength()
-                        .first()
-                        .filter { binder.isCached(it) }
-                        .map(SongWithContentLength::song)
-                        .shuffled()
+                    MediaId.OFFLINE ->
+                        Database
+                            .songsWithContentLength()
+                            .first()
+                            .filter { binder.isCached(it) }
+                            .map(SongWithContentLength::song)
+                            .shuffled()
 
-                    MediaId.PLAYLISTS -> data
-                        .getOrNull(1)
-                        ?.toLongOrNull()
-                        ?.let(Database::playlistWithSongs)
-                        ?.first()
-                        ?.songs
-                        ?.shuffled()
+                    MediaId.PLAYLISTS ->
+                        data
+                            .getOrNull(1)
+                            ?.toLongOrNull()
+                            ?.let(Database::playlistWithSongs)
+                            ?.first()
+                            ?.songs
+                            ?.shuffled()
 
-                    MediaId.ALBUMS -> data
-                        .getOrNull(1)
-                        ?.let(Database::albumSongs)
-                        ?.first()
+                    MediaId.ALBUMS ->
+                        data
+                            .getOrNull(1)
+                            ?.let(Database::albumSongs)
+                            ?.first()
 
                     else -> emptyList()
                 }?.map(Song::asMediaItem) ?: return@launch

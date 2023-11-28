@@ -10,7 +10,7 @@ import it.vfsfitvnm.vimusic.roundedShape
 data class Appearance(
     val colorPalette: ColorPalette,
     val typography: Typography,
-    val thumbnailShapeCorners: Dp,
+    val thumbnailShapeCorners: Dp
 ) {
     val thumbnailShape = thumbnailShapeCorners.roundedShape
     operator fun component4() = thumbnailShape

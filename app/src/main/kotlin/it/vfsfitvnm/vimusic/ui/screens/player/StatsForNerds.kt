@@ -63,7 +63,7 @@ fun StatsForNerds(
     AnimatedVisibility(
         visible = isDisplayed,
         enter = fadeIn(),
-        exit = fadeOut(),
+        exit = fadeOut()
     ) {
         var cachedBytes by remember(mediaId) {
             mutableLongStateOf(binder.cache.getCachedBytes(mediaId, 0, -1))

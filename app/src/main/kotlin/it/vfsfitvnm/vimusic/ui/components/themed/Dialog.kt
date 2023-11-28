@@ -57,6 +57,7 @@ import it.vfsfitvnm.vimusic.utils.drawCircle
 import it.vfsfitvnm.vimusic.utils.medium
 import it.vfsfitvnm.vimusic.utils.secondary
 import it.vfsfitvnm.vimusic.utils.semiBold
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.delay
 
 @Composable
@@ -116,13 +117,13 @@ fun TextFieldDialog(
                     androidx.compose.animation.AnimatedVisibility(
                         visible = textFieldValue.text.isEmpty(),
                         enter = fadeIn(tween(100)),
-                        exit = fadeOut(tween(100)),
+                        exit = fadeOut(tween(100))
                     ) {
                         BasicText(
                             text = hintText,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            style = typography.xs.semiBold.secondary,
+                            style = typography.xs.semiBold.secondary
                         )
                     }
 
@@ -166,29 +167,27 @@ fun TextFieldDialog(
 
 @Composable
 fun <T> NumberFieldDialog(
-    modifier: Modifier = Modifier,
     onDismiss: () -> Unit,
     onDone: (T) -> Unit,
-    cancelText: String = "Cancel",
-    doneText: String = "Done",
     initialValue: T,
     defaultValue: T,
-    onCancel: () -> Unit = onDismiss,
     convert: (String) -> T?,
-    range: ClosedRange<T>
-) where T : Number, T : Comparable<T> {
-    TextFieldDialog(
-        hintText = "",
-        onDismiss = onDismiss,
-        onDone = { onDone((convert(it) ?: defaultValue).coerceIn(range)) },
-        modifier = modifier,
-        cancelText = cancelText,
-        doneText = doneText,
-        initialTextInput = initialValue.toString(),
-        onCancel = onCancel,
-        isTextInputValid = { true } // we handle invalid input ourselves
-    )
-}
+    range: ClosedRange<T>,
+    modifier: Modifier = Modifier,
+    cancelText: String = "Cancel",
+    doneText: String = "Done",
+    onCancel: () -> Unit = onDismiss
+) where T : Number, T : Comparable<T> = TextFieldDialog(
+    hintText = "",
+    onDismiss = onDismiss,
+    onDone = { onDone((convert(it) ?: defaultValue).coerceIn(range)) },
+    modifier = modifier,
+    cancelText = cancelText,
+    doneText = doneText,
+    initialTextInput = initialValue.toString(),
+    onCancel = onCancel,
+    isTextInputValid = { true }
+)
 
 fun <T : Comparable<T>> T.coerceIn(range: ClosedRange<T>) = when {
     this < range.start -> range.start
@@ -215,14 +214,12 @@ fun ConfirmationDialog(
         BasicText(
             text = text,
             style = typography.xs.medium.center,
-            modifier = Modifier
-                .padding(all = 16.dp)
+            modifier = Modifier.padding(all = 16.dp)
         )
 
         Row(
             horizontalArrangement = Arrangement.SpaceEvenly,
-            modifier = Modifier
-                .fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
         ) {
             DialogTextButton(
                 text = cancelText,
@@ -273,7 +270,7 @@ inline fun <T> ValueSelectorDialog(
     noinline onDismiss: () -> Unit,
     title: String,
     selectedValue: T,
-    values: List<T>,
+    values: ImmutableList<T>,
     crossinline onValueSelected: (T) -> Unit,
     modifier: Modifier = Modifier,
     crossinline valueText: (T) -> String = { it.toString() }
@@ -301,7 +298,7 @@ inline fun <T> ValueSelectorDialogBody(
     noinline onDismiss: () -> Unit,
     title: String,
     selectedValue: T?,
-    values: List<T>,
+    values: ImmutableList<T>,
     crossinline onValueSelected: (T) -> Unit,
     modifier: Modifier = Modifier,
     crossinline valueText: (T) -> String = { it.toString() }
@@ -391,10 +388,10 @@ inline fun SliderDialog(
     initialValue: Float,
     crossinline onSlide: (Float) -> Unit,
     crossinline onSlideCompleted: (Float) -> Unit,
-    modifier: Modifier = Modifier,
-    crossinline toDisplay: (Float) -> String = { it.toString() },
     min: Float,
     max: Float,
+    modifier: Modifier = Modifier,
+    crossinline toDisplay: (Float) -> String = { it.toString() },
     steps: Int = 0,
     crossinline content: @Composable () -> Unit = { }
 ) {
@@ -424,10 +421,10 @@ inline fun SliderDialog(
     crossinline setState: (Float) -> Unit,
     crossinline onSlide: (Float) -> Unit,
     crossinline onSlideCompleted: (Float) -> Unit,
-    modifier: Modifier = Modifier,
-    crossinline toDisplay: (Float) -> String = { it.toString() },
     min: Float,
     max: Float,
+    modifier: Modifier = Modifier,
+    crossinline toDisplay: (Float) -> String = { it.toString() },
     steps: Int = 0,
     crossinline content: @Composable () -> Unit = { }
 ) {
@@ -438,7 +435,7 @@ inline fun SliderDialog(
             modifier = modifier
                 .padding(all = 48.dp)
                 .background(color = colorPalette.background1, shape = RoundedCornerShape(8.dp))
-                .padding(vertical = 16.dp),
+                .padding(vertical = 16.dp)
         ) {
             BasicText(
                 text = title,

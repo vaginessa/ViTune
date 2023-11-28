@@ -44,41 +44,41 @@ import kotlin.math.sin
 fun SeekBar(
     position: () -> Float,
     onSeek: (updated: Float) -> Unit,
+    color: Color,
     modifier: Modifier = Modifier,
     onSeekStarted: (updated: Float) -> Unit = {},
     onSeekFinished: () -> Unit = {},
-    color: Color,
     backgroundColor: Color = Color.Transparent,
     range: ClosedRange<Float> = 0f..100f,
     isActive: Boolean = true,
     scrubberRadius: Dp = 6.dp,
-    shape: Shape = RectangleShape,
+    shape: Shape = RectangleShape
 ) {
     val minimumValue = range.start
     val maximumValue = range.endInclusive
-    val isDragging = remember {
-        MutableTransitionState(false)
-    }
+
+    val isDragging = remember { MutableTransitionState(false) }
 
     val transition = updateTransition(transitionState = isDragging, label = null)
 
     val currentAmplitude by transition.animateDp(label = "") { if (it || !isActive) 0.dp else 2.dp }
     val currentScrubberHeight by transition.animateDp(label = "") { if (it) 20.dp else 15.dp }
 
-    Box(modifier = modifier
-        .pointerInput(minimumValue, maximumValue) {
-            if (maximumValue < minimumValue) return@pointerInput
+    Box(
+        modifier = modifier
+            .pointerInput(minimumValue, maximumValue) {
+                if (maximumValue < minimumValue) return@pointerInput
 
-            detectDrags(isDragging, maximumValue, minimumValue, onSeek, onSeekFinished)
-        }
-        .pointerInput(minimumValue, maximumValue) {
-            detectTaps(maximumValue, minimumValue, onSeekStarted, onSeekFinished)
-        }
-        .padding(horizontal = scrubberRadius)
-        .drawWithContent {
-            drawContent()
-            drawScrubber(range, position(), color, currentScrubberHeight)
-        }
+                detectDrags(isDragging, maximumValue, minimumValue, onSeek, onSeekFinished)
+            }
+            .pointerInput(minimumValue, maximumValue) {
+                detectTaps(maximumValue, minimumValue, onSeekStarted, onSeekFinished)
+            }
+            .padding(horizontal = scrubberRadius)
+            .drawWithContent {
+                drawContent()
+                drawScrubber(range, position(), color, currentScrubberHeight)
+            }
     ) {
         SeekBarContent(
             backgroundColor,
@@ -139,7 +139,10 @@ private suspend fun PointerInputScope.detectTaps(
 }
 
 private fun ContentDrawScope.drawScrubber(
-    range: ClosedRange<Float>, position: Float, color: Color, height: Dp
+    range: ClosedRange<Float>,
+    position: Float,
+    color: Color,
+    height: Dp
 ) {
     val minimumValue = range.start
     val maximumValue = range.endInclusive
@@ -150,12 +153,12 @@ private fun ContentDrawScope.drawScrubber(
     }
 
     drawRoundRect(
-        color, topLeft = Offset(scrubberPosition - 5f, (size.height - height.toPx()) / 2),
+        color,
+        topLeft = Offset(scrubberPosition - 5f, (size.height - height.toPx()) / 2),
         size = Size(10f, height.toPx()),
         cornerRadius = CornerRadius(5f)
     )
 }
-
 
 @Composable
 private fun SeekBarContent(
@@ -173,12 +176,15 @@ private fun SeekBarContent(
         1f,
         animationSpec = infiniteRepeatable(
             tween(2000, easing = LinearEasing)
-        ), label = ""
+        ),
+        label = ""
     )
+
     Box(
-        Modifier
+        modifier = Modifier
             .fillMaxWidth()
-            .height(6.dp)) {
+            .height(6.dp)
+    ) {
         Spacer(
             modifier = Modifier
                 .fillMaxHeight()
@@ -191,7 +197,8 @@ private fun SeekBarContent(
             Modifier
                 .fillMaxWidth(fraction)
                 .height(amplitude())
-                .align(Alignment.CenterStart)) {
+                .align(Alignment.CenterStart)
+        ) {
             drawPath(
                 wavePath(size.copy(height = size.height * 2), progress),
                 color,
@@ -201,14 +208,14 @@ private fun SeekBarContent(
     }
 }
 
-private fun wavePath(size: Size, progress: Float): Path {
-    fun yFromX(x: Float) = (sin(x / 15f + progress * 2 * PI.toFloat()) + 1) * size.height / 2
-    return Path().apply {
-        moveTo(0f, yFromX(0f))
-        var currentX = 0f
-        while (currentX < size.width) {
-            lineTo(currentX, yFromX(currentX))
-            currentX += 1
-        }
+private fun wavePath(size: Size, progress: Float) = Path().apply {
+    fun f(x: Float) = (sin(x / 15f + progress * 2 * PI.toFloat()) + 1) * size.height / 2
+
+    moveTo(0f, f(0f))
+    var currentX = 0f
+
+    while (currentX < size.width) {
+        lineTo(currentX, f(currentX))
+        currentX += 1
     }
 }

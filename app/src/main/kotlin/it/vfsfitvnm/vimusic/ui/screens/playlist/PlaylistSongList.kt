@@ -68,7 +68,8 @@ import kotlinx.coroutines.withContext
 fun PlaylistSongList(
     browseId: String,
     params: String?,
-    maxDepth: Int?
+    maxDepth: Int?,
+    modifier: Modifier = Modifier
 ) {
     val (colorPalette) = LocalAppearance.current
     val binder = LocalPlayerServiceBinder.current
@@ -141,8 +142,10 @@ fun PlaylistSongList(
                 icon = R.drawable.share_social,
                 color = colorPalette.text,
                 onClick = {
-                    (playlistPage?.url
-                        ?: "https://music.youtube.com/playlist?list=${browseId.removePrefix("VL")}").let { url ->
+                    (
+                        playlistPage?.url
+                            ?: "https://music.youtube.com/playlist?list=${browseId.removePrefix("VL")}"
+                        ).let { url ->
                         val sendIntent = Intent().apply {
                             action = Intent.ACTION_SEND
                             type = "text/plain"
@@ -161,7 +164,10 @@ fun PlaylistSongList(
 
     val lazyListState = rememberLazyListState()
 
-    LayoutWithAdaptiveThumbnail(thumbnailContent = thumbnailContent) {
+    LayoutWithAdaptiveThumbnail(
+        thumbnailContent = thumbnailContent,
+        modifier = modifier
+    ) {
         Box {
             LazyColumn(
                 state = lazyListState,
@@ -192,7 +198,7 @@ fun PlaylistSongList(
                                     menuState.display {
                                         NonQueuedMediaItemMenu(
                                             onDismiss = menuState::hide,
-                                            mediaItem = song.asMediaItem,
+                                            mediaItem = song.asMediaItem
                                         )
                                     }
                                 },

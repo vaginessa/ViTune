@@ -43,6 +43,7 @@ import it.vfsfitvnm.vimusic.ui.items.AlbumItemPlaceholder
 import it.vfsfitvnm.vimusic.ui.items.SongItem
 import it.vfsfitvnm.vimusic.ui.items.SongItemPlaceholder
 import it.vfsfitvnm.vimusic.ui.screens.GlobalRoutes
+import it.vfsfitvnm.vimusic.ui.screens.Route
 import it.vfsfitvnm.vimusic.ui.screens.albumRoute
 import it.vfsfitvnm.vimusic.ui.screens.searchresult.ItemsPage
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
@@ -57,6 +58,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
+@Route
 @Composable
 fun ArtistScreen(browseId: String) {
     val saveableStateHolder = rememberSaveableStateHolder()
@@ -70,12 +72,15 @@ fun ArtistScreen(browseId: String) {
     LaunchedEffect(Unit) {
         Database
             .artist(browseId)
-            .combine(snapshotFlow { UIStatePreferences.artistScreenTabIndex }.map { it != 4 }) { artist, mustFetch -> artist to mustFetch }
+            .combine(
+                flow = snapshotFlow { UIStatePreferences.artistScreenTabIndex }.map { it != 4 },
+                transform = ::Pair
+            )
             .distinctUntilChanged()
             .collect { (currentArtist, mustFetch) ->
                 artist = currentArtist
 
-                if (artistPage == null && (currentArtist?.timestamp == null || mustFetch)) {
+                if (artistPage == null && (currentArtist?.timestamp == null || mustFetch))
                     withContext(Dispatchers.IO) {
                         Innertube.artistPage(BrowseBody(browseId = browseId))
                             ?.onSuccess { currentArtistPage ->
@@ -92,7 +97,6 @@ fun ArtistScreen(browseId: String) {
                                 )
                             }
                     }
-                }
             }
     }
 
@@ -100,38 +104,26 @@ fun ArtistScreen(browseId: String) {
         GlobalRoutes()
 
         NavHost {
-            val thumbnailContent =
-                adaptiveThumbnailContent(
-                    artist?.timestamp == null,
-                    artist?.thumbnailUrl,
-                    CircleShape
-                )
+            val thumbnailContent = adaptiveThumbnailContent(
+                isLoading = artist?.timestamp == null,
+                url = artist?.thumbnailUrl,
+                shape = CircleShape
+            )
 
             val headerContent: @Composable (textButton: (@Composable () -> Unit)?) -> Unit =
                 { textButton ->
-                    if (artist?.timestamp == null) {
-                        HeaderPlaceholder(
-                            modifier = Modifier
-                                .shimmer()
-                        )
-                    } else {
+                    if (artist?.timestamp == null) HeaderPlaceholder(modifier = Modifier.shimmer()) else {
                         val (colorPalette) = LocalAppearance.current
                         val context = LocalContext.current
 
                         Header(title = artist?.name ?: "Unknown") {
                             textButton?.invoke()
 
-                            Spacer(
-                                modifier = Modifier
-                                    .weight(1f)
-                            )
+                            Spacer(modifier = Modifier.weight(1f))
 
                             HeaderIconButton(
-                                icon = if (artist?.bookmarkedAt == null) {
-                                    R.drawable.bookmark_outline
-                                } else {
-                                    R.drawable.bookmark
-                                },
+                                icon = if (artist?.bookmarkedAt == null) R.drawable.bookmark_outline
+                                else R.drawable.bookmark,
                                 color = colorPalette.accent,
                                 onClick = {
                                     val bookmarkedAt =
@@ -176,7 +168,7 @@ fun ArtistScreen(browseId: String) {
                     item(2, "Albums", R.drawable.disc)
                     item(3, "Singles", R.drawable.disc)
                     item(4, "Library", R.drawable.library)
-                },
+                }
             ) { currentTabIndex ->
                 saveableStateHolder.SaveableStateProvider(key = currentTabIndex) {
                     when (currentTabIndex) {
@@ -187,7 +179,7 @@ fun ArtistScreen(browseId: String) {
                             onAlbumClick = { albumRoute(it) },
                             onViewAllSongsClick = { UIStatePreferences.artistScreenTabIndex = 1 },
                             onViewAllAlbumsClick = { UIStatePreferences.artistScreenTabIndex = 2 },
-                            onViewAllSinglesClick = { UIStatePreferences.artistScreenTabIndex = 3 },
+                            onViewAllSinglesClick = { UIStatePreferences.artistScreenTabIndex = 3 }
                         )
 
                         1 -> {
@@ -200,11 +192,12 @@ fun ArtistScreen(browseId: String) {
                                 tag = "artist/$browseId/songs",
                                 headerContent = headerContent,
                                 itemsPageProvider = artistPage?.let {
-                                    ({ continuation ->
+                                    @Suppress("SpacingAroundCurly")
+                                    { continuation ->
                                         continuation?.let {
                                             Innertube.itemsPage(
                                                 body = ContinuationBody(continuation = continuation),
-                                                fromMusicResponsiveListItemRenderer = Innertube.SongItem::from,
+                                                fromMusicResponsiveListItemRenderer = Innertube.SongItem::from
                                             )
                                         } ?: artistPage
                                             ?.songsEndpoint
@@ -213,9 +206,9 @@ fun ArtistScreen(browseId: String) {
                                                 Innertube.itemsPage(
                                                     body = BrowseBody(
                                                         browseId = endpoint.browseId!!,
-                                                        params = endpoint.params,
+                                                        params = endpoint.params
                                                     ),
-                                                    fromMusicResponsiveListItemRenderer = Innertube.SongItem::from,
+                                                    fromMusicResponsiveListItemRenderer = Innertube.SongItem::from
                                                 )
                                             }
                                         ?: Result.success(
@@ -224,29 +217,28 @@ fun ArtistScreen(browseId: String) {
                                                 continuation = null
                                             )
                                         )
-                                    })
+                                    }
                                 },
                                 itemContent = { song ->
                                     SongItem(
                                         song = song,
                                         thumbnailSizeDp = thumbnailSizeDp,
                                         thumbnailSizePx = thumbnailSizePx,
-                                        modifier = Modifier
-                                            .combinedClickable(
-                                                onLongClick = {
-                                                    menuState.display {
-                                                        NonQueuedMediaItemMenu(
-                                                            onDismiss = menuState::hide,
-                                                            mediaItem = song.asMediaItem,
-                                                        )
-                                                    }
-                                                },
-                                                onClick = {
-                                                    binder?.stopRadio()
-                                                    binder?.player?.forcePlay(song.asMediaItem)
-                                                    binder?.setupRadio(song.info?.endpoint)
+                                        modifier = Modifier.combinedClickable(
+                                            onLongClick = {
+                                                menuState.display {
+                                                    NonQueuedMediaItemMenu(
+                                                        onDismiss = menuState::hide,
+                                                        mediaItem = song.asMediaItem
+                                                    )
                                                 }
-                                            )
+                                            },
+                                            onClick = {
+                                                binder?.stopRadio()
+                                                binder?.player?.forcePlay(song.asMediaItem)
+                                                binder?.setupRadio(song.info?.endpoint)
+                                            }
+                                        )
                                     )
                                 },
                                 itemPlaceholderContent = {
@@ -264,11 +256,12 @@ fun ArtistScreen(browseId: String) {
                                 headerContent = headerContent,
                                 emptyItemsText = "This artist didn't release any album",
                                 itemsPageProvider = artistPage?.let {
-                                    ({ continuation ->
+                                    @Suppress("SpacingAroundCurly")
+                                    { continuation ->
                                         continuation?.let {
                                             Innertube.itemsPage(
                                                 body = ContinuationBody(continuation = continuation),
-                                                fromMusicTwoRowItemRenderer = Innertube.AlbumItem::from,
+                                                fromMusicTwoRowItemRenderer = Innertube.AlbumItem::from
                                             )
                                         } ?: artistPage
                                             ?.albumsEndpoint
@@ -277,9 +270,9 @@ fun ArtistScreen(browseId: String) {
                                                 Innertube.itemsPage(
                                                     body = BrowseBody(
                                                         browseId = endpoint.browseId!!,
-                                                        params = endpoint.params,
+                                                        params = endpoint.params
                                                     ),
-                                                    fromMusicTwoRowItemRenderer = Innertube.AlbumItem::from,
+                                                    fromMusicTwoRowItemRenderer = Innertube.AlbumItem::from
                                                 )
                                             }
                                         ?: Result.success(
@@ -288,15 +281,14 @@ fun ArtistScreen(browseId: String) {
                                                 continuation = null
                                             )
                                         )
-                                    })
+                                    }
                                 },
                                 itemContent = { album ->
                                     AlbumItem(
                                         album = album,
                                         thumbnailSizePx = thumbnailSizePx,
                                         thumbnailSizeDp = thumbnailSizeDp,
-                                        modifier = Modifier
-                                            .clickable(onClick = { albumRoute(album.key) })
+                                        modifier = Modifier.clickable(onClick = { albumRoute(album.key) })
                                     )
                                 },
                                 itemPlaceholderContent = {
@@ -314,11 +306,12 @@ fun ArtistScreen(browseId: String) {
                                 headerContent = headerContent,
                                 emptyItemsText = "This artist didn't release any single",
                                 itemsPageProvider = artistPage?.let {
-                                    ({ continuation ->
+                                    @Suppress("SpacingAroundCurly")
+                                    { continuation ->
                                         continuation?.let {
                                             Innertube.itemsPage(
                                                 body = ContinuationBody(continuation = continuation),
-                                                fromMusicTwoRowItemRenderer = Innertube.AlbumItem::from,
+                                                fromMusicTwoRowItemRenderer = Innertube.AlbumItem::from
                                             )
                                         } ?: artistPage
                                             ?.singlesEndpoint
@@ -327,9 +320,9 @@ fun ArtistScreen(browseId: String) {
                                                 Innertube.itemsPage(
                                                     body = BrowseBody(
                                                         browseId = endpoint.browseId!!,
-                                                        params = endpoint.params,
+                                                        params = endpoint.params
                                                     ),
-                                                    fromMusicTwoRowItemRenderer = Innertube.AlbumItem::from,
+                                                    fromMusicTwoRowItemRenderer = Innertube.AlbumItem::from
                                                 )
                                             }
                                         ?: Result.success(
@@ -338,15 +331,14 @@ fun ArtistScreen(browseId: String) {
                                                 continuation = null
                                             )
                                         )
-                                    })
+                                    }
                                 },
                                 itemContent = { album ->
                                     AlbumItem(
                                         album = album,
                                         thumbnailSizePx = thumbnailSizePx,
                                         thumbnailSizeDp = thumbnailSizeDp,
-                                        modifier = Modifier
-                                            .clickable(onClick = { albumRoute(album.key) })
+                                        modifier = Modifier.clickable(onClick = { albumRoute(album.key) })
                                     )
                                 },
                                 itemPlaceholderContent = {
@@ -358,7 +350,7 @@ fun ArtistScreen(browseId: String) {
                         4 -> ArtistLocalSongs(
                             browseId = browseId,
                             headerContent = headerContent,
-                            thumbnailContent = thumbnailContent,
+                            thumbnailContent = thumbnailContent
                         )
                     }
                 }

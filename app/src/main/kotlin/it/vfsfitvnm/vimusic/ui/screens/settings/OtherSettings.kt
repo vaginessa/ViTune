@@ -49,6 +49,7 @@ import it.vfsfitvnm.vimusic.query
 import it.vfsfitvnm.vimusic.service.PlayerMediaBrowserService
 import it.vfsfitvnm.vimusic.ui.components.themed.Header
 import it.vfsfitvnm.vimusic.ui.components.themed.SecondaryTextButton
+import it.vfsfitvnm.vimusic.ui.screens.Route
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.utils.findActivity
 import it.vfsfitvnm.vimusic.utils.isAtLeastAndroid12
@@ -62,6 +63,7 @@ import kotlin.system.exitProcess
 
 @SuppressLint("BatteryLife")
 @ExperimentalAnimationApi
+@Route
 @Composable
 fun OtherSettings() {
     val context = LocalContext.current
@@ -128,7 +130,9 @@ fun OtherSettings() {
         )
 
         AnimatedVisibility(visible = isAndroidAutoEnabled) {
-            SettingsDescription(text = "Remember to enable \"Unknown sources\" in the Developer Settings of Android Auto.")
+            SettingsDescription(
+                text = "Remember to enable \"Unknown sources\" in the Developer Settings of Android Auto."
+            )
         }
 
         SettingsGroupSpacer()
@@ -173,15 +177,19 @@ fun OtherSettings() {
         SettingsEntryGroupText(title = "SERVICE LIFETIME")
 
         AnimatedVisibility(visible = !isIgnoringBatteryOptimizations) {
-            ImportantSettingsDescription(text = "If battery optimizations are applied, the playback notification can suddenly disappear when paused.")
+            ImportantSettingsDescription(
+                text = "If battery optimizations are applied, the playback notification can suddenly disappear when paused."
+            )
         }
 
-        if (isAtLeastAndroid12)
-            SettingsDescription(text = "Since Android 12, disabling battery optimizations is required for the invincible service option to be available.")
+        if (isAtLeastAndroid12) SettingsDescription(
+            text = "Since Android 12, disabling battery optimizations is required for the invincible service option to be available."
+        )
 
         SettingsEntry(
             title = "Ignore battery optimizations",
-            text = if (isIgnoringBatteryOptimizations) "Restriction already lifted" else "Disable background restrictions",
+            text = if (isIgnoringBatteryOptimizations) "Restriction already lifted"
+            else "Disable background restrictions",
             onClick = {
                 if (!isAtLeastAndroid6) return@SettingsEntry
 
@@ -193,9 +201,7 @@ fun OtherSettings() {
                     )
                 } catch (e: ActivityNotFoundException) {
                     try {
-                        activityResultLauncher.launch(
-                            Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
-                        )
+                        activityResultLauncher.launch(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
                     } catch (e: ActivityNotFoundException) {
                         context.toast("Couldn't find battery optimization settings, please whitelist ViMusic manually")
                     }
@@ -222,7 +228,9 @@ fun OtherSettings() {
             }
         )
 
-        SettingsDescription(text = "If you really think there is something wrong with the app itself, hop on to the About tab")
+        SettingsDescription(
+            text = "If you really think there is something wrong with the app itself, hop on to the About tab"
+        )
 
         SettingsGroupSpacer()
 
@@ -276,22 +284,20 @@ fun OtherSettings() {
                 )
 
                 SettingsGroupSpacer()
-            } else {
-                SecondaryTextButton(
-                    text = "Show troubleshoot section",
-                    onClick = {
-                        coroutineScope.launch {
-                            delay(500)
-                            scrollState.animateScrollTo(scrollState.maxValue)
-                        }
-                        showTroubleshoot = true
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 16.dp, bottom = 16.dp)
-                        .padding(horizontal = 16.dp)
-                )
-            }
+            } else SecondaryTextButton(
+                text = "Show troubleshoot section",
+                onClick = {
+                    coroutineScope.launch {
+                        delay(500)
+                        scrollState.animateScrollTo(scrollState.maxValue)
+                    }
+                    showTroubleshoot = true
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, bottom = 16.dp)
+                    .padding(horizontal = 16.dp)
+            )
         }
     }
 }

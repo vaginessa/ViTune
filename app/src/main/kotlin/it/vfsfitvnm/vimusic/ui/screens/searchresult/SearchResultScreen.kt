@@ -37,6 +37,7 @@ import it.vfsfitvnm.vimusic.ui.items.SongItemPlaceholder
 import it.vfsfitvnm.vimusic.ui.items.VideoItem
 import it.vfsfitvnm.vimusic.ui.items.VideoItemPlaceholder
 import it.vfsfitvnm.vimusic.ui.screens.GlobalRoutes
+import it.vfsfitvnm.vimusic.ui.screens.Route
 import it.vfsfitvnm.vimusic.ui.screens.albumRoute
 import it.vfsfitvnm.vimusic.ui.screens.artistRoute
 import it.vfsfitvnm.vimusic.ui.screens.playlistRoute
@@ -46,6 +47,7 @@ import it.vfsfitvnm.vimusic.utils.asMediaItem
 import it.vfsfitvnm.vimusic.utils.forcePlay
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
+@Route
 @Composable
 fun SearchResultScreen(query: String, onSearchAgain: () -> Unit) {
     val context = LocalContext.current
@@ -60,15 +62,14 @@ fun SearchResultScreen(query: String, onSearchAgain: () -> Unit) {
             val headerContent: @Composable (textButton: (@Composable () -> Unit)?) -> Unit = {
                 Header(
                     title = query,
-                    modifier = Modifier
-                        .pointerInput(Unit) {
-                            detectTapGestures {
-                                context.persistMap?.keys?.removeAll {
-                                    it.startsWith("searchResults/$query/")
-                                }
-                                onSearchAgain()
+                    modifier = Modifier.pointerInput(Unit) {
+                        detectTapGestures {
+                            context.persistMap?.keys?.removeAll {
+                                it.startsWith("searchResults/$query/")
                             }
+                            onSearchAgain()
                         }
+                    }
                 )
             }
 
@@ -99,20 +100,16 @@ fun SearchResultScreen(query: String, onSearchAgain: () -> Unit) {
                             ItemsPage(
                                 tag = "searchResults/$query/songs",
                                 itemsPageProvider = { continuation ->
-                                    if (continuation == null) {
-                                        Innertube.searchPage(
-                                            body = SearchBody(
-                                                query = query,
-                                                params = Innertube.SearchFilter.Song.value
-                                            ),
-                                            fromMusicShelfRendererContent = Innertube.SongItem.Companion::from
-                                        )
-                                    } else {
-                                        Innertube.searchPage(
-                                            body = ContinuationBody(continuation = continuation),
-                                            fromMusicShelfRendererContent = Innertube.SongItem.Companion::from
-                                        )
-                                    }
+                                    if (continuation == null) Innertube.searchPage(
+                                        body = SearchBody(
+                                            query = query,
+                                            params = Innertube.SearchFilter.Song.value
+                                        ),
+                                        fromMusicShelfRendererContent = Innertube.SongItem.Companion::from
+                                    ) else Innertube.searchPage(
+                                        body = ContinuationBody(continuation = continuation),
+                                        fromMusicShelfRendererContent = Innertube.SongItem.Companion::from
+                                    )
                                 },
                                 emptyItemsText = emptyItemsText,
                                 headerContent = headerContent,
@@ -126,7 +123,7 @@ fun SearchResultScreen(query: String, onSearchAgain: () -> Unit) {
                                                 menuState.display {
                                                     NonQueuedMediaItemMenu(
                                                         onDismiss = menuState::hide,
-                                                        mediaItem = song.asMediaItem,
+                                                        mediaItem = song.asMediaItem
                                                     )
                                                 }
                                             },
@@ -173,10 +170,8 @@ fun SearchResultScreen(query: String, onSearchAgain: () -> Unit) {
                                         album = album,
                                         thumbnailSizePx = thumbnailSizePx,
                                         thumbnailSizeDp = thumbnailSizeDp,
-                                        modifier = Modifier
-                                            .clickable(onClick = { albumRoute(album.key) })
+                                        modifier = Modifier.clickable(onClick = { albumRoute(album.key) })
                                     )
-
                                 },
                                 itemPlaceholderContent = {
                                     AlbumItemPlaceholder(thumbnailSizeDp = thumbnailSizeDp)

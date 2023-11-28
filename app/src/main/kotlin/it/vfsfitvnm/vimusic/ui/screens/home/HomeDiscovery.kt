@@ -53,6 +53,7 @@ import it.vfsfitvnm.vimusic.ui.components.themed.Header
 import it.vfsfitvnm.vimusic.ui.components.themed.TextPlaceholder
 import it.vfsfitvnm.vimusic.ui.items.AlbumItem
 import it.vfsfitvnm.vimusic.ui.items.AlbumItemPlaceholder
+import it.vfsfitvnm.vimusic.ui.screens.Route
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.ui.styling.px
@@ -64,6 +65,7 @@ import it.vfsfitvnm.vimusic.utils.secondary
 import it.vfsfitvnm.vimusic.utils.semiBold
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
+@Route
 @Composable
 fun HomeDiscovery(
     onMoodClick: (mood: Innertube.Mood.Item) -> Unit,
@@ -88,7 +90,7 @@ fun HomeDiscovery(
 
     var discoverPage by persist<Result<Innertube.DiscoverPage>>("home/discovery")
 
-    LaunchedEffect(key1 = Unit) {
+    LaunchedEffect(Unit) {
         discoverPage = Innertube.discoverPage()
     }
 
@@ -221,7 +223,8 @@ fun MoodItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val (_, typography, _, thumbnailShape) = LocalAppearance.current
+    val typography = LocalAppearance.current.typography
+    val thumbnailShape = LocalAppearance.current.thumbnailShape
 
     val moodColor by remember { derivedStateOf { Color(mood.stripeColor) } }
     val textColor by remember {
@@ -255,9 +258,11 @@ fun MoodItemPlaceholder(
     width: Dp,
     modifier: Modifier = Modifier
 ) {
-    val (colorPalette, _, _, thumbnailShape) = LocalAppearance.current
+    val colorPalette = LocalAppearance.current.colorPalette
+    val thumbnailShape = LocalAppearance.current.thumbnailShape
+
     Spacer(
-        modifier
+        modifier = modifier
             .background(color = colorPalette.shimmer, shape = thumbnailShape)
             .size(width, 64.dp)
     )

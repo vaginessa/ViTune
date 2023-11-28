@@ -1,7 +1,7 @@
 package it.vfsfitvnm.vimusic.enums
 
 @Suppress("unused", "EnumEntryName")
-enum class CoilDiskCacheMaxSize(val bytes: Long) {
+enum class CoilDiskCacheSize(val bytes: Long) {
     `64MB`(bytes = 64.mb),
     `128MB`(bytes = 128.mb),
     `256MB`(bytes = 256.mb),
