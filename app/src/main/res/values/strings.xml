@@ -99,7 +99,7 @@
     <string name="other_versions">Other versions</string>
     <string name="no_alternative_version">This album doesn\'t have any alternative version</string>
 
-    <string name="from_wikipedia">From Wikipedia</string>
+    <string name="from_wikipedia" translatable="false">From Wikipedia</string>
     <string name="wikipedia_cc_by_sa">From Wikipedia under Creative Commons Attribution CC-BY-SA 3.0</string>
     <string name="quote_open">“</string>
     <string name="quote_close">„</string>
