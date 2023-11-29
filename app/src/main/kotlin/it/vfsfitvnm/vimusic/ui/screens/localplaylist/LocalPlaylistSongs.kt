@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import it.vfsfitvnm.compose.persist.persist
 import it.vfsfitvnm.compose.reordering.draggedItem
@@ -104,8 +105,8 @@ fun LocalPlaylistSongs(
     var isRenaming by rememberSaveable { mutableStateOf(false) }
 
     if (isRenaming) TextFieldDialog(
-        hintText = "Enter the playlist name",
-        initialTextInput = playlistWithSongs?.playlist?.name ?: "",
+        hintText = stringResource(R.string.enter_playlist_name_prompt),
+        initialTextInput = playlistWithSongs?.playlist?.name.orEmpty(),
         onDismiss = { isRenaming = false },
         onDone = { text ->
             query {
@@ -117,7 +118,7 @@ fun LocalPlaylistSongs(
     var isDeleting by rememberSaveable { mutableStateOf(false) }
 
     if (isDeleting) ConfirmationDialog(
-        text = "Do you really want to delete this playlist?",
+        text = stringResource(R.string.confirm_delete_playlist),
         onDismiss = { isDeleting = false },
         onConfirm = {
             query {
@@ -146,11 +147,11 @@ fun LocalPlaylistSongs(
                 contentType = 0
             ) {
                 Header(
-                    title = playlistWithSongs?.playlist?.name ?: "Unknown",
+                    title = playlistWithSongs?.playlist?.name ?: stringResource(R.string.unknown),
                     modifier = Modifier.padding(bottom = 8.dp)
                 ) {
                     SecondaryTextButton(
-                        text = "Enqueue",
+                        text = stringResource(R.string.enqueue),
                         enabled = playlistWithSongs?.songs?.isNotEmpty() == true,
                         onClick = {
                             playlistWithSongs?.songs?.map(Song::asMediaItem)?.let { mediaItems ->
@@ -170,7 +171,7 @@ fun LocalPlaylistSongs(
                                     playlistWithSongs?.playlist?.browseId?.let { browseId ->
                                         MenuEntry(
                                             icon = R.drawable.sync,
-                                            text = "Sync",
+                                            text = stringResource(R.string.sync),
                                             onClick = {
                                                 menuState.hide()
                                                 transaction {
@@ -199,7 +200,7 @@ fun LocalPlaylistSongs(
                                         playlistWithSongs?.songs?.firstOrNull()?.id?.let { firstSongId ->
                                             MenuEntry(
                                                 icon = R.drawable.play,
-                                                text = "Watch playlist on YouTube",
+                                                text = stringResource(R.string.watch_playlist_on_youtube),
                                                 onClick = {
                                                     menuState.hide()
                                                     binder?.player?.pause()
@@ -214,7 +215,7 @@ fun LocalPlaylistSongs(
 
                                             MenuEntry(
                                                 icon = R.drawable.musical_notes,
-                                                text = "Open in YouTube Music",
+                                                text = stringResource(R.string.open_in_youtube_music),
                                                 onClick = {
                                                     menuState.hide()
                                                     binder?.player?.pause()
@@ -226,7 +227,7 @@ fun LocalPlaylistSongs(
                                                                     ?.drop(2)
                                                             }"
                                                         )
-                                                    ) context.toast("YouTube Music is not installed on your device!")
+                                                    ) context.toast(context.getString(R.string.youtube_music_not_installed))
                                                 }
                                             )
                                         }
@@ -234,7 +235,7 @@ fun LocalPlaylistSongs(
 
                                     MenuEntry(
                                         icon = R.drawable.pencil,
-                                        text = "Rename",
+                                        text = stringResource(R.string.rename),
                                         onClick = {
                                             menuState.hide()
                                             isRenaming = true
@@ -243,7 +244,7 @@ fun LocalPlaylistSongs(
 
                                     MenuEntry(
                                         icon = R.drawable.trash,
-                                        text = "Delete",
+                                        text = stringResource(R.string.delete),
                                         onClick = {
                                             menuState.hide()
                                             isDeleting = true

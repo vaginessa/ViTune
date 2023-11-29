@@ -24,6 +24,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import it.vfsfitvnm.compose.persist.persistList
@@ -111,14 +112,17 @@ fun BuiltInPlaylistSongs(
             item(key = "header", contentType = 0) {
                 Header(
                     title = when (builtInPlaylist) {
-                        BuiltInPlaylist.Favorites -> "Favorites"
-                        BuiltInPlaylist.Offline -> "Offline"
-                        BuiltInPlaylist.Top -> "My top $topListLength"
+                        BuiltInPlaylist.Favorites -> stringResource(R.string.favorites)
+                        BuiltInPlaylist.Offline -> stringResource(R.string.offline)
+                        BuiltInPlaylist.Top -> stringResource(
+                            R.string.format_my_top_playlist,
+                            topListLength
+                        )
                     },
                     modifier = Modifier.padding(bottom = 8.dp)
                 ) {
                     SecondaryTextButton(
-                        text = "Enqueue",
+                        text = stringResource(R.string.enqueue),
                         enabled = songs.isNotEmpty(),
                         onClick = {
                             binder?.player?.enqueue(songs.map(Song::asMediaItem))
@@ -131,17 +135,17 @@ fun BuiltInPlaylistSongs(
                         var dialogShowing by rememberSaveable { mutableStateOf(false) }
 
                         SecondaryTextButton(
-                            text = topListPeriod.displayName,
+                            text = topListPeriod.displayName(),
                             onClick = { dialogShowing = true }
                         )
 
                         if (dialogShowing) ValueSelectorDialog(
                             onDismiss = { dialogShowing = false },
-                            title = "View top $topListLength of ...",
+                            title = stringResource(R.string.format_view_top_of_header, topListLength),
                             selectedValue = topListPeriod,
                             values = DataPreferences.TopListPeriod.entries.toImmutableList(),
                             onValueSelected = { topListPeriod = it },
-                            valueText = { it.displayName }
+                            valueText = { it.displayName() }
                         )
                     }
                 }

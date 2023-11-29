@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.valentinilk.shimmer.shimmer
 import it.vfsfitvnm.compose.persist.persist
@@ -28,6 +29,7 @@ import it.vfsfitvnm.innertube.models.bodies.BrowseBody
 import it.vfsfitvnm.innertube.requests.BrowseResult
 import it.vfsfitvnm.innertube.requests.browse
 import it.vfsfitvnm.vimusic.LocalPlayerAwareWindowInsets
+import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.models.Mood
 import it.vfsfitvnm.vimusic.ui.components.ShimmerHost
 import it.vfsfitvnm.vimusic.ui.components.themed.Header
@@ -58,7 +60,7 @@ fun MoodList(
     val windowInsets = LocalPlayerAwareWindowInsets.current
 
     val browseId = mood.browseId ?: DEFAULT_BROWSE_ID
-    var moodPage by persist<Result<BrowseResult>>("playlist/$browseId${mood.params?.let { "/$it" } ?: ""}")
+    var moodPage by persist<Result<BrowseResult>>("playlist/$browseId${mood.params?.let { "/$it" }.orEmpty()}")
 
     LaunchedEffect(Unit) {
         moodPage = Innertube.browse(BrowseBody(browseId = browseId, params = mood.params))
@@ -153,7 +155,7 @@ fun MoodList(
             }
         } ?: moodPage?.exceptionOrNull()?.let {
             BasicText(
-                text = "An error has occurred",
+                text = stringResource(R.string.error_message),
                 style = typography.s.secondary.center,
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)

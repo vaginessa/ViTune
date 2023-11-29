@@ -20,7 +20,7 @@ open class Route internal constructor(val tag: String) {
 
     object Saver : androidx.compose.runtime.saveable.Saver<Route?, String> {
         override fun restore(value: String): Route? = value.takeIf(String::isNotEmpty)?.let(::Route)
-        override fun SaverScope.save(value: Route?): String = value?.tag ?: ""
+        override fun SaverScope.save(value: Route?): String = value?.tag.orEmpty()
     }
 }
 

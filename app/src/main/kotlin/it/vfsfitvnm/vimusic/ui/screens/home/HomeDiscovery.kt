@@ -40,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import it.vfsfitvnm.compose.persist.persist
@@ -119,11 +120,15 @@ fun HomeDiscovery(
                         .asPaddingValues()
                 )
         ) {
-            Header(title = "Discover", modifier = Modifier.padding(endPaddingValues))
+            Header(
+                title = stringResource(R.string.discover),
+                modifier = Modifier.padding(endPaddingValues)
+            )
+
             discoverPage?.getOrNull()?.let { page ->
                 if (page.moods.isNotEmpty()) {
                     BasicText(
-                        text = "Moods and genres",
+                        text = stringResource(R.string.moods_and_genres),
                         style = typography.m.semiBold,
                         modifier = sectionTextModifier
                     )
@@ -154,7 +159,7 @@ fun HomeDiscovery(
 
                 if (page.newReleaseAlbums.isNotEmpty()) {
                     BasicText(
-                        text = "New released albums",
+                        text = stringResource(R.string.new_released_albums),
                         style = typography.m.semiBold,
                         modifier = sectionTextModifier
                     )
@@ -173,7 +178,7 @@ fun HomeDiscovery(
                 }
             } ?: discoverPage?.exceptionOrNull()?.let {
                 BasicText(
-                    text = "An error has occurred",
+                    text = stringResource(R.string.error_message),
                     style = typography.s.secondary.center,
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)

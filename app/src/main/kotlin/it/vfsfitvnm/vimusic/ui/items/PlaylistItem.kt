@@ -213,7 +213,7 @@ fun PlaylistItem(
         else Alignment.Start
     ) {
         BasicText(
-            text = name ?: "",
+            text = name.orEmpty(),
             style = typography.xs.semiBold,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis

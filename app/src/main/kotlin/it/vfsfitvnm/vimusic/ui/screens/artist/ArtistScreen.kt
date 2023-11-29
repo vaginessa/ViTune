@@ -15,6 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import com.valentinilk.shimmer.shimmer
 import it.vfsfitvnm.compose.persist.PersistMapCleanup
 import it.vfsfitvnm.compose.persist.persist
@@ -116,7 +117,7 @@ fun ArtistScreen(browseId: String) {
                         val (colorPalette) = LocalAppearance.current
                         val context = LocalContext.current
 
-                        Header(title = artist?.name ?: "Unknown") {
+                        Header(title = artist?.name ?: stringResource(R.string.unknown)) {
                             textButton?.invoke()
 
                             Spacer(modifier = Modifier.weight(1f))
@@ -163,11 +164,11 @@ fun ArtistScreen(browseId: String) {
                 tabIndex = UIStatePreferences.artistScreenTabIndex,
                 onTabChanged = { UIStatePreferences.artistScreenTabIndex = it },
                 tabColumnContent = { item ->
-                    item(0, "Overview", R.drawable.sparkles)
-                    item(1, "Songs", R.drawable.musical_notes)
-                    item(2, "Albums", R.drawable.disc)
-                    item(3, "Singles", R.drawable.disc)
-                    item(4, "Library", R.drawable.library)
+                    item(0, stringResource(R.string.overview), R.drawable.sparkles)
+                    item(1, stringResource(R.string.songs), R.drawable.musical_notes)
+                    item(2, stringResource(R.string.albums), R.drawable.disc)
+                    item(3, stringResource(R.string.singles), R.drawable.disc)
+                    item(4, stringResource(R.string.library), R.drawable.library)
                 }
             ) { currentTabIndex ->
                 saveableStateHolder.SaveableStateProvider(key = currentTabIndex) {
@@ -254,7 +255,7 @@ fun ArtistScreen(browseId: String) {
                             ItemsPage(
                                 tag = "artist/$browseId/albums",
                                 headerContent = headerContent,
-                                emptyItemsText = "This artist didn't release any album",
+                                emptyItemsText = stringResource(R.string.artist_has_no_albums),
                                 itemsPageProvider = artistPage?.let {
                                     @Suppress("SpacingAroundCurly")
                                     { continuation ->
@@ -304,7 +305,7 @@ fun ArtistScreen(browseId: String) {
                             ItemsPage(
                                 tag = "artist/$browseId/singles",
                                 headerContent = headerContent,
-                                emptyItemsText = "This artist didn't release any single",
+                                emptyItemsText = stringResource(R.string.artist_has_no_singles),
                                 itemsPageProvider = artistPage?.let {
                                     @Suppress("SpacingAroundCurly")
                                     { continuation ->

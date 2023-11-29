@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import com.valentinilk.shimmer.shimmer
 import it.vfsfitvnm.compose.persist.persist
 import it.vfsfitvnm.innertube.Innertube
@@ -93,8 +94,8 @@ fun PlaylistSongList(
     var isImportingPlaylist by rememberSaveable { mutableStateOf(false) }
 
     if (isImportingPlaylist) TextFieldDialog(
-        hintText = "Enter the playlist name",
-        initialTextInput = playlistPage?.title ?: "",
+        hintText = stringResource(R.string.enter_playlist_name_prompt),
+        initialTextInput = playlistPage?.title.orEmpty(),
         onDismiss = { isImportingPlaylist = false },
         onDone = { text ->
             query {
@@ -118,9 +119,9 @@ fun PlaylistSongList(
 
     val headerContent: @Composable () -> Unit = {
         if (playlistPage == null) HeaderPlaceholder(modifier = Modifier.shimmer())
-        else Header(title = playlistPage?.title ?: "Unknown") {
+        else Header(title = playlistPage?.title ?: stringResource(R.string.unknown)) {
             SecondaryTextButton(
-                text = "Enqueue",
+                text = stringResource(R.string.enqueue),
                 enabled = playlistPage?.songsPage?.items?.isNotEmpty() == true,
                 onClick = {
                     playlistPage?.songsPage?.items?.map(Innertube.SongItem::asMediaItem)

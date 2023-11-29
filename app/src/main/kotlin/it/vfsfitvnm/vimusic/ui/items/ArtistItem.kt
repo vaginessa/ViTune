@@ -31,17 +31,15 @@ fun ArtistItem(
     thumbnailSizeDp: Dp,
     modifier: Modifier = Modifier,
     alternative: Boolean = false
-) {
-    ArtistItem(
-        thumbnailUrl = artist.thumbnailUrl,
-        name = artist.name,
-        subscribersCount = null,
-        thumbnailSizePx = thumbnailSizePx,
-        thumbnailSizeDp = thumbnailSizeDp,
-        modifier = modifier,
-        alternative = alternative
-    )
-}
+) = ArtistItem(
+    thumbnailUrl = artist.thumbnailUrl,
+    name = artist.name,
+    subscribersCount = null,
+    thumbnailSizePx = thumbnailSizePx,
+    thumbnailSizeDp = thumbnailSizeDp,
+    modifier = modifier,
+    alternative = alternative
+)
 
 @Composable
 fun ArtistItem(
@@ -50,17 +48,15 @@ fun ArtistItem(
     thumbnailSizeDp: Dp,
     modifier: Modifier = Modifier,
     alternative: Boolean = false
-) {
-    ArtistItem(
-        thumbnailUrl = artist.thumbnail?.url,
-        name = artist.info?.name,
-        subscribersCount = artist.subscribersCountText,
-        thumbnailSizePx = thumbnailSizePx,
-        thumbnailSizeDp = thumbnailSizeDp,
-        modifier = modifier,
-        alternative = alternative
-    )
-}
+) = ArtistItem(
+    thumbnailUrl = artist.thumbnail?.url,
+    name = artist.info?.name,
+    subscribersCount = artist.subscribersCountText,
+    thumbnailSizePx = thumbnailSizePx,
+    thumbnailSizeDp = thumbnailSizeDp,
+    modifier = modifier,
+    alternative = alternative
+)
 
 @Composable
 fun ArtistItem(
@@ -92,7 +88,7 @@ fun ArtistItem(
             horizontalAlignment = if (alternative) Alignment.CenterHorizontally else Alignment.Start
         ) {
             BasicText(
-                text = name ?: "",
+                text = name.orEmpty(),
                 style = typography.xs.semiBold,
                 maxLines = if (alternative) 1 else 2,
                 overflow = TextOverflow.Ellipsis
@@ -104,8 +100,7 @@ fun ArtistItem(
                     style = typography.xxs.semiBold.secondary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier
-                        .padding(top = 4.dp)
+                    modifier = Modifier.padding(top = 4.dp)
                 )
             }
         }
@@ -136,10 +131,7 @@ fun ArtistItemPlaceholder(
             horizontalAlignment = if (alternative) Alignment.CenterHorizontally else Alignment.Start
         ) {
             TextPlaceholder()
-            TextPlaceholder(
-                modifier = Modifier
-                    .padding(top = 4.dp)
-            )
+            TextPlaceholder(modifier = Modifier.padding(top = 4.dp))
         }
     }
 }

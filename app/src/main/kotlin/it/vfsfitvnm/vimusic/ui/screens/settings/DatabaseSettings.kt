@@ -20,8 +20,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import it.vfsfitvnm.vimusic.Database
 import it.vfsfitvnm.vimusic.LocalPlayerAwareWindowInsets
+import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.internal
 import it.vfsfitvnm.vimusic.path
 import it.vfsfitvnm.vimusic.preferences.DataPreferences
@@ -97,70 +99,70 @@ fun DatabaseSettings() {
                         .asPaddingValues()
                 )
         ) {
-            Header(title = "Database")
+            Header(title = stringResource(R.string.database))
 
-            SettingsEntryGroupText(title = "CLEANUP")
+            SettingsEntryGroupText(title = stringResource(R.string.cleanup))
 
             SwitchSettingEntry(
-                title = "Pause playback history",
-                text = "Stops playback events being used for quick picks",
+                title = stringResource(R.string.pause_playback_history),
+                text = stringResource(R.string.pause_playback_history_description),
                 isChecked = pauseHistory,
                 onCheckedChange = { pauseHistory = !pauseHistory }
             )
 
             AnimatedVisibility(visible = pauseHistory) {
-                ImportantSettingsDescription(text = "Please note: this won't affect offline caching!")
+                ImportantSettingsDescription(text = stringResource(R.string.pause_playback_history_warning))
             }
 
             AnimatedVisibility(visible = !(pauseHistory && eventsCount == 0)) {
                 SettingsEntry(
-                    title = "Reset quick picks",
-                    text = if (eventsCount > 0) {
-                        "Delete $eventsCount playback events"
-                    } else {
-                        "Quick picks are cleared"
-                    },
+                    title = stringResource(R.string.reset_quick_picks),
+                    text = if (eventsCount > 0) stringResource(R.string.format_reset_quick_picks_amount, eventsCount)
+                    else stringResource(R.string.quick_picks_empty),
                     onClick = { query(Database::clearEvents) },
                     isEnabled = eventsCount > 0
                 )
             }
 
             SwitchSettingEntry(
-                title = "Pause playback time",
-                text = "Stops playback time from being saved. This pauses the statistics in the 'My Top $topListLength' playlist!",
+                title = stringResource(R.string.pause_playback_time),
+                text = stringResource(
+                    R.string.format_pause_playback_time_description,
+                    topListLength
+                ),
                 isChecked = pausePlaytime,
                 onCheckedChange = { pausePlaytime = !pausePlaytime }
             )
 
             SettingsGroupSpacer()
 
-            SettingsEntryGroupText(title = "BACKUP")
+            SettingsEntryGroupText(title = stringResource(R.string.backup))
 
-            SettingsDescription(text = "Personal preferences (i.e. the theme mode) and the cache are excluded.")
+            SettingsDescription(text = stringResource(R.string.backup_description))
 
             SettingsEntry(
-                title = "Backup",
-                text = "Export the database to the external storage",
+                title = stringResource(R.string.backup),
+                text = stringResource(R.string.backup_action_description),
                 onClick = {
                     val dateFormat = SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault())
 
                     try {
                         backupLauncher.launch("vimusic_${dateFormat.format(Date())}.db")
                     } catch (e: ActivityNotFoundException) {
-                        context.toast("Couldn't find an application to create documents")
+                        context.toast(context.getString(R.string.no_file_chooser_installed))
                     }
                 }
             )
 
             SettingsGroupSpacer()
 
-            SettingsEntryGroupText(title = "RESTORE")
+            SettingsEntryGroupText(title = stringResource(R.string.restore))
 
-            ImportantSettingsDescription(text = "Existing data will be overwritten.\n${context.applicationInfo.nonLocalizedLabel} will automatically close itself after restoring the database.")
+            ImportantSettingsDescription(text = stringResource(R.string.restore_warning))
 
             SettingsEntry(
-                title = "Restore",
-                text = "Import the database from the external storage",
+                title = stringResource(R.string.restore),
+                text = stringResource(R.string.restore_description),
                 onClick = {
                     try {
                         restoreLauncher.launch(
@@ -171,7 +173,7 @@ fun DatabaseSettings() {
                             )
                         )
                     } catch (e: ActivityNotFoundException) {
-                        context.toast("Couldn't find an application to open documents")
+                        context.toast(context.getString(R.string.no_file_chooser_installed))
                     }
                 }
             )

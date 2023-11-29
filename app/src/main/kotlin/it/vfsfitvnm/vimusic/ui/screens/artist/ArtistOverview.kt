@@ -24,6 +24,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import it.vfsfitvnm.innertube.Innertube
@@ -104,7 +105,7 @@ fun ArtistOverview(
                     headerContent {
                         youtubeArtistPage?.shuffleEndpoint?.let { endpoint ->
                             SecondaryTextButton(
-                                text = "Shuffle",
+                                text = stringResource(R.string.shuffle),
                                 onClick = {
                                     binder?.stopRadio()
                                     binder?.playRadio(endpoint)
@@ -116,7 +117,7 @@ fun ArtistOverview(
 
                 thumbnailContent()
 
-                if (youtubeArtistPage != null) {
+                youtubeArtistPage?.let {
                     youtubeArtistPage.songs?.let { songs ->
                         Row(
                             verticalAlignment = Alignment.Bottom,
@@ -126,14 +127,14 @@ fun ArtistOverview(
                                 .padding(endPaddingValues)
                         ) {
                             BasicText(
-                                text = "Songs",
+                                text = stringResource(R.string.songs),
                                 style = typography.m.semiBold,
                                 modifier = sectionTextModifier
                             )
 
                             youtubeArtistPage.songsEndpoint?.let {
                                 BasicText(
-                                    text = "View all",
+                                    text = stringResource(R.string.view_all),
                                     style = typography.xs.secondary,
                                     modifier = sectionTextModifier.clickable(onClick = onViewAllSongsClick)
                                 )
@@ -178,14 +179,14 @@ fun ArtistOverview(
                                 .padding(endPaddingValues)
                         ) {
                             BasicText(
-                                text = "Albums",
+                                text = stringResource(R.string.albums),
                                 style = typography.m.semiBold,
                                 modifier = sectionTextModifier
                             )
 
                             youtubeArtistPage.albumsEndpoint?.let {
                                 BasicText(
-                                    text = "View all",
+                                    text = stringResource(R.string.view_all),
                                     style = typography.xs.secondary,
                                     modifier = sectionTextModifier.clickable(onClick = onViewAllAlbumsClick)
                                 )
@@ -194,8 +195,7 @@ fun ArtistOverview(
 
                         LazyRow(
                             contentPadding = endPaddingValues,
-                            modifier = Modifier
-                                .fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth()
                         ) {
                             items(
                                 items = albums,
@@ -223,14 +223,14 @@ fun ArtistOverview(
                                 .padding(endPaddingValues)
                         ) {
                             BasicText(
-                                text = "Singles",
+                                text = stringResource(R.string.singles),
                                 style = typography.m.semiBold,
                                 modifier = sectionTextModifier
                             )
 
                             youtubeArtistPage.singlesEndpoint?.let {
                                 BasicText(
-                                    text = "View all",
+                                    text = stringResource(R.string.view_all),
                                     style = typography.xs.secondary,
                                     modifier = sectionTextModifier.clickable(onClick = onViewAllSinglesClick)
                                 )
@@ -257,7 +257,8 @@ fun ArtistOverview(
                     }
 
                     youtubeArtistPage.description?.let { description ->
-                        val attributionsIndex = description.lastIndexOf("\n\nFrom Wikipedia")
+                        val attributionsIndex =
+                            description.lastIndexOf("\n\n${stringResource(R.string.from_wikipedia)}")
 
                         Row(
                             modifier = Modifier
@@ -266,7 +267,7 @@ fun ArtistOverview(
                                 .padding(endPaddingValues)
                         ) {
                             BasicText(
-                                text = "“",
+                                text = stringResource(R.string.quote_open),
                                 style = typography.xxl.semiBold,
                                 modifier = Modifier
                                     .offset(y = (-8).dp)
@@ -283,7 +284,7 @@ fun ArtistOverview(
                             )
 
                             BasicText(
-                                text = "„",
+                                text = stringResource(R.string.quote_close),
                                 style = typography.xxl.semiBold,
                                 modifier = Modifier
                                     .offset(y = 4.dp)
@@ -292,7 +293,7 @@ fun ArtistOverview(
                         }
 
                         if (attributionsIndex != -1) BasicText(
-                            text = "From Wikipedia under Creative Commons Attribution CC-BY-SA 3.0",
+                            text = stringResource(R.string.wikipedia_cc_by_sa),
                             style = typography.xxs.color(colorPalette.textDisabled)
                                 .align(TextAlign.End),
                             modifier = Modifier
@@ -301,24 +302,22 @@ fun ArtistOverview(
                                 .padding(endPaddingValues)
                         )
                     }
-                } else {
-                    ShimmerHost {
+                } ?: ShimmerHost {
+                    TextPlaceholder(modifier = sectionTextModifier)
+
+                    repeat(5) {
+                        SongItemPlaceholder(thumbnailSizeDp = songThumbnailSizeDp)
+                    }
+
+                    repeat(2) {
                         TextPlaceholder(modifier = sectionTextModifier)
 
-                        repeat(5) {
-                            SongItemPlaceholder(thumbnailSizeDp = songThumbnailSizeDp)
-                        }
-
-                        repeat(2) {
-                            TextPlaceholder(modifier = sectionTextModifier)
-
-                            Row {
-                                repeat(2) {
-                                    AlbumItemPlaceholder(
-                                        thumbnailSizeDp = albumThumbnailSizeDp,
-                                        alternative = true
-                                    )
-                                }
+                        Row {
+                            repeat(2) {
+                                AlbumItemPlaceholder(
+                                    thumbnailSizeDp = albumThumbnailSizeDp,
+                                    alternative = true
+                                )
                             }
                         }
                     }

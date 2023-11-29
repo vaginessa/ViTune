@@ -765,16 +765,16 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                     .setShowActionsInCompactView(0, 1, 2)
                     .setMediaSession(mediaSession.sessionToken)
             )
-            .addAction(R.drawable.play_skip_back, "Skip back", prevIntent)
+            .addAction(R.drawable.play_skip_back, getString(R.string.skip_back), prevIntent)
             .addAction(
                 if (player.shouldBePlaying) R.drawable.pause else R.drawable.play,
-                if (player.shouldBePlaying) "Pause" else "Play",
+                if (player.shouldBePlaying) getString(R.string.pause) else getString(R.string.play),
                 if (player.shouldBePlaying) pauseIntent else playIntent
             )
-            .addAction(R.drawable.play_skip_forward, "Skip forward", nextIntent)
+            .addAction(R.drawable.play_skip_forward, getString(R.string.skip_forward), nextIntent)
             .addAction(
                 if (isLikedState.value) R.drawable.heart else R.drawable.heart_outline,
-                "Like",
+                getString(R.string.like),
                 likeIntent
             )
 
@@ -795,7 +795,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             if (getNotificationChannel(NOTIFICATION_CHANNEL_ID) == null) createNotificationChannel(
                 NotificationChannel(
                     NOTIFICATION_CHANNEL_ID,
-                    "Now playing",
+                    getString(R.string.now_playing),
                     NotificationManager.IMPORTANCE_LOW
                 ).apply {
                     setSound(null, null)
@@ -808,7 +808,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                 createNotificationChannel(
                     NotificationChannel(
                         SLEEP_TIMER_NOTIFICATION_CHANNEL_ID,
-                        "Sleep timer",
+                        getString(R.string.sleep_timer),
                         NotificationManager.IMPORTANCE_LOW
                     ).apply {
                         setSound(null, null)
@@ -981,7 +981,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             timerJob = coroutineScope.timer(delayMillis) {
                 val notification = NotificationCompat
                     .Builder(this@PlayerService, SLEEP_TIMER_NOTIFICATION_CHANNEL_ID)
-                    .setContentTitle("Sleep timer ended")
+                    .setContentTitle(getString(R.string.sleep_timer_ended))
                     .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                     .setAutoCancel(true)
                     .setOnlyAlertOnce(true)

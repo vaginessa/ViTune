@@ -29,18 +29,16 @@ fun AlbumItem(
     thumbnailSizeDp: Dp,
     modifier: Modifier = Modifier,
     alternative: Boolean = false
-) {
-    AlbumItem(
-        thumbnailUrl = album.thumbnailUrl,
-        title = album.title,
-        authors = album.authorsText,
-        year = album.year,
-        thumbnailSizePx = thumbnailSizePx,
-        thumbnailSizeDp = thumbnailSizeDp,
-        alternative = alternative,
-        modifier = modifier
-    )
-}
+) = AlbumItem(
+    thumbnailUrl = album.thumbnailUrl,
+    title = album.title,
+    authors = album.authorsText,
+    year = album.year,
+    thumbnailSizePx = thumbnailSizePx,
+    thumbnailSizeDp = thumbnailSizeDp,
+    alternative = alternative,
+    modifier = modifier
+)
 
 @Composable
 fun AlbumItem(
@@ -49,18 +47,16 @@ fun AlbumItem(
     thumbnailSizeDp: Dp,
     modifier: Modifier = Modifier,
     alternative: Boolean = false
-) {
-    AlbumItem(
-        thumbnailUrl = album.thumbnail?.url,
-        title = album.info?.name,
-        authors = album.authors?.joinToString("") { it.name ?: "" },
-        year = album.year,
-        thumbnailSizePx = thumbnailSizePx,
-        thumbnailSizeDp = thumbnailSizeDp,
-        alternative = alternative,
-        modifier = modifier
-    )
-}
+) = AlbumItem(
+    thumbnailUrl = album.thumbnail?.url,
+    title = album.info?.name,
+    authors = album.authors?.joinToString("") { it.name.orEmpty() },
+    year = album.year,
+    thumbnailSizePx = thumbnailSizePx,
+    thumbnailSizeDp = thumbnailSizeDp,
+    alternative = alternative,
+    modifier = modifier
+)
 
 @Composable
 fun AlbumItem(
@@ -91,7 +87,7 @@ fun AlbumItem(
 
     ItemInfoContainer {
         BasicText(
-            text = title ?: "",
+            text = title.orEmpty(),
             style = typography.xs.semiBold,
             maxLines = if (alternative) 1 else 2,
             overflow = TextOverflow.Ellipsis
@@ -107,12 +103,11 @@ fun AlbumItem(
         }
 
         BasicText(
-            text = year ?: "",
+            text = year.orEmpty(),
             style = typography.xxs.semiBold.secondary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier
-                .padding(top = 4.dp)
+            modifier = Modifier.padding(top = 4.dp)
         )
     }
 }

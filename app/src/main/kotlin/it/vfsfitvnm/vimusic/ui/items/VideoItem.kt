@@ -33,18 +33,16 @@ fun VideoItem(
     thumbnailHeightDp: Dp,
     thumbnailWidthDp: Dp,
     modifier: Modifier = Modifier
-) {
-    VideoItem(
-        thumbnailUrl = video.thumbnail?.url,
-        duration = video.durationText,
-        title = video.info?.name,
-        uploader = video.authors?.joinToString("") { it.name ?: "" },
-        views = video.viewsText,
-        thumbnailHeightDp = thumbnailHeightDp,
-        thumbnailWidthDp = thumbnailWidthDp,
-        modifier = modifier
-    )
-}
+) = VideoItem(
+    thumbnailUrl = video.thumbnail?.url,
+    duration = video.durationText,
+    title = video.info?.name,
+    uploader = video.authors?.joinToString("") { it.name.orEmpty() },
+    views = video.viewsText,
+    thumbnailHeightDp = thumbnailHeightDp,
+    thumbnailWidthDp = thumbnailWidthDp,
+    modifier = modifier
+)
 
 @Composable
 fun VideoItem(
@@ -92,14 +90,14 @@ fun VideoItem(
 
     ItemInfoContainer {
         BasicText(
-            text = title ?: "",
+            text = title.orEmpty(),
             style = typography.xs.semiBold,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
 
         BasicText(
-            text = uploader ?: "",
+            text = uploader.orEmpty(),
             style = typography.xs.semiBold.secondary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -111,8 +109,7 @@ fun VideoItem(
                 style = typography.xxs.medium.secondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier
-                    .padding(top = 4.dp)
+                modifier = Modifier.padding(top = 4.dp)
             )
         }
     }

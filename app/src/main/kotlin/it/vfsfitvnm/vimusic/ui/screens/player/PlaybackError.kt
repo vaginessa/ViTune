@@ -14,7 +14,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,11 +30,13 @@ import it.vfsfitvnm.vimusic.utils.medium
 @Composable
 fun PlaybackError(
     isDisplayed: Boolean,
-    messageProvider: () -> String,
+    messageProvider: @Composable () -> String,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) = Box {
     val (_, typography) = LocalAppearance.current
+
+    val message by rememberUpdatedState(newValue = messageProvider())
 
     AnimatedVisibility(
         visible = isDisplayed,
@@ -61,7 +64,7 @@ fun PlaybackError(
         modifier = Modifier.align(Alignment.TopCenter)
     ) {
         BasicText(
-            text = remember { messageProvider() },
+            text = message,
             style = typography.xs.center.medium.color(PureBlackColorPalette.text),
             modifier = Modifier
                 .background(Color.Black.copy(0.4f))

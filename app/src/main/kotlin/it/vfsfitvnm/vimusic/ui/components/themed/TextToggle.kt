@@ -15,7 +15,9 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.utils.medium
 
@@ -25,8 +27,8 @@ fun TextToggle(
     toggleState: () -> Unit,
     name: String,
     modifier: Modifier = Modifier,
-    onLabel: String = "on",
-    offLabel: String = "off"
+    onLabel: String = stringResource(R.string.on),
+    offLabel: String = stringResource(R.string.off)
 ) {
     val (colorPalette, typography) = LocalAppearance.current
 

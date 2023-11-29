@@ -15,6 +15,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import it.vfsfitvnm.compose.persist.PersistMapCleanup
@@ -65,7 +66,7 @@ fun SearchScreen(
                         modifier = Modifier.align(Alignment.CenterEnd)
                     ) {
                         BasicText(
-                            text = "Enter a name",
+                            text = stringResource(R.string.search_placeholder),
                             maxLines = 1,
                             style = LocalAppearance.current.typography.xxl.secondary
                         )
@@ -81,8 +82,8 @@ fun SearchScreen(
                 tabIndex = tabIndex,
                 onTabChanged = onTabChanged,
                 tabColumnContent = { item ->
-                    item(0, "Online", R.drawable.globe)
-                    item(1, "Library", R.drawable.library)
+                    item(0, stringResource(R.string.online), R.drawable.globe)
+                    item(1, stringResource(R.string.library), R.drawable.library)
                 }
             ) { currentTabIndex ->
                 saveableStateHolder.SaveableStateProvider(currentTabIndex) {

@@ -1,6 +1,9 @@
 package it.vfsfitvnm.vimusic.preferences
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import it.vfsfitvnm.vimusic.GlobalPreferencesHolder
+import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.enums.CoilDiskCacheSize
 import it.vfsfitvnm.vimusic.enums.ExoPlayerDiskCacheSize
 import kotlin.time.Duration
@@ -15,11 +18,11 @@ object DataPreferences : GlobalPreferencesHolder() {
     var topListLength by int(10)
     var topListPeriod by enum(TopListPeriod.AllTime)
 
-    enum class TopListPeriod(val displayName: String, val duration: Duration? = null) {
-        PastDay(displayName = "Past 24 hours", duration = 1.days),
-        PastWeek(displayName = "Past week", duration = 7.days),
-        PastMonth(displayName = "Past month", duration = 30.days),
-        PastYear(displayName = "Past year", 365.days),
-        AllTime(displayName = "All time")
+    enum class TopListPeriod(val displayName: @Composable () -> String, val duration: Duration? = null) {
+        PastDay(displayName = { stringResource(R.string.past_24_hours) }, duration = 1.days),
+        PastWeek(displayName = { stringResource(R.string.past_week) }, duration = 7.days),
+        PastMonth(displayName = { stringResource(R.string.past_month) }, duration = 30.days),
+        PastYear(displayName = { stringResource(R.string.past_year) }, 365.days),
+        AllTime(displayName = { stringResource(R.string.all_time) })
     }
 }

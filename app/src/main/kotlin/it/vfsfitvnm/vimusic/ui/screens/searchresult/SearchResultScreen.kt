@@ -10,6 +10,7 @@ import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import it.vfsfitvnm.compose.persist.PersistMapCleanup
 import it.vfsfitvnm.compose.persist.persistMap
@@ -73,7 +74,7 @@ fun SearchResultScreen(query: String, onSearchAgain: () -> Unit) {
                 )
             }
 
-            val emptyItemsText = "No results found. Please try a different query or category"
+            val emptyItemsText = stringResource(R.string.no_search_results)
 
             Scaffold(
                 topIconButtonId = R.drawable.chevron_back,
@@ -81,12 +82,12 @@ fun SearchResultScreen(query: String, onSearchAgain: () -> Unit) {
                 tabIndex = UIStatePreferences.searchResultScreenTabIndex,
                 onTabChanged = { UIStatePreferences.searchResultScreenTabIndex = it },
                 tabColumnContent = { item ->
-                    item(0, "Songs", R.drawable.musical_notes)
-                    item(1, "Albums", R.drawable.disc)
-                    item(2, "Artists", R.drawable.person)
-                    item(3, "Videos", R.drawable.film)
-                    item(4, "Playlists", R.drawable.playlist)
-                    item(5, "Featured", R.drawable.playlist)
+                    item(0, stringResource(R.string.songs), R.drawable.musical_notes)
+                    item(1, stringResource(R.string.albums), R.drawable.disc)
+                    item(2, stringResource(R.string.artists), R.drawable.person)
+                    item(3, stringResource(R.string.videos), R.drawable.film)
+                    item(4, stringResource(R.string.playlists), R.drawable.playlist)
+                    item(5, stringResource(R.string.featured), R.drawable.playlist)
                 }
             ) { tabIndex ->
                 saveableStateHolder.SaveableStateProvider(tabIndex) {

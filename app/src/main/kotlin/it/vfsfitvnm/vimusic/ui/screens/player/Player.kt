@@ -49,6 +49,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.coerceAtMost
 import androidx.compose.ui.unit.dp
@@ -207,7 +208,7 @@ fun Player(
                         .weight(1f)
                 ) {
                     AnimatedContent(
-                        targetState = mediaItem.mediaMetadata.title?.toString() ?: "",
+                        targetState = mediaItem.mediaMetadata.title?.toString().orEmpty(),
                         label = "",
                         transitionSpec = { fadeIn() togetherWith fadeOut() }
                     ) { text ->
@@ -220,7 +221,7 @@ fun Player(
                     }
                     AnimatedVisibility(visible = mediaItem.mediaMetadata.artist != null) {
                         AnimatedContent(
-                            targetState = mediaItem.mediaMetadata.artist?.toString() ?: "",
+                            targetState = mediaItem.mediaMetadata.artist?.toString().orEmpty(),
                             label = "",
                             transitionSpec = { fadeIn() togetherWith fadeOut() }
                         ) { text ->
@@ -357,20 +358,26 @@ fun Player(
 
         if (speedDialogOpen) SliderDialog(
             onDismiss = { speedDialogOpen = false },
-            title = "Playback speed",
+            title = stringResource(R.string.playback_speed),
             initialValue = PlayerPreferences.speed * 100f,
             onSlide = { },
             onSlideCompleted = { PlayerPreferences.speed = it.roundToInt() / 100f },
             min = 0f,
             max = 200f,
-            toDisplay = { if (it <= 1f) "Why would you do this?!" else "${"%.2f".format(it.roundToInt() / 100f)}x" }
+            toDisplay = {
+                if (it <= 1f) stringResource(R.string.minimum_speed_value)
+                else stringResource(
+                    R.string.format_speed_multiplier,
+                    "%.2f".format(it.roundToInt() / 100f)
+                )
+            }
         ) {
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
                 SecondaryTextButton(
-                    text = "Reset",
+                    text = stringResource(R.string.reset),
                     onClick = {
                         PlayerPreferences.speed = 1f
                         speedDialogOpen = false
@@ -394,21 +401,23 @@ fun Player(
                     boostDialogOpen = false
                     submit()
                 },
-                title = "Song volume boost",
+                title = stringResource(R.string.song_volume_boost),
                 state = newValue * 100f,
                 setState = { newValue = it / 100f },
                 onSlide = { },
                 onSlideCompleted = { submit() },
                 min = -2000f,
                 max = 2000f,
-                toDisplay = { "${"%.2f".format(it.roundToInt() / 100f)} dB" }
+                toDisplay = {
+                    stringResource(R.string.format_db, "%.2f".format(it.roundToInt() / 100f))
+                }
             ) {
                 Box(
                     modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
                     SecondaryTextButton(
-                        text = "Reset",
+                        text = stringResource(R.string.reset),
                         onClick = {
                             newValue = 0f
                             submit()
@@ -425,7 +434,7 @@ fun Player(
                     TextToggle(
                         state = trackLoopEnabled,
                         toggleState = { trackLoopEnabled = !trackLoopEnabled },
-                        name = "Song loop"
+                        name = stringResource(R.string.song_loop)
                     )
                 },
                 afterContent = {
@@ -503,7 +512,7 @@ private fun PlayerMenu(
                     }
                 )
             } catch (e: ActivityNotFoundException) {
-                context.toast("Couldn't find an application to equalize audio")
+                context.toast(context.getString(R.string.no_equalizer_installed))
             }
         },
         onShowSleepTimer = {},

@@ -23,8 +23,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import it.vfsfitvnm.vimusic.Database
+import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.models.Song
 import it.vfsfitvnm.vimusic.preferences.OrderPreferences
 import it.vfsfitvnm.vimusic.service.LOCAL_KEY_PREFIX
@@ -87,7 +89,7 @@ fun HomeLocalSongs(onSearchClick: () -> Unit) = with(OrderPreferences) {
         setSortBy = { localSongSortBy = it },
         sortOrder = localSongSortOrder,
         setSortOrder = { localSongSortOrder = it },
-        title = "Local"
+        title = stringResource(R.string.local)
     ) else {
         LaunchedEffect(Unit) { launcher.launch(permission) }
 
@@ -97,12 +99,12 @@ fun HomeLocalSongs(onSearchClick: () -> Unit) = with(OrderPreferences) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             BasicText(
-                text = "Permission declined, please grant media permissions in the settings of your device.",
+                text = stringResource(R.string.media_permission_declined),
                 modifier = Modifier.fillMaxWidth(0.5f),
                 style = typography.s
             )
             SecondaryTextButton(
-                text = "Open settings",
+                text = stringResource(R.string.open_settings),
                 onClick = {
                     context.startActivity(
                         Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {

@@ -44,6 +44,7 @@ import androidx.compose.ui.geometry.center
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
@@ -51,6 +52,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.utils.center
 import it.vfsfitvnm.vimusic.utils.drawCircle
@@ -66,17 +68,15 @@ fun TextFieldDialog(
     onDismiss: () -> Unit,
     onDone: (String) -> Unit,
     modifier: Modifier = Modifier,
-    cancelText: String = "Cancel",
-    doneText: String = "Done",
+    cancelText: String = stringResource(R.string.cancel),
+    doneText: String = stringResource(R.string.done),
     initialTextInput: String = "",
     singleLine: Boolean = true,
     maxLines: Int = 1,
     onCancel: () -> Unit = onDismiss,
     isTextInputValid: (String) -> Boolean = { it.isNotEmpty() }
 ) {
-    val focusRequester = remember {
-        FocusRequester()
-    }
+    val focusRequester = remember { FocusRequester() }
     val (colorPalette, typography) = LocalAppearance.current
 
     var textFieldValue by rememberSaveable(initialTextInput, stateSaver = TextFieldValue.Saver) {
@@ -174,8 +174,8 @@ fun <T> NumberFieldDialog(
     convert: (String) -> T?,
     range: ClosedRange<T>,
     modifier: Modifier = Modifier,
-    cancelText: String = "Cancel",
-    doneText: String = "Done",
+    cancelText: String = stringResource(R.string.cancel),
+    doneText: String = stringResource(R.string.done),
     onCancel: () -> Unit = onDismiss
 ) where T : Number, T : Comparable<T> = TextFieldDialog(
     hintText = "",
@@ -201,8 +201,8 @@ fun ConfirmationDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
     modifier: Modifier = Modifier,
-    cancelText: String = "Cancel",
-    confirmText: String = "Confirm",
+    cancelText: String = stringResource(R.string.cancel),
+    confirmText: String = stringResource(R.string.confirm),
     onCancel: () -> Unit = onDismiss
 ) {
     val (_, typography) = LocalAppearance.current
@@ -244,25 +244,21 @@ inline fun DefaultDialog(
     modifier: Modifier = Modifier,
     horizontalAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
     crossinline content: @Composable ColumnScope.() -> Unit
+) = Dialog(
+    onDismissRequest = onDismiss,
+    properties = DialogProperties(usePlatformDefaultWidth = false)
 ) {
-    val (colorPalette) = LocalAppearance.current
-
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
-    ) {
-        Column(
-            horizontalAlignment = horizontalAlignment,
-            modifier = modifier
-                .padding(all = 48.dp)
-                .background(
-                    color = colorPalette.background1,
-                    shape = RoundedCornerShape(8.dp)
-                )
-                .padding(horizontal = 24.dp, vertical = 16.dp),
-            content = content
-        )
-    }
+    Column(
+        horizontalAlignment = horizontalAlignment,
+        modifier = modifier
+            .padding(all = 48.dp)
+            .background(
+                color = LocalAppearance.current.colorPalette.background1,
+                shape = RoundedCornerShape(8.dp)
+            )
+            .padding(horizontal = 24.dp, vertical = 16.dp),
+        content = content
+    )
 }
 
 @Composable
@@ -273,24 +269,20 @@ inline fun <T> ValueSelectorDialog(
     values: ImmutableList<T>,
     crossinline onValueSelected: (T) -> Unit,
     modifier: Modifier = Modifier,
-    crossinline valueText: (T) -> String = { it.toString() }
-) {
-    val (colorPalette) = LocalAppearance.current
-
-    Dialog(onDismissRequest = onDismiss) {
-        ValueSelectorDialogBody(
-            onDismiss = onDismiss,
-            title = title,
-            selectedValue = selectedValue,
-            values = values,
-            onValueSelected = onValueSelected,
-            modifier = modifier
-                .padding(all = 48.dp)
-                .background(color = colorPalette.background1, shape = RoundedCornerShape(8.dp))
-                .padding(vertical = 16.dp),
-            valueText = valueText
-        )
-    }
+    crossinline valueText: @Composable (T) -> String = { it.toString() }
+) = Dialog(onDismissRequest = onDismiss) {
+    ValueSelectorDialogBody(
+        onDismiss = onDismiss,
+        title = title,
+        selectedValue = selectedValue,
+        values = values,
+        onValueSelected = onValueSelected,
+        modifier = modifier
+            .padding(all = 48.dp)
+            .background(color = LocalAppearance.current.colorPalette.background1, shape = RoundedCornerShape(8.dp))
+            .padding(vertical = 16.dp),
+        valueText = valueText
+    )
 }
 
 @Composable
@@ -301,7 +293,7 @@ inline fun <T> ValueSelectorDialogBody(
     values: ImmutableList<T>,
     crossinline onValueSelected: (T) -> Unit,
     modifier: Modifier = Modifier,
-    crossinline valueText: (T) -> String = { it.toString() }
+    crossinline valueText: @Composable (T) -> String = { it.toString() }
 ) {
     val (colorPalette, typography) = LocalAppearance.current
 
@@ -327,37 +319,33 @@ inline fun <T> ValueSelectorDialogBody(
                         .padding(vertical = 12.dp, horizontal = 24.dp)
                         .fillMaxWidth()
                 ) {
-                    if (selectedValue == value) {
-                        Canvas(
-                            modifier = Modifier
-                                .size(18.dp)
-                                .background(
-                                    color = colorPalette.accent,
-                                    shape = CircleShape
-                                )
-                        ) {
-                            drawCircle(
-                                color = colorPalette.onAccent,
-                                radius = 4.dp.toPx(),
-                                center = size.center,
-                                shadow = Shadow(
-                                    color = Color.Black.copy(alpha = 0.4f),
-                                    blurRadius = 4.dp.toPx(),
-                                    offset = Offset(x = 0f, y = 1.dp.toPx())
-                                )
+                    if (selectedValue == value) Canvas(
+                        modifier = Modifier
+                            .size(18.dp)
+                            .background(
+                                color = colorPalette.accent,
+                                shape = CircleShape
                             )
-                        }
-                    } else {
-                        Spacer(
-                            modifier = Modifier
-                                .size(18.dp)
-                                .border(
-                                    width = 1.dp,
-                                    color = colorPalette.textDisabled,
-                                    shape = CircleShape
-                                )
+                    ) {
+                        drawCircle(
+                            color = colorPalette.onAccent,
+                            radius = 4.dp.toPx(),
+                            center = size.center,
+                            shadow = Shadow(
+                                color = Color.Black.copy(alpha = 0.4f),
+                                blurRadius = 4.dp.toPx(),
+                                offset = Offset(x = 0f, y = 1.dp.toPx())
+                            )
                         )
-                    }
+                    } else Spacer(
+                        modifier = Modifier
+                            .size(18.dp)
+                            .border(
+                                width = 1.dp,
+                                color = colorPalette.textDisabled,
+                                shape = CircleShape
+                            )
+                    )
 
                     BasicText(
                         text = valueText(value),
@@ -391,7 +379,7 @@ inline fun SliderDialog(
     min: Float,
     max: Float,
     modifier: Modifier = Modifier,
-    crossinline toDisplay: (Float) -> String = { it.toString() },
+    crossinline toDisplay: @Composable (Float) -> String = { it.toString() },
     steps: Int = 0,
     crossinline content: @Composable () -> Unit = { }
 ) {
@@ -424,7 +412,7 @@ inline fun SliderDialog(
     min: Float,
     max: Float,
     modifier: Modifier = Modifier,
-    crossinline toDisplay: (Float) -> String = { it.toString() },
+    crossinline toDisplay: @Composable (Float) -> String = { it.toString() },
     steps: Int = 0,
     crossinline content: @Composable () -> Unit = { }
 ) {
@@ -440,8 +428,7 @@ inline fun SliderDialog(
             BasicText(
                 text = title,
                 style = typography.s.semiBold,
-                modifier = Modifier
-                    .padding(vertical = 8.dp, horizontal = 24.dp)
+                modifier = Modifier.padding(vertical = 8.dp, horizontal = 24.dp)
             )
 
             Slider(
@@ -480,7 +467,7 @@ inline fun SliderDialog(
                     .padding(end = 24.dp)
             ) {
                 DialogTextButton(
-                    text = "Cancel",
+                    text = stringResource(R.string.cancel),
                     onClick = onDismiss,
                     modifier = Modifier
                 )

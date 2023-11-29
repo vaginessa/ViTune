@@ -40,7 +40,7 @@ fun SongItem(
     modifier = modifier,
     thumbnailUrl = song.thumbnail?.size(thumbnailSizePx),
     title = song.info?.name,
-    authors = song.authors?.joinToString("") { it.name ?: "" },
+    authors = song.authors?.joinToString("") { it.name.orEmpty() },
     duration = song.durationText,
     thumbnailSizeDp = thumbnailSizeDp
 )
@@ -164,7 +164,7 @@ fun SongItem(
             trailingContent?.let {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     BasicText(
-                        text = title ?: "",
+                        text = title.orEmpty(),
                         style = typography.xs.semiBold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -174,20 +174,22 @@ fun SongItem(
                     it()
                 }
             } ?: BasicText(
-                text = title ?: "",
+                text = title.orEmpty(),
                 style = typography.xs.semiBold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
 
             Row(verticalAlignment = Alignment.CenterVertically) {
-                BasicText(
-                    text = authors ?: "",
-                    style = typography.xs.semiBold.secondary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Clip,
-                    modifier = Modifier.weight(1f)
-                )
+                authors?.let {
+                    BasicText(
+                        text = authors,
+                        style = typography.xs.semiBold.secondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Clip,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
 
                 duration?.let {
                     BasicText(

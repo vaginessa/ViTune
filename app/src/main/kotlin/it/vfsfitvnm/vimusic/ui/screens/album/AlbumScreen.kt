@@ -15,6 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.valentinilk.shimmer.shimmer
 import it.vfsfitvnm.compose.persist.PersistMapCleanup
@@ -81,7 +82,7 @@ fun AlbumScreen(browseId: String) {
                                         thumbnailUrl = currentAlbumPage.thumbnail?.url,
                                         year = currentAlbumPage.year,
                                         authorsText = currentAlbumPage.authors
-                                            ?.joinToString("") { it.name ?: "" },
+                                            ?.joinToString("") { it.name.orEmpty() },
                                         shareUrl = currentAlbumPage.url,
                                         timestamp = System.currentTimeMillis(),
                                         bookmarkedAt = album?.bookmarkedAt
@@ -115,7 +116,7 @@ fun AlbumScreen(browseId: String) {
                         val (colorPalette) = LocalAppearance.current
                         val context = LocalContext.current
 
-                        Header(title = album?.title ?: "Unknown") {
+                        Header(title = album?.title ?: stringResource(R.string.unknown)) {
                             textButton?.invoke()
 
                             Spacer(modifier = Modifier.weight(1f))
@@ -166,8 +167,8 @@ fun AlbumScreen(browseId: String) {
                 tabIndex = tabIndex,
                 onTabChanged = { tabIndex = it },
                 tabColumnContent = { item ->
-                    item(0, "Songs", R.drawable.musical_notes)
-                    item(1, "Other versions", R.drawable.disc)
+                    item(0, stringResource(R.string.songs), R.drawable.musical_notes)
+                    item(1, stringResource(R.string.other_versions), R.drawable.disc)
                 }
             ) { currentTabIndex ->
                 saveableStateHolder.SaveableStateProvider(key = currentTabIndex) {
@@ -187,7 +188,7 @@ fun AlbumScreen(browseId: String) {
                                 headerContent = headerContent,
                                 initialPlaceholderCount = 1,
                                 continuationPlaceholderCount = 1,
-                                emptyItemsText = "This album doesn't have any alternative version",
+                                emptyItemsText = stringResource(R.string.no_alternative_version),
                                 itemsPageProvider = albumPage?.let {
                                     {
                                         Result.success(

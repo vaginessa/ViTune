@@ -3,6 +3,7 @@ package it.vfsfitvnm.vimusic.ui.screens.mood
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.ui.res.stringResource
 import it.vfsfitvnm.compose.persist.PersistMapCleanup
 import it.vfsfitvnm.compose.routing.RouteHandler
 import it.vfsfitvnm.vimusic.R
@@ -29,7 +30,7 @@ fun MoodScreen(mood: Mood) {
                 tabIndex = 0,
                 onTabChanged = { },
                 tabColumnContent = { item ->
-                    item(0, "Mood", R.drawable.disc)
+                    item(0, stringResource(R.string.mood), R.drawable.disc)
                 }
             ) { currentTabIndex ->
                 saveableStateHolder.SaveableStateProvider(key = currentTabIndex) {

@@ -38,11 +38,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import it.vfsfitvnm.vimusic.Database
 import it.vfsfitvnm.vimusic.DatabaseInitializer
 import it.vfsfitvnm.vimusic.LocalPlayerAwareWindowInsets
 import it.vfsfitvnm.vimusic.LocalPlayerServiceBinder
+import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.preferences.DataPreferences
 import it.vfsfitvnm.vimusic.preferences.PlayerPreferences
 import it.vfsfitvnm.vimusic.query
@@ -118,42 +120,37 @@ fun OtherSettings() {
                     .asPaddingValues()
             )
     ) {
-        Header(title = "Other")
+        Header(title = stringResource(R.string.other))
 
-        SettingsEntryGroupText(title = "ANDROID AUTO")
+        SettingsEntryGroupText(title = stringResource(R.string.android_auto))
 
         SwitchSettingEntry(
-            title = "Android Auto",
-            text = "Enable Android Auto support",
+            title = stringResource(R.string.android_auto),
+            text = stringResource(R.string.android_auto_description),
             isChecked = isAndroidAutoEnabled,
             onCheckedChange = { isAndroidAutoEnabled = it }
         )
 
         AnimatedVisibility(visible = isAndroidAutoEnabled) {
-            SettingsDescription(
-                text = "Remember to enable \"Unknown sources\" in the Developer Settings of Android Auto."
-            )
+            SettingsDescription(text = stringResource(R.string.android_auto_warning))
         }
 
         SettingsGroupSpacer()
 
-        SettingsEntryGroupText(title = "SEARCH HISTORY")
+        SettingsEntryGroupText(title = stringResource(R.string.search_history))
 
         SwitchSettingEntry(
-            title = "Pause search history",
-            text = "Neither save new searched queries nor show history",
+            title = stringResource(R.string.pause_search_history),
+            text = stringResource(R.string.pause_search_history_description),
             isChecked = DataPreferences.pauseSearchHistory,
             onCheckedChange = { DataPreferences.pauseSearchHistory = it }
         )
 
         AnimatedVisibility(visible = !(DataPreferences.pauseSearchHistory && queriesCount == 0)) {
             SettingsEntry(
-                title = "Clear search history",
-                text = if (queriesCount > 0) {
-                    "Delete $queriesCount search queries"
-                } else {
-                    "History is empty"
-                },
+                title = stringResource(R.string.clear_search_history),
+                text = if (queriesCount > 0) stringResource(R.string.format_clear_search_history_amount, queriesCount)
+                else stringResource(R.string.empty_history),
                 onClick = { query(Database::clearQueries) },
                 isEnabled = queriesCount > 0
             )
@@ -161,11 +158,11 @@ fun OtherSettings() {
 
         SettingsGroupSpacer()
 
-        SettingsEntryGroupText(title = "BUILT-IN PLAYLISTS")
+        SettingsEntryGroupText(title = stringResource(R.string.built_in_playlists))
 
         IntSettingEntry(
-            title = "Top list length",
-            text = "Limits the length of the 'My top x' playlist",
+            title = stringResource(R.string.top_list_length),
+            text = stringResource(R.string.top_list_length_description),
             currentValue = DataPreferences.topListLength,
             setValue = { DataPreferences.topListLength = it },
             defaultValue = 10,
@@ -174,22 +171,22 @@ fun OtherSettings() {
 
         SettingsGroupSpacer()
 
-        SettingsEntryGroupText(title = "SERVICE LIFETIME")
+        SettingsEntryGroupText(title = stringResource(R.string.service_lifetime))
 
         AnimatedVisibility(visible = !isIgnoringBatteryOptimizations) {
             ImportantSettingsDescription(
-                text = "If battery optimizations are applied, the playback notification can suddenly disappear when paused."
+                text = stringResource(R.string.service_lifetime_warning)
             )
         }
 
         if (isAtLeastAndroid12) SettingsDescription(
-            text = "Since Android 12, disabling battery optimizations is required for the invincible service option to be available."
+            text = stringResource(R.string.service_lifetime_warning_android_12)
         )
 
         SettingsEntry(
-            title = "Ignore battery optimizations",
-            text = if (isIgnoringBatteryOptimizations) "Restriction already lifted"
-            else "Disable background restrictions",
+            title = stringResource(R.string.ignore_battery_optimizations),
+            text = if (isIgnoringBatteryOptimizations) stringResource(R.string.ignoring_battery_optimizations)
+            else stringResource(R.string.ignore_battery_optimizations_action),
             onClick = {
                 if (!isAtLeastAndroid6) return@SettingsEntry
 
@@ -203,7 +200,7 @@ fun OtherSettings() {
                     try {
                         activityResultLauncher.launch(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
                     } catch (e: ActivityNotFoundException) {
-                        context.toast("Couldn't find battery optimization settings, please whitelist ViMusic manually")
+                        context.toast(context.getString(R.string.no_battery_optimization_settings_found))
                     }
                 }
             },
@@ -212,25 +209,22 @@ fun OtherSettings() {
 
         AnimatedVisibility(!isAtLeastAndroid12 || isIgnoringBatteryOptimizations) {
             SwitchSettingEntry(
-                title = "Invincible service",
-                text = "Should keep the playback going 99.99% of the time, in case turning off the battery optimizations is not enough",
+                title = stringResource(R.string.invincible_service),
+                text = stringResource(R.string.invincible_service_description),
                 isChecked = PlayerPreferences.isInvincibilityEnabled,
                 onCheckedChange = { PlayerPreferences.isInvincibilityEnabled = it }
             )
         }
 
         SettingsEntry(
-            title = "Need help?",
-            text = "Most of the time, it is not the developer's fault (even after turning on invincible service) that the app stops working properly in the background.\n" +
-                    "Check if your device manufacturer kills your apps (click to redirect)",
+            title = stringResource(R.string.need_help),
+            text = stringResource(R.string.need_help_description),
             onClick = {
                 uriHandler.openUri("https://dontkillmyapp.com/")
             }
         )
 
-        SettingsDescription(
-            text = "If you really think there is something wrong with the app itself, hop on to the About tab"
-        )
+        SettingsDescription(text = stringResource(R.string.service_lifetime_report_issue))
 
         SettingsGroupSpacer()
 
@@ -238,15 +232,15 @@ fun OtherSettings() {
 
         AnimatedContent(showTroubleshoot, label = "") { show ->
             if (show) Column {
-                SettingsEntryGroupText(title = "TROUBLESHOOTING")
+                SettingsEntryGroupText(title = stringResource(R.string.troubleshooting))
 
-                ImportantSettingsDescription(text = "Caution: use these buttons as a last resort when audio playback fails")
+                ImportantSettingsDescription(text = stringResource(R.string.troubleshooting_warning))
 
                 val troubleshootScope = rememberCoroutineScope()
                 var reloading by rememberSaveable { mutableStateOf(false) }
 
                 SecondaryTextButton(
-                    text = "Reload app internals",
+                    text = stringResource(R.string.reload_app_internals),
                     onClick = {
                         if (!reloading) troubleshootScope.launch {
                             reloading = true
@@ -265,7 +259,7 @@ fun OtherSettings() {
                 Spacer(modifier = Modifier.height(12.dp))
 
                 SecondaryTextButton(
-                    text = "Kill app",
+                    text = stringResource(R.string.kill_app),
                     onClick = {
                         binder?.stopRadio()
                         binder?.invincible = false
@@ -285,7 +279,7 @@ fun OtherSettings() {
 
                 SettingsGroupSpacer()
             } else SecondaryTextButton(
-                text = "Show troubleshoot section",
+                text = stringResource(R.string.show_troubleshoot_section),
                 onClick = {
                     coroutineScope.launch {
                         delay(500)

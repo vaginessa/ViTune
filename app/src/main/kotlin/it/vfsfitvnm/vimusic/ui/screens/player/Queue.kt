@@ -52,6 +52,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -342,7 +344,7 @@ fun Queue(
                     toggleState = {
                         PlayerPreferences.queueLoopEnabled = !PlayerPreferences.queueLoopEnabled
                     },
-                    name = "Queue loop"
+                    name = stringResource(R.string.queue_loop)
                 )
 
                 Image(
@@ -355,7 +357,11 @@ fun Queue(
                 )
 
                 BasicText(
-                    text = "${windows.size} songs",
+                    text = pluralStringResource(
+                        id = R.plurals.song_count_plural,
+                        count = windows.size,
+                        windows.size
+                    ),
                     style = typography.xxs.medium,
                     modifier = Modifier
                         .clip(RoundedCornerShape(16.dp))
@@ -392,7 +398,7 @@ fun Queue(
                                 }.collectAsState(initial = null, context = Dispatchers.IO)
 
                                 if (isCreatingNewPlaylist) TextFieldDialog(
-                                    hintText = "Enter the playlist name",
+                                    hintText = stringResource(R.string.enter_playlist_name_prompt),
                                     onDismiss = { isCreatingNewPlaylist = false },
                                     onDone = { text ->
                                         menuState.hide()
@@ -411,14 +417,14 @@ fun Queue(
                                             .fillMaxWidth()
                                     ) {
                                         BasicText(
-                                            text = "Add queue to playlist",
+                                            text = stringResource(R.string.add_queue_to_playlist),
                                             style = typography.m.semiBold
                                         )
 
                                         Spacer(modifier = Modifier.weight(1f))
 
                                         SecondaryTextButton(
-                                            text = "New playlist",
+                                            text = stringResource(R.string.new_playlist),
                                             onClick = { isCreatingNewPlaylist = true },
                                             alternative = true
                                         )
@@ -431,7 +437,11 @@ fun Queue(
                                         MenuEntry(
                                             icon = R.drawable.playlist,
                                             text = playlistPreview.playlist.name,
-                                            secondaryText = "${playlistPreview.songCount} songs",
+                                            secondaryText = pluralStringResource(
+                                                id = R.plurals.song_count_plural,
+                                                count = playlistPreview.songCount,
+                                                playlistPreview.songCount
+                                            ),
                                             onClick = {
                                                 menuState.hide()
                                                 addToPlaylist(

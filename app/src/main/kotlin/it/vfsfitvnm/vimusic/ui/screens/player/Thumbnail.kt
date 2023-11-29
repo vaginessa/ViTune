@@ -28,6 +28,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
@@ -182,14 +183,16 @@ fun Thumbnail(
             PlaybackError(
                 isDisplayed = error != null,
                 messageProvider = {
-                    if (currentWindow.mediaItem.isLocal) "This local music file does not exist anymore" else
+                    if (currentWindow.mediaItem.isLocal) stringResource(R.string.error_local_music_deleted) else
                         when (error?.cause?.cause) {
-                            is UnresolvedAddressException, is UnknownHostException -> "A network error has occurred"
-                            is PlayableFormatNotFoundException -> "Couldn't find a playable audio format"
-                            is UnplayableException -> "The original video source of this song has been deleted"
-                            is LoginRequiredException -> "This song cannot be played due to server restrictions"
-                            is VideoIdMismatchException -> "The returned video id doesn't match the requested one"
-                            else -> "An unknown playback error has occurred"
+                            is UnresolvedAddressException, is UnknownHostException -> stringResource(
+                                R.string.error_network
+                            )
+                            is PlayableFormatNotFoundException -> stringResource(R.string.error_unplayable)
+                            is UnplayableException -> stringResource(R.string.error_source_deleted)
+                            is LoginRequiredException -> stringResource(R.string.error_server_restrictions)
+                            is VideoIdMismatchException -> stringResource(R.string.error_id_mismatch)
+                            else -> stringResource(R.string.error_unknown_playback)
                         }
                 },
                 onDismiss = player::prepare

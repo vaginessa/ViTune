@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -79,6 +80,19 @@ import it.vfsfitvnm.vimusic.utils.secondary
 import it.vfsfitvnm.vimusic.utils.semiBold
 import kotlinx.coroutines.flow.Flow
 
+private val Song.formattedTotalPlayTime: String
+    @Composable get() {
+        val seconds = totalPlayTimeMs / 1000
+
+        val hours = seconds / 3600
+
+        return when {
+            hours == 0L -> stringResource(id = R.string.format_minutes, seconds / 60)
+            hours < 24L -> stringResource(id = R.string.format_hours, hours)
+            else -> stringResource(id = R.string.format_days, hours / 24)
+        }
+    }
+
 @Composable
 fun HomeSongs(
     onSearchClick: () -> Unit
@@ -92,7 +106,7 @@ fun HomeSongs(
         setSortBy = { songSortBy = it },
         sortOrder = songSortOrder,
         setSortOrder = { songSortOrder = it },
-        title = "Songs"
+        title = stringResource(R.string.songs)
     )
 }
 
@@ -174,7 +188,7 @@ fun HomeSongs(
                         }
 
                         BasicTextField(
-                            value = filter ?: "",
+                            value = filter.orEmpty(),
                             onValueChange = { filter = it },
                             textStyle = typography.xs.semiBold,
                             singleLine = true,
@@ -196,7 +210,7 @@ fun HomeSongs(
                                         exit = fadeOut(tween(100))
                                     ) {
                                         BasicText(
-                                            text = "Filter...",
+                                            text = stringResource(R.string.filter_placeholder),
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis,
                                             style = typography.xs.semiBold.secondary

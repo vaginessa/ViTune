@@ -38,10 +38,7 @@ fun Switch(
         if (it) 36.dp else 12.dp
     }
 
-    Canvas(
-        modifier = modifier
-            .size(width = 48.dp, height = 24.dp)
-    ) {
+    Canvas(modifier = modifier.size(width = 48.dp, height = 24.dp)) {
         drawRoundRect(
             color = backgroundColor,
             cornerRadius = CornerRadius(x = 12.dp.toPx(), y = 12.dp.toPx())

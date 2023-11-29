@@ -7,7 +7,7 @@ data class Runs(
     val runs: List<Run> = listOf()
 ) {
     val text: String
-        get() = runs.joinToString("") { it.text ?: "" }
+        get() = runs.joinToString("") { it.text.orEmpty() }
 
     fun splitBySeparator(): List<List<Run>> {
         return runs.flatMapIndexed { index, run ->
