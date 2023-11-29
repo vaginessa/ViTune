@@ -27,8 +27,8 @@ fun TextToggle(
     toggleState: () -> Unit,
     name: String,
     modifier: Modifier = Modifier,
-    onLabel: String = stringResource(R.string.on),
-    offLabel: String = stringResource(R.string.off)
+    onLabel: String = stringResource(R.string.on_label),
+    offLabel: String = stringResource(R.string.off_label)
 ) {
     val (colorPalette, typography) = LocalAppearance.current
 

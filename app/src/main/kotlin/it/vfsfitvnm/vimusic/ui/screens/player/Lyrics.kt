@@ -516,7 +516,9 @@ fun Lyrics(
                                         MenuEntry(
                                             icon = R.drawable.play_skip_forward,
                                             text = stringResource(R.string.set_lyrics_start_offset),
-                                            secondaryText = stringResource(R.string.set_lyrics_start_offset_description),
+                                            secondaryText = stringResource(
+                                                R.string.set_lyrics_start_offset_description
+                                            ),
                                             onClick = {
                                                 menuState.hide()
                                                 lyrics?.let {

@@ -241,19 +241,22 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
                         lastSongs
                     }
 
-                    MediaId.FAVORITES -> Database
+                    MediaId.FAVORITES ->
+                        Database
                         .favorites()
                         .first()
                         .shuffled()
 
-                    MediaId.OFFLINE -> Database
+                    MediaId.OFFLINE ->
+                        Database
                         .songsWithContentLength()
                         .first()
                         .filter { binder.isCached(it) }
                         .map(SongWithContentLength::song)
                         .shuffled()
 
-                    MediaId.PLAYLISTS -> data
+                    MediaId.PLAYLISTS ->
+                        data
                         .getOrNull(1)
                         ?.toLongOrNull()
                         ?.let(Database::playlistWithSongs)
@@ -261,7 +264,8 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
                         ?.songs
                         ?.shuffled()
 
-                    MediaId.ALBUMS -> data
+                    MediaId.ALBUMS ->
+                        data
                         .getOrNull(1)
                         ?.let(Database::albumSongs)
                         ?.first()

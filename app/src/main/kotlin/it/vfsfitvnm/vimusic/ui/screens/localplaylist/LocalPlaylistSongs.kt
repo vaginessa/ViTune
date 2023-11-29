@@ -227,7 +227,9 @@ fun LocalPlaylistSongs(
                                                                     ?.drop(2)
                                                             }"
                                                         )
-                                                    ) context.toast(context.getString(R.string.youtube_music_not_installed))
+                                                    ) context.toast(
+                                                        context.getString(R.string.youtube_music_not_installed)
+                                                    )
                                                 }
                                             )
                                         }
