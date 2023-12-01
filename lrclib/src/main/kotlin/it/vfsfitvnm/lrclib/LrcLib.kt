@@ -62,7 +62,7 @@ object LrcLib {
             get() = runCatching {
                 buildMap {
                     put(0L, "")
-                    text.trim().lines().filter { it.length > 10 }.forEach {
+                    text.trim().lines().filter { it.length >= 10 }.forEach {
                         put(
                             it[8].digitToInt() * 10L +
                                     it[7].digitToInt() * 100 +
