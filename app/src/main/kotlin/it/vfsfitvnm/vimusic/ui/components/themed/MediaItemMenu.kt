@@ -398,8 +398,8 @@ fun MediaItemMenu(
                     modifier = Modifier.weight(1f),
                     thumbnailUrl = mediaItem.mediaMetadata.artworkUri
                         .thumbnail(thumbnailSizePx)?.toString(),
-                    title = mediaItem.mediaMetadata.title.toString(),
-                    authors = mediaItem.mediaMetadata.artist.toString(),
+                    title = mediaItem.mediaMetadata.title?.toString().orEmpty(),
+                    authors = mediaItem.mediaMetadata.artist?.toString().orEmpty(),
                     duration = null,
                     thumbnailSizeDp = thumbnailSizeDp
                 )
