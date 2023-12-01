@@ -13,7 +13,6 @@
     <string name="format_my_top_playlist">My top %1$s</string>
     <string name="format_view_top_of_header">View top %1$s of …</string>
     <string name="format_speed_multiplier">%1$sx</string>
-    <string name="format_opening_url">Opening url %1$s</string>
 
     <string name="past_24_hours">Past 24 hours</string>
     <string name="past_week">Past week</string>
@@ -278,7 +277,7 @@
     <string name="persistent_queue">Persistent queue</string>
     <string name="persistent_queue_description">Save and restore playing songs</string>
     <string name="resume_playback">Resume playback</string>
-    <string name="resume_playback_description">When a wired or bluetooth device is connected</string>
+    <string name="resume_playback_description">When a wired or Bluetooth device is connected</string>
     <string name="stop_when_closed">Stop when closed</string>
     <string name="stop_when_closed_description">When you close the app, the music stops playing</string>
 

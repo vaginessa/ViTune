@@ -404,7 +404,7 @@ class MainActivity : ComponentActivity() {
         intent?.data = null
         this.intent = null
 
-        Log.d("MainActivity", getString(R.string.format_opening_url, uri))
+        Log.d("MainActivity", "Opening url: $uri")
 
         lifecycleScope.launch(Dispatchers.IO) {
             when (val path = uri.pathSegments.firstOrNull()) {
