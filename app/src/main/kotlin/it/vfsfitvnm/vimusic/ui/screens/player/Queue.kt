@@ -54,6 +54,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -418,15 +419,19 @@ fun Queue(
                                     ) {
                                         BasicText(
                                             text = stringResource(R.string.add_queue_to_playlist),
-                                            style = typography.m.semiBold
+                                            style = typography.m.semiBold,
+                                            overflow = TextOverflow.Ellipsis,
+                                            maxLines = 2,
+                                            modifier = Modifier.weight(weight = 2f, fill = false)
                                         )
 
-                                        Spacer(modifier = Modifier.weight(1f))
+                                        Spacer(modifier = Modifier.width(8.dp))
 
                                         SecondaryTextButton(
                                             text = stringResource(R.string.new_playlist),
                                             onClick = { isCreatingNewPlaylist = true },
-                                            alternative = true
+                                            alternative = true,
+                                            modifier = Modifier.weight(weight = 1f, fill = false)
                                         )
                                     }
 
