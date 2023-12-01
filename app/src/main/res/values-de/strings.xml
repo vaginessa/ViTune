@@ -65,7 +65,6 @@
     <string name="clear">Löschen</string>
     <string name="view_all">Alle anzeigen</string>
 
-    <string name="on">an</string>
     <string name="on_label">an</string>
     <string name="off_label">aus</string>
     <string name="unknown">Unbekannt</string>
@@ -289,10 +288,10 @@
     <string name="bass_boost">Bassverstärkung</string>
     <string name="bass_boost_description">Verstärkung der tiefen Frequenzen für ein besseres Hörerlebnis</string>
     <string name="bass_boost_level">Pegel der Bassverstärkung</string>
-    <string name="bass_boost_level_description">Pegel (0-1000) der Anhebung der tiefen Frequenzen; Verwendung auf eigene Gefahr!</string>
+    <string name="bass_boost_level_description">Pegel (0–1000) der Anhebung der tiefen Frequenzen; Verwendung auf eigene Gefahr!</string>
     <string name="equalizer_description">Mit dem System-Equalizer interagieren</string>
 
-    <string name="filter_placeholder">Filtern...</string>
+    <string name="filter_placeholder">Filtern…</string>
 
     <plurals name="song_count_plural">
         <item quantity="one">%1$d Lied</item>
