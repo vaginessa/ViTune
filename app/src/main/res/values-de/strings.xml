@@ -3,7 +3,7 @@
     <string name="format_go_to_artist">Mehr von %1$s</string>
     <string name="format_top_playlist">Top %1$s</string>
     <string name="format_my_top_playlist">Meine Top %1$s</string>
-    <string name="format_view_top_of_header">Ansicht top %1$s of …</string>
+    <string name="format_view_top_of_header">Top %1$s…</string>
     <string name="format_speed_multiplier">%1$sx</string>
 
     <string name="past_24_hours">24 Stunden</string>
@@ -14,11 +14,11 @@
 
     <string name="songs">Songs</string>
     <string name="playlists">Wiedergabelisten</string>
-    <string name="albums">Albums</string>
+    <string name="albums">Alben</string>
     <string name="artists">Künstler</string>
     <string name="singles">Singles</string>
 
-    <string name="favorites">Favorites</string>
+    <string name="favorites">Favoriten</string>
     <string name="offline">Offline</string>
     <string name="overview">Übersicht</string>
     <string name="library">Bibliothek</string>
@@ -171,7 +171,7 @@
     <string name="theme">Thema</string>
     <string name="theme_name_default">Standard</string>
     <string name="theme_name_dynamic">Dynamisch</string>
-    <string name="theme_name_pureblack">ReinSchwarz</string>
+    <string name="theme_name_pureblack">Rein Schwarz</string>
 
     <string name="theme_mode">Theme-Modus</string>
     <string name="theme_mode_light">Hell</string>
@@ -201,7 +201,7 @@
     <string name="previous_button_while_collapsed_description">Zeigt die Schaltfläche für den vorherigen Titel an, wenn der Player zusammengeklappt ist.</string>
     <string name="swipe_horizontally_to_close">Horizontal wischen zum Schließen</string>
     <string name="swipe_horizontally_to_close_description">Schließt den Player, wenn Sie auf dem eingeklappten Player nach links/rechts wischen. Nützlich für Benutzer, bei denen der Einhandmodus von Android aktiviert ist.</string>
-    <string name="show_like_button">Schaltfläche "Gefällt mir" anzeigen</string>
+    <string name="show_like_button">Schaltfläche "Gefällt-Mir" anzeigen</string>
     <string name="show_like_button_description">Anzeigen der Gefällt-Mir-Schaltfläche direkt im Player</string>
     <string name="swipe_to_remove_item">Wischen zum Entfernen eines Titels</string>
     <string name="swipe_to_remove_item_description">Wischen Sie nach links, um ein Element aus der Warteschlange zu entfernen</string>
@@ -213,9 +213,9 @@
     <string name="format_cache_space_used">%1$s verwendet (%2$s%%)</string>
     <string name="song_cache">Song-Zwischenspeicher</string>
     <string name="used_word">verwendet</string>
-    <string name="database">Musik-Datenbank</string>
+    <string name="database">Datenbank</string>
 
-    <string name="cleanup">Bereinigung</string>
+    <string name="cleanup">Zurücksetzen</string>
     <string name="pause_playback_history">Pausieren des Wiedergabeverlaufs</string>
     <string name="pause_playback_history_description">Stoppt die Verwendung von Wiedergabeereignissen für die Schnellauswahl</string>
     <string name="pause_playback_history_warning">Bitte beachten Sie: Dies hat keine Auswirkungen auf das Offline-Caching!</string>
@@ -289,7 +289,7 @@
     <string name="bass_boost_level_description">Pegel (0–1000) der Anhebung der tiefen Frequenzen; Verwendung auf eigene Gefahr!</string>
     <string name="equalizer_description">Mit dem System-Equalizer interagieren</string>
 
-    <string name="filter_placeholder">Filtern…</string>
+    <string name="filter_placeholder">Suchen…</string>
 
     <plurals name="song_count_plural">
         <item quantity="one">%1$d Lied</item>
