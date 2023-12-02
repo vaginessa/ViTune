@@ -61,6 +61,8 @@ import androidx.media3.exoplayer.analytics.AnalyticsListener
 import androidx.media3.exoplayer.analytics.PlaybackStats
 import androidx.media3.exoplayer.analytics.PlaybackStatsListener
 import androidx.media3.exoplayer.audio.AudioRendererEventListener
+import androidx.media3.exoplayer.audio.AudioSink
+import androidx.media3.exoplayer.audio.DefaultAudioOffloadSupportProvider
 import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.exoplayer.audio.DefaultAudioSink.DefaultAudioProcessorChain
 import androidx.media3.exoplayer.audio.MediaCodecAudioRenderer
@@ -97,6 +99,7 @@ import it.vfsfitvnm.vimusic.utils.forcePlayFromBeginning
 import it.vfsfitvnm.vimusic.utils.forceSeekToNext
 import it.vfsfitvnm.vimusic.utils.forceSeekToPrevious
 import it.vfsfitvnm.vimusic.utils.intent
+import it.vfsfitvnm.vimusic.utils.isAtLeastAndroid10
 import it.vfsfitvnm.vimusic.utils.isAtLeastAndroid13
 import it.vfsfitvnm.vimusic.utils.isAtLeastAndroid6
 import it.vfsfitvnm.vimusic.utils.isAtLeastAndroid8
@@ -920,7 +923,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         val audioSink = DefaultAudioSink.Builder(applicationContext)
             .setEnableFloatOutput(false)
             .setEnableAudioTrackPlaybackParams(false)
-            .setOffloadMode(DefaultAudioSink.OFFLOAD_MODE_DISABLED)
+            .setAudioOffloadSupportProvider(DefaultAudioOffloadSupportProvider(applicationContext))
             .setAudioProcessorChain(
                 DefaultAudioProcessorChain(
                     arrayOf(),
@@ -933,6 +936,9 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                 )
             )
             .build()
+            .apply {
+                if (isAtLeastAndroid10) setOffloadMode(AudioSink.OFFLOAD_MODE_DISABLED)
+            }
 
         return RenderersFactory { handler: Handler?, _, audioListener: AudioRendererEventListener?, _, _ ->
             arrayOf(
