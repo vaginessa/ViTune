@@ -5,6 +5,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import it.vfsfitvnm.innertube.Innertube
 import it.vfsfitvnm.innertube.models.BrowseResponse
+import it.vfsfitvnm.innertube.models.Context
 import it.vfsfitvnm.innertube.models.MusicCarouselShelfRenderer
 import it.vfsfitvnm.innertube.models.NextResponse
 import it.vfsfitvnm.innertube.models.bodies.BrowseBody
@@ -16,7 +17,7 @@ import it.vfsfitvnm.innertube.utils.runCatchingNonCancellable
 
 suspend fun Innertube.relatedPage(body: NextBody) = runCatchingNonCancellable {
     val nextResponse = client.post(NEXT) {
-        setBody(body)
+        setBody(body.copy(context = Context.DefaultWebNoLang))
         @Suppress("all")
         mask("contents.singleColumnMusicWatchNextResultsRenderer.tabbedRenderer.watchNextTabbedResultsRenderer.tabs.tabRenderer(endpoint,title)")
     }.body<NextResponse>()

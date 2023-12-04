@@ -1,6 +1,7 @@
 package it.vfsfitvnm.innertube.models
 
 import kotlinx.serialization.Serializable
+import java.util.Locale
 
 @Serializable
 data class Context(
@@ -24,7 +25,16 @@ data class Context(
     )
 
     companion object {
-        val DefaultWeb = Context(
+        val DefaultWeb get() = Context(
+            client = Client(
+                clientName = "WEB_REMIX",
+                clientVersion = "1.20220918",
+                platform = "DESKTOP",
+                hl = Locale.getDefault().language
+            )
+        )
+
+        val DefaultWebNoLang = Context(
             client = Client(
                 clientName = "WEB_REMIX",
                 clientVersion = "1.20220918",

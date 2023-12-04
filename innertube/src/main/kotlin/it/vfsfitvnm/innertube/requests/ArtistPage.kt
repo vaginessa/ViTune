@@ -5,31 +5,51 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import it.vfsfitvnm.innertube.Innertube
 import it.vfsfitvnm.innertube.models.BrowseResponse
+import it.vfsfitvnm.innertube.models.Context
 import it.vfsfitvnm.innertube.models.MusicCarouselShelfRenderer
 import it.vfsfitvnm.innertube.models.MusicShelfRenderer
-import it.vfsfitvnm.innertube.models.SectionListRenderer
 import it.vfsfitvnm.innertube.models.bodies.BrowseBody
 import it.vfsfitvnm.innertube.utils.findSectionByTitle
 import it.vfsfitvnm.innertube.utils.from
 import it.vfsfitvnm.innertube.utils.runCatchingNonCancellable
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
+import kotlinx.coroutines.currentCoroutineContext
 
 suspend fun Innertube.artistPage(body: BrowseBody) = runCatchingNonCancellable {
+    val ctx = currentCoroutineContext()
     val response = client.post(BROWSE) {
         setBody(body)
         mask("contents,header")
     }.body<BrowseResponse>()
 
-    fun findSectionByTitle(text: String): SectionListRenderer.Content? {
-        return response
-            .contents
-            ?.singleColumnBrowseResultsRenderer
-            ?.tabs
-            ?.get(0)
-            ?.tabRenderer
-            ?.content
-            ?.sectionListRenderer
-            ?.findSectionByTitle(text)
+    val responseNoLang by lazy {
+        CoroutineScope(ctx).async(start = CoroutineStart.LAZY) {
+            client.post(BROWSE) {
+                setBody(body.copy(context = Context.DefaultWebNoLang))
+                mask("contents,header")
+            }.body<BrowseResponse>()
+        }
     }
+
+    suspend fun findSectionByTitle(text: String) = response
+        .contents
+        ?.singleColumnBrowseResultsRenderer
+        ?.tabs
+        ?.get(0)
+        ?.tabRenderer
+        ?.content
+        ?.sectionListRenderer
+        ?.findSectionByTitle(text) ?: responseNoLang.await()
+        .contents
+        ?.singleColumnBrowseResultsRenderer
+        ?.tabs
+        ?.get(0)
+        ?.tabRenderer
+        ?.content
+        ?.sectionListRenderer
+        ?.findSectionByTitle(text)
 
     val songsSection = findSectionByTitle("Songs")?.musicShelfRenderer
     val albumsSection = findSectionByTitle("Albums")?.musicCarouselShelfRenderer
