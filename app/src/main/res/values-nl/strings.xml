@@ -299,6 +299,10 @@
 
     <string name="filter_placeholder">Filteren…</string>
 
+    <string name="last_interaction">Laatst afgespeeld</string>
+    <string name="trending">Trending</string>
+    <string name="quick_picks_source">Bron voor Snelle keuzes</string>
+
     <plurals name="song_count_plural">
         <item quantity="one">%1$d nummer</item>
         <item quantity="other">%1$d nummers</item>

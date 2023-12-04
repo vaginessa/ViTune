@@ -40,6 +40,7 @@ import it.vfsfitvnm.vimusic.enums.SortOrder
 import it.vfsfitvnm.vimusic.models.Album
 import it.vfsfitvnm.vimusic.models.Artist
 import it.vfsfitvnm.vimusic.models.Event
+import it.vfsfitvnm.vimusic.models.EventWithSong
 import it.vfsfitvnm.vimusic.models.Format
 import it.vfsfitvnm.vimusic.models.Info
 import it.vfsfitvnm.vimusic.models.Lyrics
@@ -446,8 +447,8 @@ interface Database {
         WHERE (:now - Event.timestamp) <= :period AND
         Song.id NOT LIKE '$LOCAL_KEY_PREFIX%'
         GROUP BY songId
-        ORDER BY SUM(playTime)
-        DESC LIMIT :limit
+        ORDER BY SUM(playTime) DESC
+        LIMIT :limit
         """
     )
     @RewriteQueriesToDropUnusedColumns
@@ -456,6 +457,10 @@ interface Database {
         now: Long = System.currentTimeMillis(),
         period: Long
     ): Flow<List<Song>>
+
+    @Transaction
+    @Query("SELECT * FROM Event ORDER BY timestamp DESC")
+    fun events(): Flow<List<EventWithSong>>
 
     @Query("SELECT COUNT (*) FROM Event")
     fun eventsCount(): Flow<Int>

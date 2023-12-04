@@ -49,6 +49,7 @@ import it.vfsfitvnm.vimusic.LocalPlayerAwareWindowInsets
 import it.vfsfitvnm.vimusic.LocalPlayerServiceBinder
 import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.models.Song
+import it.vfsfitvnm.vimusic.preferences.DataPreferences
 import it.vfsfitvnm.vimusic.query
 import it.vfsfitvnm.vimusic.ui.components.LocalMenuState
 import it.vfsfitvnm.vimusic.ui.components.ShimmerHost
@@ -95,14 +96,28 @@ fun QuickPicks(
 
     var relatedPageResult by persist<Result<Innertube.RelatedPage?>?>(tag = "home/relatedPageResult")
 
-    LaunchedEffect(Unit) {
-        Database.trending().distinctUntilChanged().collect { songs ->
-            val song = songs.firstOrNull()
-            if (relatedPageResult == null || trending?.id != song?.id) {
-                relatedPageResult =
-                    Innertube.relatedPage(NextBody(videoId = (song?.id ?: "J7p4bzqLvCw")))
-            }
+    LaunchedEffect(DataPreferences.quickPicksSource) {
+        suspend fun handleSong(song: Song?) {
+            if (relatedPageResult == null || trending?.id != song?.id) relatedPageResult =
+                Innertube.relatedPage(
+                    NextBody(
+                        videoId = (song?.id ?: "J7p4bzqLvCw")
+                    )
+                )
             trending = song
+        }
+        when (DataPreferences.quickPicksSource) {
+            DataPreferences.QuickPicksSource.Trending ->
+                Database
+                    .trending()
+                    .distinctUntilChanged()
+                    .collect { handleSong(it.firstOrNull()) }
+
+            DataPreferences.QuickPicksSource.LastInteraction ->
+                Database
+                    .events()
+                    .distinctUntilChanged()
+                    .collect { handleSong(it.firstOrNull()?.song) }
         }
     }
 

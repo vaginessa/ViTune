@@ -300,6 +300,10 @@
 
     <string name="filter_placeholder">Filter…</string>
 
+    <string name="last_interaction">Last Played</string>
+    <string name="trending">Trending</string>
+    <string name="quick_picks_source">Quick Picks Source</string>
+
     <plurals name="song_count_plural">
         <item quantity="one">%1$d song</item>
         <item quantity="other">%1$d songs</item>

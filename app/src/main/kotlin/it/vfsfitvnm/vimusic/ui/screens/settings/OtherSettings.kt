@@ -58,6 +58,7 @@ import it.vfsfitvnm.vimusic.utils.isAtLeastAndroid12
 import it.vfsfitvnm.vimusic.utils.isAtLeastAndroid6
 import it.vfsfitvnm.vimusic.utils.isIgnoringBatteryOptimizations
 import it.vfsfitvnm.vimusic.utils.toast
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -149,7 +150,10 @@ fun OtherSettings() {
         AnimatedVisibility(visible = !(DataPreferences.pauseSearchHistory && queriesCount == 0)) {
             SettingsEntry(
                 title = stringResource(R.string.clear_search_history),
-                text = if (queriesCount > 0) stringResource(R.string.format_clear_search_history_amount, queriesCount)
+                text = if (queriesCount > 0) stringResource(
+                    R.string.format_clear_search_history_amount,
+                    queriesCount
+                )
                 else stringResource(R.string.empty_history),
                 onClick = { query(Database::clearQueries) },
                 isEnabled = queriesCount > 0
@@ -167,6 +171,18 @@ fun OtherSettings() {
             setValue = { DataPreferences.topListLength = it },
             defaultValue = 10,
             range = 1..500
+        )
+
+        SettingsGroupSpacer()
+
+        SettingsEntryGroupText(title = stringResource(R.string.quick_picks))
+
+        ValueSelectorSettingsEntry(
+            title = stringResource(R.string.quick_picks_source),
+            selectedValue = DataPreferences.quickPicksSource,
+            values = enumValues<DataPreferences.QuickPicksSource>().toList().toImmutableList(),
+            onValueSelected = { DataPreferences.quickPicksSource = it },
+            valueText = { it.displayName() }
         )
 
         SettingsGroupSpacer()

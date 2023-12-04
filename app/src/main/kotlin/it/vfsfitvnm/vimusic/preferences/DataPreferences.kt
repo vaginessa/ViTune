@@ -17,6 +17,7 @@ object DataPreferences : GlobalPreferencesHolder() {
     var pauseSearchHistory by boolean(false)
     var topListLength by int(10)
     var topListPeriod by enum(TopListPeriod.AllTime)
+    var quickPicksSource by enum(QuickPicksSource.Trending)
 
     enum class TopListPeriod(val displayName: @Composable () -> String, val duration: Duration? = null) {
         PastDay(displayName = { stringResource(R.string.past_24_hours) }, duration = 1.days),
@@ -24,5 +25,10 @@ object DataPreferences : GlobalPreferencesHolder() {
         PastMonth(displayName = { stringResource(R.string.past_month) }, duration = 30.days),
         PastYear(displayName = { stringResource(R.string.past_year) }, 365.days),
         AllTime(displayName = { stringResource(R.string.all_time) })
+    }
+
+    enum class QuickPicksSource(val displayName: @Composable () -> String) {
+        Trending(displayName = { stringResource(R.string.trending) }),
+        LastInteraction(displayName = { stringResource(R.string.last_interaction) })
     }
 }
