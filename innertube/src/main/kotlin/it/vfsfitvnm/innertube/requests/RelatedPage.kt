@@ -19,7 +19,9 @@ suspend fun Innertube.relatedPage(body: NextBody) = runCatchingNonCancellable {
     val nextResponse = client.post(NEXT) {
         setBody(body.copy(context = Context.DefaultWebNoLang))
         @Suppress("all")
-        mask("contents.singleColumnMusicWatchNextResultsRenderer.tabbedRenderer.watchNextTabbedResultsRenderer.tabs.tabRenderer(endpoint,title)")
+        mask(
+            "contents.singleColumnMusicWatchNextResultsRenderer.tabbedRenderer.watchNextTabbedResultsRenderer.tabs.tabRenderer(endpoint,title)"
+        )
     }.body<NextResponse>()
 
     val browseId = nextResponse
@@ -36,9 +38,16 @@ suspend fun Innertube.relatedPage(body: NextBody) = runCatchingNonCancellable {
         ?: return@runCatchingNonCancellable null
 
     val response = client.post(BROWSE) {
-        setBody(BrowseBody(browseId = browseId))
+        setBody(
+            BrowseBody(
+                browseId = browseId,
+                context = Context.DefaultWebNoLang
+            )
+        )
         @Suppress("all")
-        mask("contents.sectionListRenderer.contents.musicCarouselShelfRenderer(header.musicCarouselShelfBasicHeaderRenderer(title,strapline),contents($MUSIC_RESPONSIVE_LIST_ITEM_RENDERER_MASK,$MUSIC_TWO_ROW_ITEM_RENDERER_MASK))")
+        mask(
+            "contents.sectionListRenderer.contents.musicCarouselShelfRenderer(header.musicCarouselShelfBasicHeaderRenderer(title,strapline),contents($MUSIC_RESPONSIVE_LIST_ITEM_RENDERER_MASK,$MUSIC_TWO_ROW_ITEM_RENDERER_MASK))"
+        )
     }.body<BrowseResponse>()
 
     val sectionListRenderer = response

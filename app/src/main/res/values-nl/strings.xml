@@ -167,7 +167,7 @@
     <string name="view_album">Toon album</string>
     <string name="view_playlist">Toon afspeellijst</string>
 
-    <string name="search_placeholder">Voer een naam in</string>
+    <string name="search_placeholder">Zoek…</string>
     <string name="format_version_credits">v%1$s door vfsfitvnm</string>
     <string name="social">Sociaal</string>
     <string name="github">GitHub</string>
@@ -189,7 +189,7 @@
 
     <string name="thumbnail_roundness">Rondheid van miniaturen</string>
     <string name="thumbnail_roundness_none">Geen</string>
-    <string name="thumbnail_roundness_light">Light</string>
+    <string name="thumbnail_roundness_light">Licht</string>
     <string name="thumbnail_roundness_medium">Gemiddeld</string>
     <string name="thumbnail_roundness_heavy">Sterk</string>
     <string name="thumbnail_roundness_heavier">Nog sterker</string>

@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -139,8 +140,12 @@ fun Thumbnail(
         Box(
             modifier = Modifier
                 .aspectRatio(1f)
-                .clip(LocalAppearance.current.thumbnailShape)
                 .size(thumbnailSizeDp)
+                .clip(LocalAppearance.current.thumbnailShape)
+                .shadow(
+                    elevation = 8.dp,
+                    shape = LocalAppearance.current.thumbnailShape
+                )
         ) {
             if (currentWindow.mediaItem.mediaMetadata.artworkUri != null) AsyncImage(
                 model = currentWindow.mediaItem.mediaMetadata.artworkUri.thumbnail(thumbnailSizePx),

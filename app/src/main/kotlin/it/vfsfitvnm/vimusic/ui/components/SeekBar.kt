@@ -194,7 +194,7 @@ private fun SeekBarContent(
         )
 
         Canvas(
-            Modifier
+            modifier = Modifier
                 .fillMaxWidth(fraction)
                 .height(amplitude())
                 .align(Alignment.CenterStart)

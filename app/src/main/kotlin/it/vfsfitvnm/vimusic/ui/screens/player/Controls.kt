@@ -106,13 +106,7 @@ fun Controls(
     }
 
     LaunchedEffect(position) {
-        if (!isSeeking && !animatedPosition.isRunning) animatedPosition.animateTo(
-            targetValue = position.toFloat(),
-            animationSpec = tween(
-                durationMillis = 1000,
-                easing = LinearEasing
-            )
-        )
+        if (!isSeeking && !animatedPosition.isRunning) animatedPosition.animateTo(position.toFloat())
     }
 
     val durationVisible by remember(isSeeking) { derivedStateOf { isSeeking } }
@@ -150,9 +144,9 @@ fun Controls(
         Spacer(modifier = Modifier.weight(1f))
 
         Row(
-            Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(if (PlayerPreferences.showLike) 4.dp else 8.dp)
         ) {
             if (PlayerPreferences.showLike) BigIconButton(
                 iconId = if (likedAt == null) R.drawable.heart_outline else R.drawable.heart,

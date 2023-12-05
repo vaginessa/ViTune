@@ -330,17 +330,17 @@ fun Queue(
                 )
             }
 
-            Box(
+            Row(
                 modifier = Modifier
                     .clickable(onClick = layoutState::collapseSoft)
                     .background(colorPalette.background2)
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp)
                     .padding(horizontalBottomPaddingValues)
-                    .height(64.dp)
+                    .height(64.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 TextToggle(
-                    modifier = Modifier.align(Alignment.CenterStart),
                     state = PlayerPreferences.queueLoopEnabled,
                     toggleState = {
                         PlayerPreferences.queueLoopEnabled = !PlayerPreferences.queueLoopEnabled
@@ -348,14 +348,14 @@ fun Queue(
                     name = stringResource(R.string.queue_loop)
                 )
 
+                Spacer(modifier = Modifier.weight(1f))
                 Image(
                     painter = painterResource(R.drawable.chevron_down),
                     contentDescription = null,
                     colorFilter = ColorFilter.tint(colorPalette.text),
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .size(18.dp)
+                    modifier = Modifier.size(18.dp)
                 )
+                Spacer(modifier = Modifier.weight(1f))
 
                 BasicText(
                     text = pluralStringResource(
@@ -460,7 +460,6 @@ fun Queue(
                             }
                         }
                         .background(colorPalette.background1)
-                        .align(Alignment.CenterEnd)
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 )
             }

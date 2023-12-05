@@ -95,6 +95,7 @@ dependencies {
     implementation(projects.composeRouting)
     implementation(projects.composeReordering)
 
+    implementation(platform(libs.compose.bom))
     implementation(libs.compose.activity)
     implementation(libs.compose.foundation)
     implementation(libs.compose.ui)
