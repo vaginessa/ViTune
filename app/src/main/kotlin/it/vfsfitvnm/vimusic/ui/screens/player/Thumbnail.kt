@@ -141,11 +141,11 @@ fun Thumbnail(
             modifier = Modifier
                 .aspectRatio(1f)
                 .size(thumbnailSizeDp)
-                .clip(LocalAppearance.current.thumbnailShape)
                 .shadow(
                     elevation = 8.dp,
                     shape = LocalAppearance.current.thumbnailShape
                 )
+                .clip(LocalAppearance.current.thumbnailShape)
         ) {
             if (currentWindow.mediaItem.mediaMetadata.artworkUri != null) AsyncImage(
                 model = currentWindow.mediaItem.mediaMetadata.artworkUri.thumbnail(thumbnailSizePx),
