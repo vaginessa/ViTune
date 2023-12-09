@@ -308,12 +308,23 @@ fun Player(
         }
 
         val controlsContent: @Composable (modifier: Modifier) -> Unit = { innerModifier ->
-            Controls(
-                media = mediaItem.toUiMedia(positionAndDuration.second),
-                shouldBePlaying = shouldBePlaying,
-                position = positionAndDuration.first,
-                modifier = innerModifier
-            )
+            val media = mediaItem.toUiMedia(positionAndDuration.second)
+
+            when (PlayerPreferences.playerLayout) {
+                PlayerPreferences.PlayerLayout.Classic -> ClassicControls(
+                    media = media,
+                    shouldBePlaying = shouldBePlaying,
+                    position = positionAndDuration.first,
+                    modifier = innerModifier
+                )
+
+                PlayerPreferences.PlayerLayout.New -> Controls(
+                    media = media,
+                    shouldBePlaying = shouldBePlaying,
+                    position = positionAndDuration.first,
+                    modifier = innerModifier
+                )
+            }
         }
 
         if (isLandscape) Row(
@@ -428,33 +439,42 @@ fun Player(
         }
 
         with(PlayerPreferences) {
+            @Composable
+            fun Actions() {
+                IconButton(
+                    onClick = { speedDialogOpen = true },
+                    icon = R.drawable.speed,
+                    color = colorPalette.text,
+                    modifier = Modifier
+                        .padding(vertical = 8.dp)
+                        .size(20.dp)
+                )
+
+                IconButton(
+                    onClick = { boostDialogOpen = true },
+                    icon = R.drawable.volume_up,
+                    color = colorPalette.text,
+                    modifier = Modifier
+                        .padding(vertical = 8.dp)
+                        .size(20.dp)
+                )
+            }
+
             Queue(
                 layoutState = playerBottomSheetState,
                 beforeContent = {
-                    TextToggle(
-                        state = trackLoopEnabled,
-                        toggleState = { trackLoopEnabled = !trackLoopEnabled },
-                        name = stringResource(R.string.song_loop)
-                    )
+                    when (playerLayout) {
+                        PlayerPreferences.PlayerLayout.Classic -> Actions()
+
+                        PlayerPreferences.PlayerLayout.New -> TextToggle(
+                            state = trackLoopEnabled,
+                            toggleState = { trackLoopEnabled = !trackLoopEnabled },
+                            name = stringResource(R.string.song_loop)
+                        )
+                    }
                 },
                 afterContent = {
-                    IconButton(
-                        onClick = { speedDialogOpen = true },
-                        icon = R.drawable.speed,
-                        color = colorPalette.text,
-                        modifier = Modifier
-                            .padding(horizontal = 8.dp, vertical = 8.dp)
-                            .size(20.dp)
-                    )
-
-                    IconButton(
-                        onClick = { boostDialogOpen = true },
-                        icon = R.drawable.volume_up,
-                        color = colorPalette.text,
-                        modifier = Modifier
-                            .padding(horizontal = 8.dp, vertical = 8.dp)
-                            .size(20.dp)
-                    )
+                    if (playerLayout == PlayerPreferences.PlayerLayout.New) Actions()
 
                     IconButton(
                         icon = R.drawable.ellipsis_horizontal,
@@ -469,11 +489,9 @@ fun Player(
                             }
                         },
                         modifier = Modifier
-                            .padding(start = 8.dp, end = 4.dp, top = 8.dp, bottom = 8.dp)
+                            .padding(vertical = 8.dp)
                             .size(20.dp)
                     )
-
-                    Spacer(modifier = Modifier.width(4.dp))
                 },
                 backgroundColorProvider = { colorPalette.background2 },
                 modifier = Modifier.align(Alignment.BottomCenter)

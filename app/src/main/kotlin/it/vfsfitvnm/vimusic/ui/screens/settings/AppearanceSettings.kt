@@ -1,5 +1,6 @@
 package it.vfsfitvnm.vimusic.ui.screens.settings
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
@@ -160,12 +161,24 @@ fun AppearanceSettings() {
                 onCheckedChange = { PlayerPreferences.horizontalSwipeToClose = it }
             )
 
-            SwitchSettingEntry(
-                title = stringResource(R.string.show_like_button),
-                text = stringResource(R.string.show_like_button_description),
-                isChecked = PlayerPreferences.showLike,
-                onCheckedChange = { PlayerPreferences.showLike = it }
+            EnumValueSelectorSettingsEntry(
+                title = stringResource(R.string.player_layout),
+                selectedValue = PlayerPreferences.playerLayout,
+                onValueSelected = { PlayerPreferences.playerLayout = it },
+                valueText = { it.displayName() }
             )
+
+            AnimatedVisibility(
+                visible = PlayerPreferences.playerLayout == PlayerPreferences.PlayerLayout.New,
+                label = ""
+            ) {
+                SwitchSettingEntry(
+                    title = stringResource(R.string.show_like_button),
+                    text = stringResource(R.string.show_like_button_description),
+                    isChecked = PlayerPreferences.showLike,
+                    onCheckedChange = { PlayerPreferences.showLike = it }
+                )
+            }
 
             SwitchSettingEntry(
                 title = stringResource(R.string.swipe_to_remove_item),

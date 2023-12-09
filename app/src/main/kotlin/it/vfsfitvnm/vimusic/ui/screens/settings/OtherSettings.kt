@@ -58,7 +58,6 @@ import it.vfsfitvnm.vimusic.utils.isAtLeastAndroid12
 import it.vfsfitvnm.vimusic.utils.isAtLeastAndroid6
 import it.vfsfitvnm.vimusic.utils.isIgnoringBatteryOptimizations
 import it.vfsfitvnm.vimusic.utils.toast
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -177,10 +176,9 @@ fun OtherSettings() {
 
         SettingsEntryGroupText(title = stringResource(R.string.quick_picks))
 
-        ValueSelectorSettingsEntry(
+        EnumValueSelectorSettingsEntry(
             title = stringResource(R.string.quick_picks_source),
             selectedValue = DataPreferences.quickPicksSource,
-            values = enumValues<DataPreferences.QuickPicksSource>().toList().toImmutableList(),
             onValueSelected = { DataPreferences.quickPicksSource = it },
             valueText = { it.displayName() }
         )

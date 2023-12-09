@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
@@ -60,13 +61,18 @@ import it.vfsfitvnm.vimusic.Database
 import it.vfsfitvnm.vimusic.LocalPlayerServiceBinder
 import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.models.Info
+import it.vfsfitvnm.vimusic.models.Song
 import it.vfsfitvnm.vimusic.models.ui.UiMedia
 import it.vfsfitvnm.vimusic.preferences.PlayerPreferences
+import it.vfsfitvnm.vimusic.query
 import it.vfsfitvnm.vimusic.transaction
+import it.vfsfitvnm.vimusic.ui.components.ClassicSeekBar
 import it.vfsfitvnm.vimusic.ui.components.SeekBar
 import it.vfsfitvnm.vimusic.ui.components.themed.BigIconButton
+import it.vfsfitvnm.vimusic.ui.components.themed.IconButton
 import it.vfsfitvnm.vimusic.ui.screens.artistRoute
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
+import it.vfsfitvnm.vimusic.ui.styling.favoritesIcon
 import it.vfsfitvnm.vimusic.utils.bold
 import it.vfsfitvnm.vimusic.utils.forceSeekToNext
 import it.vfsfitvnm.vimusic.utils.forceSeekToPrevious
@@ -82,6 +88,174 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 private const val FORWARD_BACKWARD_OFFSET = 16f
+
+@Composable
+fun ClassicControls(
+    media: UiMedia,
+    shouldBePlaying: Boolean,
+    position: Long,
+    modifier: Modifier = Modifier
+) = with(PlayerPreferences) {
+    val (colorPalette, typography) = LocalAppearance.current
+
+    val binder = LocalPlayerServiceBinder.current
+    binder?.player ?: return
+
+    var scrubbingPosition by remember(media) { mutableStateOf<Long?>(null) }
+    var likedAt by rememberSaveable { mutableStateOf<Long?>(null) }
+
+    LaunchedEffect(media) {
+        Database.likedAt(media.id).distinctUntilChanged().collect { likedAt = it }
+    }
+
+    val shouldBePlayingTransition = updateTransition(shouldBePlaying, label = "shouldBePlaying")
+
+    val playPauseRoundness by shouldBePlayingTransition.animateDp(
+        transitionSpec = { tween(durationMillis = 100, easing = LinearEasing) },
+        label = "playPauseRoundness",
+        targetValueByState = { if (it) 32.dp else 16.dp }
+    )
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 32.dp)
+    ) {
+        Spacer(modifier = Modifier.weight(1f))
+        MediaInfo(media)
+        Spacer(modifier = Modifier.weight(0.5f))
+
+        ClassicSeekBar(
+            value = scrubbingPosition ?: position,
+            minimumValue = 0,
+            maximumValue = media.duration,
+            onDragStart = { scrubbingPosition = it },
+            onDrag = { delta ->
+                scrubbingPosition = if (media.duration != C.TIME_UNSET) scrubbingPosition
+                    ?.plus(delta)
+                    ?.coerceIn(0, media.duration) else null
+            },
+            onDragEnd = {
+                scrubbingPosition?.let(binder.player::seekTo)
+                scrubbingPosition = null
+            },
+            color = colorPalette.text,
+            backgroundColor = colorPalette.background2,
+            shape = RoundedCornerShape(8.dp)
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            BasicText(
+                text = formatAsDuration(scrubbingPosition ?: position),
+                style = typography.xxs.semiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            if (media.duration != C.TIME_UNSET) BasicText(
+                text = formatAsDuration(media.duration),
+                style = typography.xxs.semiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            IconButton(
+                icon = if (likedAt == null) R.drawable.heart_outline else R.drawable.heart,
+                color = colorPalette.favoritesIcon,
+                onClick = {
+                    val currentMediaItem = binder.player.currentMediaItem
+
+                    query {
+                        if (
+                            Database.like(
+                                media.id,
+                                if (likedAt == null) System.currentTimeMillis() else null
+                            ) == 0
+                        ) {
+                            currentMediaItem
+                                ?.takeIf { it.mediaId == media.id }
+                                ?.let {
+                                    Database.insert(currentMediaItem, Song::toggleLike)
+                                }
+                        }
+                    }
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .size(24.dp)
+            )
+
+            IconButton(
+                icon = R.drawable.play_skip_back,
+                color = colorPalette.text,
+                onClick = binder.player::forceSeekToPrevious,
+                modifier = Modifier
+                    .weight(1f)
+                    .size(24.dp)
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(playPauseRoundness))
+                    .clickable {
+                        if (shouldBePlaying) binder.player.pause() else {
+                            if (binder.player.playbackState == Player.STATE_IDLE) binder.player.prepare()
+                            binder.player.play()
+                        }
+                    }
+                    .background(colorPalette.background2)
+                    .size(64.dp)
+            ) {
+                Image(
+                    painter = painterResource(if (shouldBePlaying) R.drawable.pause else R.drawable.play),
+                    contentDescription = null,
+                    colorFilter = ColorFilter.tint(colorPalette.text),
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(28.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            IconButton(
+                icon = R.drawable.play_skip_forward,
+                color = colorPalette.text,
+                onClick = binder.player::forceSeekToNext,
+                modifier = Modifier
+                    .weight(1f)
+                    .size(24.dp)
+            )
+
+            IconButton(
+                icon = R.drawable.infinite,
+                color = if (trackLoopEnabled) colorPalette.text else colorPalette.textDisabled,
+                onClick = { trackLoopEnabled = !trackLoopEnabled },
+                modifier = Modifier
+                    .weight(1f)
+                    .size(24.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+    }
+}
 
 @Composable
 fun Controls(

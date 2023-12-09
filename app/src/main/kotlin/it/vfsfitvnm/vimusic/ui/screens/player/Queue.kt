@@ -131,9 +131,10 @@ fun Queue(
                     .drawBehind { drawRect(backgroundColorProvider()) }
                     .fillMaxSize()
                     .padding(horizontalBottomPaddingValues),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(4.dp))
                 beforeContent()
                 Spacer(modifier = Modifier.weight(1f))
                 Image(
@@ -144,7 +145,7 @@ fun Queue(
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 afterContent()
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(4.dp))
             }
         }
     ) {
