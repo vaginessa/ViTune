@@ -303,6 +303,7 @@
     <string name="last_interaction">Last Played</string>
     <string name="trending">Trending</string>
     <string name="quick_picks_source">Quick Picks Source</string>
+
     <string name="player_layout">Player layout</string>
     <string name="classic_player_layout_name">Classic</string>
     <string name="new_player_layout_name">Modern (new)</string>

@@ -304,6 +304,10 @@
     <string name="trending">Trending</string>
     <string name="quick_picks_source">Bron voor Snelle keuzes</string>
 
+    <string name="player_layout">Lay-out van de speler</string>
+    <string name="classic_player_layout_name">Klassiek</string>
+    <string name="new_player_layout_name">Modern (nieuw)</string>
+
     <plurals name="song_count_plural">
         <item quantity="one">%1$d nummer</item>
         <item quantity="other">%1$d nummers</item>
