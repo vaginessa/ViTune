@@ -103,7 +103,7 @@ fun HomeScreen(onPlaylistUrl: (String) -> Unit) {
 
         NavHost {
             Scaffold(
-                topIconButtonId = R.drawable.equalizer,
+                topIconButtonId = R.drawable.settings,
                 onTopIconButtonClick = { settingsRoute() },
                 tabIndex = UIStatePreferences.homeScreenTabIndex,
                 onTabChanged = { UIStatePreferences.homeScreenTabIndex = it },
