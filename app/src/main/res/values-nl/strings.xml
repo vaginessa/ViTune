@@ -268,7 +268,7 @@
     <string name="need_help_description">Vaak is het niet de fout van de ontwikkelaar (zelfs na het aanzetten van de onaantastbare service) dat de app soms stopt goed te werken in de achtergrond. Controleer of jouw fabrikant jouw apps ongevraagd beëindigt (klik om door te sturen)</string>
     <string name="service_lifetime_report_issue">Als je echt denkt dat er iets mis is met de app zelf, ga dan naar het Over tabblad</string>
     <string name="troubleshooting">Foutopsporing</string>
-    <string name="troubleshooting_warning">Voorzichtig: gebruik deze knoppel alleen als een laatste hoop als het afspelen niet werkt</string>
+    <string name="troubleshooting_warning">Voorzichtig: gebruik deze knoppen alleen als een laatste hoop als het afspelen niet werkt</string>
     <string name="reload_app_internals">Herlaad interne onderdelen van de app</string>
     <string name="kill_app">Beëindig app</string>
     <string name="show_troubleshoot_section">Laat foutopspring zien</string>
