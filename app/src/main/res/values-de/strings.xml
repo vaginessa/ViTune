@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="format_minutes">%1$dmin</string>
+    <string name="format_hours">%1$dStd.</string>
+    <string name="format_days">%1$dd</string>
+    <string name="format_time_left">%1$s verbleiben</string>
+    <string name="format_db">%1$s dB</string>
+    <string name="format_kbps">%1$s kbps</string>
+    <string name="format_ms">%1$s ms</string>
+    
     <string name="format_go_to_artist">Mehr von %1$s</string>
     <string name="format_top_playlist">Top %1$s</string>
     <string name="format_my_top_playlist">Meine Top %1$s</string>
@@ -247,8 +255,8 @@
     <string name="top_list_length">Meine Top Wiedergabeliste</string>
     <string name="top_list_length_description">Begrenzt die Länge der Wiedergabeliste \'Mein Top x\'.</string>
 
-    <string name="service_lifetime">Nutzungsdauer</string>
-    <string name="service_lifetime_warning">Wenn die Batterie optimiert wird, kann die Benachrichtigung über die Wiedergabe plötzlich verschwinden, wenn die Wiedergabe angehalten wird.</string>
+    <string name="service_lifetime">Akku-Optimierung</string>
+    <string name="service_lifetime_warning">Wenn die Akkulaufzeit optimiert wird, kann die Benachrichtigung über die Wiedergabe plötzlich verschwinden, wenn die Wiedergabe angehalten wird.</string>
     <string name="service_lifetime_warning_android_12">Seit Android 12 ist die Deaktivierung der Akku-Optimierung erforderlich, damit die Option "Unbesiegbar" zur Verfügung steht.</string>
     <string name="ignore_battery_optimizations">Akku-Optimierungen ignorieren</string>
     <string name="ignoring_battery_optimizations">Beschränkung bereits aufgehoben</string>
@@ -291,6 +299,14 @@
     <string name="equalizer_description">Mit dem System-Equalizer interagieren</string>
 
     <string name="filter_placeholder">Suchen…</string>
+
+    <string name="last_interaction">Basierend auf dem letzten Lied</string>
+    <string name="trending">Trend</string>
+    <string name="quick_picks_source">Startseite: Inhalte entdecken</string>
+
+    <string name="player_layout">Spieler-Layout</string>
+    <string name="classic_player_layout_name">Klassisch</string>
+    <string name="new_player_layout_name">Modern (neu)</string>
 
     <plurals name="song_count_plural">
         <item quantity="one">%1$d Lied</item>
