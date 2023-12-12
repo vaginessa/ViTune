@@ -95,9 +95,9 @@ ksp {
 }
 
 dependencies {
-    implementation(projects.composePersist)
-    implementation(projects.composeRouting)
-    implementation(projects.composeReordering)
+    implementation(projects.compose.persist)
+    implementation(projects.compose.routing)
+    implementation(projects.compose.reordering)
 
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.activity)
