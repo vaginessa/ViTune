@@ -68,8 +68,9 @@ fun SettingsScreen() {
                     item(1, stringResource(R.string.player), R.drawable.play)
                     item(2, stringResource(R.string.cache), R.drawable.server)
                     item(3, stringResource(R.string.database), R.drawable.server)
-                    item(4, stringResource(R.string.other), R.drawable.shapes)
-                    item(5, stringResource(R.string.about), R.drawable.information)
+                    item(4, stringResource(R.string.sync), R.drawable.sync)
+                    item(5, stringResource(R.string.other), R.drawable.shapes)
+                    item(6, stringResource(R.string.about), R.drawable.information)
                 }
             ) { currentTabIndex ->
                 saveableStateHolder.SaveableStateProvider(currentTabIndex) {
@@ -78,8 +79,9 @@ fun SettingsScreen() {
                         1 -> PlayerSettings()
                         2 -> CacheSettings()
                         3 -> DatabaseSettings()
-                        4 -> OtherSettings()
-                        5 -> About()
+                        4 -> SyncSettings()
+                        5 -> OtherSettings()
+                        6 -> About()
                     }
                 }
             }
@@ -142,7 +144,7 @@ inline fun <T> ValueSelectorSettingsEntry(
 @Composable
 fun SwitchSettingEntry(
     title: String,
-    text: String,
+    text: String?,
     isChecked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
