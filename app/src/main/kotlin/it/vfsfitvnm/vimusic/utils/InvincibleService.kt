@@ -1,6 +1,5 @@
 package it.vfsfitvnm.vimusic.utils
 
-import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.Service
 import android.content.BroadcastReceiver
@@ -10,6 +9,7 @@ import android.content.IntentFilter
 import android.os.Binder
 import android.os.Handler
 import android.os.Looper
+import androidx.core.content.ContextCompat
 
 // https://stackoverflow.com/q/53502244/16885569
 // I found four ways to make the system not kill the stopped foreground service: e.g. when
@@ -76,7 +76,6 @@ abstract class InvincibleService : Service() {
             }
         }
 
-        @SuppressLint("UnspecifiedRegisterReceiverFlag")
         @Synchronized
         fun start() {
             if (isStarted) return
@@ -84,12 +83,15 @@ abstract class InvincibleService : Service() {
             isStarted = true
             handler.postDelayed(this, intervalMs)
 
-            registerReceiver(
-                this,
-                IntentFilter().apply {
-                    addAction(Intent.ACTION_SCREEN_ON)
-                    addAction(Intent.ACTION_SCREEN_OFF)
-                }
+            val filter = IntentFilter().apply {
+                addAction(Intent.ACTION_SCREEN_ON)
+                addAction(Intent.ACTION_SCREEN_OFF)
+            }
+            ContextCompat.registerReceiver(
+                /* context  = */ this@InvincibleService,
+                /* receiver = */ this,
+                /* filter   = */ filter,
+                /* flags    = */ ContextCompat.RECEIVER_NOT_EXPORTED
             )
         }
 

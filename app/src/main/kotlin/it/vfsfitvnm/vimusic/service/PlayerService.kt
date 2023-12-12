@@ -32,6 +32,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.startForegroundService
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
@@ -211,7 +212,6 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
     }
 
     @Suppress("CyclomaticComplexMethod")
-    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     override fun onCreate() {
         super.onCreate()
 
@@ -302,7 +302,12 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             addAction(Action.like.value)
         }
 
-        registerReceiver(notificationActionReceiver, filter)
+        ContextCompat.registerReceiver(
+            /* context  = */ this,
+            /* receiver = */ notificationActionReceiver,
+            /* filter   = */ filter,
+            /* flags    = */ ContextCompat.RECEIVER_NOT_EXPORTED
+        )
 
         maybeResumePlaybackWhenDeviceConnected()
 
