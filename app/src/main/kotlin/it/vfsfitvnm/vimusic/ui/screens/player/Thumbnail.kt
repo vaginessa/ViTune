@@ -6,6 +6,8 @@ import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -25,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -124,7 +127,7 @@ fun Thumbnail(
                     targetScale = 0.85f,
                     animationSpec = tween(duration)
                 ),
-                sizeTransform = SizeTransform(clip = false)
+                sizeTransform = null
             )
         },
         modifier = modifier.onSwipe(
@@ -137,13 +140,20 @@ fun Thumbnail(
         contentAlignment = Alignment.Center,
         label = ""
     ) { currentWindow ->
+        val shadowElevation by animateDpAsState(
+            targetValue = if (window == currentWindow) 8.dp else 0.dp,
+            animationSpec = tween(durationMillis = 1000, easing = LinearEasing),
+            label = ""
+        )
+
         Box(
             modifier = Modifier
                 .aspectRatio(1f)
                 .size(thumbnailSizeDp)
                 .shadow(
-                    elevation = 8.dp,
-                    shape = LocalAppearance.current.thumbnailShape
+                    elevation = shadowElevation,
+                    shape = LocalAppearance.current.thumbnailShape,
+                    clip = false
                 )
                 .clip(LocalAppearance.current.thumbnailShape)
         ) {
@@ -190,9 +200,9 @@ fun Thumbnail(
                 messageProvider = {
                     if (currentWindow.mediaItem.isLocal) stringResource(R.string.error_local_music_deleted) else
                         when (error?.cause?.cause) {
-                            is UnresolvedAddressException, is UnknownHostException -> stringResource(
-                                R.string.error_network
-                            )
+                            is UnresolvedAddressException, is UnknownHostException ->
+                                stringResource(R.string.error_network)
+
                             is PlayableFormatNotFoundException -> stringResource(R.string.error_unplayable)
                             is UnplayableException -> stringResource(R.string.error_source_deleted)
                             is LoginRequiredException -> stringResource(R.string.error_server_restrictions)
