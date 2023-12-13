@@ -3,6 +3,8 @@ package it.vfsfitvnm.piped
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.HttpRequestRetry
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.HttpRequestBuilder
@@ -49,6 +51,17 @@ object Piped {
                     }
                 )
             }
+
+            install(HttpRequestRetry) {
+                exponentialDelay()
+                maxRetries = 2
+            }
+
+            install(HttpTimeout) {
+                connectTimeoutMillis = 1000L
+                requestTimeoutMillis = 5000L
+            }
+
             expectSuccess = true
 
             defaultRequest {

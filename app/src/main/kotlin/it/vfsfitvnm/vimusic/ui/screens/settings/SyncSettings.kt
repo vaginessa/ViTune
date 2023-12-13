@@ -75,14 +75,19 @@ fun SyncSettings() {
                 modifier = Modifier.padding(all = 24.dp)
             )
 
-            isLoading -> CircularProgressIndicator(modifier = Modifier.padding(all = 8.dp))
-            else -> {
+            isLoading -> CircularProgressIndicator(
+                modifier = Modifier.padding(all = 8.dp),
+                color = colorPalette.accent
+            )
+
+            else -> Column(modifier = Modifier.fillMaxWidth()) {
                 var instances: List<Instance> by persistList(tag = "settings/sync/piped/instances")
                 var loadingInstances by rememberSaveable { mutableStateOf(true) }
                 var selectedInstance: Int? by rememberSaveable { mutableStateOf(null) }
                 var username by rememberSaveable { mutableStateOf("") }
                 var password by rememberSaveable { mutableStateOf("") }
                 var canSelect by rememberSaveable { mutableStateOf(false) }
+                var instancesUnavailable by rememberSaveable { mutableStateOf(false) }
                 var customInstance: String? by rememberSaveable { mutableStateOf(null) }
 
                 LaunchedEffect(Unit) {
@@ -90,7 +95,7 @@ fun SyncSettings() {
                         selectedInstance = null
                         instances = it
                         canSelect = true
-                    } ?: run { hasError = true }
+                    } ?: run { instancesUnavailable = true }
                     loadingInstances = false
                 }
 
@@ -106,18 +111,21 @@ fun SyncSettings() {
                     onValueSelected = { selectedInstance = it },
                     valueText = { idx ->
                         idx?.let { instances.getOrNull(it)?.name }
-                            ?: stringResource(R.string.click_to_select)
+                            ?: if (instancesUnavailable) stringResource(R.string.error_piped_instances_unavailable)
+                            else stringResource(R.string.click_to_select)
                     },
-                    isEnabled = canSelect,
+                    isEnabled = !instancesUnavailable && canSelect,
+                    usePadding = false,
                     trailingContent = if (loadingInstances) {
-                        { CircularProgressIndicator() }
+                        { CircularProgressIndicator(color = colorPalette.accent) }
                     } else null
                 )
                 SwitchSettingEntry(
                     title = stringResource(R.string.custom_instance),
                     text = null,
                     isChecked = customInstance != null,
-                    onCheckedChange = { customInstance = if (customInstance == null) "" else null }
+                    onCheckedChange = { customInstance = if (customInstance == null) "" else null },
+                    usePadding = false
                 )
                 customInstance?.let { instance ->
                     Spacer(modifier = Modifier.height(8.dp))

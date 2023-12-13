@@ -118,6 +118,7 @@
     <string name="error_id_mismatch">De teruggegeven video ID is niet dezelfde als de gevraagde ID</string>
     <string name="error_unknown_playback">Een onbekende afspeelfout heeft zich voorgedaan</string>
     <string name="error_piped_link">Het linken met je Piped account is mislukt. Probeer het opnieuw.</string>
+    <string name="error_piped_instances_unavailable">De lijst van Piped instanties is niet beschikbaar</string>
 
     <string name="media_permission_declined">Permissie afgewezen, verleen media permissie in de instellingen van je apparaat.</string>
     <string name="open_settings">Open instellingen</string>

@@ -117,6 +117,7 @@ inline fun <T> ValueSelectorSettingsEntry(
     crossinline onValueSelected: (T) -> Unit,
     modifier: Modifier = Modifier,
     isEnabled: Boolean = true,
+    usePadding: Boolean = true,
     crossinline valueText: @Composable (T) -> String = { it.toString() },
     noinline trailingContent: (@Composable () -> Unit)? = null
 ) {
@@ -137,7 +138,8 @@ inline fun <T> ValueSelectorSettingsEntry(
         text = valueText(selectedValue),
         onClick = { isShowingDialog = true },
         isEnabled = isEnabled,
-        trailingContent = trailingContent
+        trailingContent = trailingContent,
+        usePadding = usePadding
     )
 }
 
@@ -148,13 +150,15 @@ fun SwitchSettingEntry(
     isChecked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
-    isEnabled: Boolean = true
+    isEnabled: Boolean = true,
+    usePadding: Boolean = true
 ) = SettingsEntry(
     modifier = modifier,
     title = title,
     text = text,
     onClick = { onCheckedChange(!isChecked) },
-    isEnabled = isEnabled
+    isEnabled = isEnabled,
+    usePadding = usePadding
 ) {
     Switch(isChecked = isChecked)
 }
@@ -171,7 +175,8 @@ fun SliderSettingEntry(
     onSlideCompleted: (Float) -> Unit = { },
     toDisplay: @Composable (Float) -> String = { it.toString() },
     steps: Int = 0,
-    isEnabled: Boolean = true
+    isEnabled: Boolean = true,
+    usePadding: Boolean = true
 ) = Column(modifier = modifier) {
     val (colorPalette) = LocalAppearance.current
 
@@ -181,7 +186,8 @@ fun SliderSettingEntry(
         title = title,
         text = "$text (${toDisplay(state)})",
         onClick = {},
-        isEnabled = isEnabled
+        isEnabled = isEnabled,
+        usePadding = usePadding
     )
 
     Slider(
@@ -194,8 +200,8 @@ fun SliderSettingEntry(
         modifier = Modifier
             .height(36.dp)
             .alpha(if (isEnabled) 1f else 0.5f)
-            .padding(start = 16.dp)
-            .padding(all = 16.dp)
+            .let { if (usePadding) it.padding(start = 32.dp, end = 16.dp) else it }
+            .padding(vertical = 16.dp)
             .fillMaxWidth(),
         colors = SliderDefaults.colors(
             thumbColor = colorPalette.onAccent,
@@ -216,7 +222,8 @@ inline fun IntSettingEntry(
     range: IntRange,
     modifier: Modifier = Modifier,
     defaultValue: Int = 0,
-    isEnabled: Boolean = true
+    isEnabled: Boolean = true,
+    usePadding: Boolean = true
 ) {
     var isShowingDialog by remember { mutableStateOf(false) }
 
@@ -237,7 +244,8 @@ inline fun IntSettingEntry(
         title = title,
         text = text,
         onClick = { isShowingDialog = true },
-        isEnabled = isEnabled
+        isEnabled = isEnabled,
+        usePadding = usePadding
     )
 }
 
@@ -248,6 +256,7 @@ fun SettingsEntry(
     modifier: Modifier = Modifier,
     text: String? = null,
     isEnabled: Boolean = true,
+    usePadding: Boolean = true,
     trailingContent: @Composable (() -> Unit)? = null
 ) = Row(
     horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -255,8 +264,8 @@ fun SettingsEntry(
     modifier = modifier
         .clickable(enabled = isEnabled, onClick = onClick)
         .alpha(if (isEnabled) 1f else 0.5f)
-        .padding(start = 16.dp)
-        .padding(all = 16.dp)
+        .let { if (usePadding) it.padding(start = 32.dp, end = 16.dp) else it }
+        .padding(vertical = 16.dp)
         .fillMaxWidth()
 ) {
     val (colorPalette, typography) = LocalAppearance.current
