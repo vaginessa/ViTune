@@ -1,5 +1,7 @@
 package it.vfsfitvnm.vimusic.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.animateDp
@@ -8,19 +10,32 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
@@ -29,35 +44,138 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.media3.common.C
+import it.vfsfitvnm.vimusic.models.ui.UiMedia
+import it.vfsfitvnm.vimusic.preferences.PlayerPreferences
+import it.vfsfitvnm.vimusic.service.PlayerService
+import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
+import it.vfsfitvnm.vimusic.utils.formatAsDuration
+import it.vfsfitvnm.vimusic.utils.isCompositionLaunched
+import it.vfsfitvnm.vimusic.utils.semiBold
+import kotlinx.coroutines.launch
 import kotlin.math.PI
 import kotlin.math.roundToLong
 import kotlin.math.sin
 
 @Composable
-fun ClassicSeekBar(
-    value: Long,
-    minimumValue: Long,
-    maximumValue: Long,
-    onDragStart: (Long) -> Unit,
-    onDrag: (Long) -> Unit,
-    onDragEnd: () -> Unit,
+fun SeekBar(
+    binder: PlayerService.Binder,
+    position: Long,
+    media: UiMedia,
+    modifier: Modifier = Modifier,
+    color: Color = LocalAppearance.current.colorPalette.text,
+    backgroundColor: Color = LocalAppearance.current.colorPalette.background2,
+    shape: Shape = RoundedCornerShape(8.dp),
+    isActive: Boolean = true,
+    alwaysShowDuration: Boolean = false,
+    scrubberRadius: Dp = 6.dp,
+    style: PlayerPreferences.SeekBarStyle = PlayerPreferences.seekBarStyle
+) {
+    val range = 0L..media.duration
+    val floatRange = 0f..media.duration.toFloat()
+
+    when (style) {
+        PlayerPreferences.SeekBarStyle.Static -> {
+            var scrubbingPosition by remember(media) { mutableStateOf<Long?>(null) }
+
+            ClassicSeekBarBody(
+                position = scrubbingPosition ?: position,
+                duration = media.duration,
+                range = range,
+                onSeekStart = { scrubbingPosition = it },
+                onSeek = { delta ->
+                    scrubbingPosition = if (media.duration == C.TIME_UNSET) null
+                    else scrubbingPosition?.let { (it + delta).coerceIn(range) }
+                },
+                onSeekEnd = {
+                    scrubbingPosition?.let(binder.player::seekTo)
+                    scrubbingPosition = null
+                },
+                color = color,
+                backgroundColor = backgroundColor,
+                showDuration = alwaysShowDuration || scrubbingPosition != null,
+                modifier = modifier,
+                scrubberRadius = scrubberRadius,
+                shape = shape
+            )
+        }
+
+        PlayerPreferences.SeekBarStyle.Wavy -> {
+            val scope = rememberCoroutineScope()
+            val compositionLaunched = isCompositionLaunched()
+
+            val animatedPosition = remember { Animatable(position.toFloat()) }
+            var isSeeking by remember { mutableStateOf(false) }
+
+            LaunchedEffect(media) {
+                if (compositionLaunched) animatedPosition.animateTo(0f)
+            }
+
+            LaunchedEffect(position) {
+                if (!isSeeking && !animatedPosition.isRunning) animatedPosition.animateTo(position.toFloat())
+            }
+
+            WavySeekBarBody(
+                position = animatedPosition.value.roundToLong(),
+                duration = media.duration,
+                range = range,
+                onSeekStart = {
+                    isSeeking = true
+                    scope.launch { animatedPosition.animateTo(it.toFloat()) }
+                },
+                onSeek = { delta ->
+                    if (media.duration == C.TIME_UNSET) return@WavySeekBarBody
+
+                    isSeeking = true
+                    scope.launch {
+                        animatedPosition.snapTo(
+                            (animatedPosition.value + delta)
+                                .coerceIn(floatRange)
+                        )
+                    }
+                },
+                onSeekEnd = {
+                    isSeeking = false
+                    binder.player.seekTo(animatedPosition.targetValue.roundToLong())
+                },
+                color = color,
+                backgroundColor = backgroundColor,
+                modifier = modifier,
+                scrubberRadius = scrubberRadius,
+                shape = shape,
+                showDuration = alwaysShowDuration || isSeeking,
+                isActive = isActive
+            )
+        }
+    }
+}
+
+@Composable
+private fun ClassicSeekBarBody(
+    position: Long,
+    duration: Long,
+    range: ClosedRange<Long>,
+    onSeekStart: (Long) -> Unit,
+    onSeek: (Long) -> Unit,
+    onSeekEnd: () -> Unit,
     color: Color,
     backgroundColor: Color,
+    scrubberRadius: Dp,
+    shape: Shape,
+    showDuration: Boolean,
     modifier: Modifier = Modifier,
     barHeight: Dp = 3.dp,
     scrubberColor: Color = color,
-    scrubberRadius: Dp = 6.dp,
-    shape: Shape = RectangleShape,
     drawSteps: Boolean = false
-) {
+) = Column {
     val isDragging = remember { MutableTransitionState(false) }
     val transition = updateTransition(transitionState = isDragging, label = null)
 
@@ -66,45 +184,43 @@ fun ClassicSeekBar(
 
     Box(
         modifier = modifier
-            .pointerInput(minimumValue, maximumValue) {
-                if (maximumValue < minimumValue) return@pointerInput
+            .pointerInput(range) {
+                if (range.endInclusive < range.start) return@pointerInput
 
                 var acc = 0f
 
                 detectHorizontalDragGestures(
-                    onDragStart = {
-                        isDragging.targetState = true
-                    },
+                    onDragStart = { isDragging.targetState = true },
                     onHorizontalDrag = { _, delta ->
-                        acc += delta / size.width * (maximumValue - minimumValue)
+                        acc += delta / size.width * (range.endInclusive - range.start).toFloat()
 
                         if (acc !in -1f..1f) {
-                            onDrag(acc.toLong())
+                            onSeek(acc.toLong())
                             acc -= acc.toLong()
                         }
                     },
                     onDragEnd = {
                         isDragging.targetState = false
                         acc = 0f
-                        onDragEnd()
+                        onSeekEnd()
                     },
                     onDragCancel = {
                         isDragging.targetState = false
                         acc = 0f
-                        onDragEnd()
+                        onSeekEnd()
                     }
                 )
             }
-            .pointerInput(minimumValue, maximumValue) {
-                if (maximumValue < minimumValue) return@pointerInput
+            .pointerInput(range.start, range.endInclusive) {
+                if (range.endInclusive < range.start) return@pointerInput
 
                 detectTapGestures(
                     onPress = { offset ->
-                        onDragStart(
-                            (offset.x / size.width * (maximumValue - minimumValue) + minimumValue).roundToLong()
+                        onSeekStart(
+                            (offset.x / size.width * (range.endInclusive - range.start) + range.start).roundToLong()
                         )
                     },
-                    onTap = { onDragEnd() }
+                    onTap = { onSeekEnd() }
                 )
             }
             .padding(horizontal = scrubberRadius)
@@ -112,8 +228,8 @@ fun ClassicSeekBar(
                 drawContent()
 
                 val scrubberPosition =
-                    if (maximumValue < minimumValue) 0f
-                    else (value.toFloat() - minimumValue) / (maximumValue - minimumValue) * size.width
+                    if (range.endInclusive < range.start) 0f
+                    else (position.toFloat() - range.start) / (range.endInclusive - range.start) * size.width
 
                 drawCircle(
                     color = scrubberColor,
@@ -121,9 +237,9 @@ fun ClassicSeekBar(
                     center = center.copy(x = scrubberPosition)
                 )
 
-                if (drawSteps) for (i in value + 1..maximumValue) {
+                if (drawSteps) for (i in position + 1..range.endInclusive) {
                     val stepPosition =
-                        (i.toFloat() - minimumValue) / (maximumValue - minimumValue) * size.width
+                        (i.toFloat() - range.start) / (range.endInclusive - range.start) * size.width
 
                     drawCircle(
                         color = scrubberColor,
@@ -145,30 +261,35 @@ fun ClassicSeekBar(
         Spacer(
             modifier = Modifier
                 .height(currentBarHeight)
-                .fillMaxWidth((value.toFloat() - minimumValue) / (maximumValue - minimumValue))
+                .fillMaxWidth((position.toFloat() - range.start) / (range.endInclusive - range.start).toFloat())
                 .background(color = color, shape = shape)
                 .align(Alignment.CenterStart)
         )
     }
+
+    Duration(
+        position = position,
+        duration = duration,
+        show = showDuration
+    )
 }
 
 @Composable
-fun SeekBar(
-    position: () -> Float,
-    onSeek: (updated: Float) -> Unit,
+private fun WavySeekBarBody(
+    position: Long,
+    duration: Long,
+    range: ClosedRange<Long>,
     color: Color,
+    backgroundColor: Color,
+    shape: Shape,
+    onSeek: (Long) -> Unit,
+    onSeekStart: (Long) -> Unit,
+    onSeekEnd: () -> Unit,
+    showDuration: Boolean,
     modifier: Modifier = Modifier,
-    onSeekStarted: (updated: Float) -> Unit = {},
-    onSeekFinished: () -> Unit = {},
-    backgroundColor: Color = Color.Transparent,
-    range: ClosedRange<Float> = 0f..100f,
     isActive: Boolean = true,
-    scrubberRadius: Dp = 6.dp,
-    shape: Shape = RectangleShape
-) {
-    val minimumValue = range.start
-    val maximumValue = range.endInclusive
-
+    scrubberRadius: Dp = 6.dp
+) = Column {
     val isDragging = remember { MutableTransitionState(false) }
 
     val transition = updateTransition(transitionState = isDragging, label = null)
@@ -178,117 +299,138 @@ fun SeekBar(
 
     Box(
         modifier = modifier
-            .pointerInput(minimumValue, maximumValue) {
-                if (maximumValue < minimumValue) return@pointerInput
+            .pointerInput(range) {
+                if (range.endInclusive < range.start) return@pointerInput
 
-                detectDrags(isDragging, maximumValue, minimumValue, onSeek, onSeekFinished)
+                detectDrags(
+                    isDragging = isDragging,
+                    range = range,
+                    onSeek = onSeek,
+                    onSeekEnd = onSeekEnd
+                )
             }
-            .pointerInput(minimumValue, maximumValue) {
-                detectTaps(maximumValue, minimumValue, onSeekStarted, onSeekFinished)
+            .pointerInput(range) {
+                detectTaps(
+                    range = range,
+                    onSeekStart = onSeekStart,
+                    onSeekEnd = onSeekEnd
+                )
             }
             .padding(horizontal = scrubberRadius)
             .drawWithContent {
                 drawContent()
-                drawScrubber(range, position(), color, currentScrubberHeight)
+
+                drawScrubber(
+                    range = range,
+                    position = position,
+                    color = color,
+                    height = currentScrubberHeight
+                )
             }
     ) {
-        SeekBarContent(
-            backgroundColor,
+        WavySeekBarContent(
+            backgroundColor = backgroundColor,
             amplitude = { currentAmplitude },
-            position(),
-            minimumValue,
-            maximumValue,
-            shape,
-            color
+            position = position,
+            range = range,
+            shape = shape,
+            color = color
         )
     }
+
+    Duration(
+        position = position,
+        duration = duration,
+        show = showDuration
+    )
 }
 
 private suspend fun PointerInputScope.detectDrags(
     isDragging: MutableTransitionState<Boolean>,
-    maximumValue: Float,
-    minimumValue: Float,
-    onSeek: (delta: Float) -> Unit,
-    onSeekFinished: () -> Unit
+    range: ClosedRange<Long>,
+    onSeek: (delta: Long) -> Unit,
+    onSeekEnd: () -> Unit
 ) {
     var acc = 0f
 
-    detectHorizontalDragGestures(onDragStart = {
-        isDragging.targetState = true
-    }, onHorizontalDrag = { _, delta ->
-        acc += delta / size.width * (maximumValue - minimumValue)
+    detectHorizontalDragGestures(
+        onDragStart = { isDragging.targetState = true },
+        onHorizontalDrag = { _, delta ->
+            acc += delta / size.width * (range.endInclusive - range.start).toFloat()
 
-        if (acc !in -1f..1f) {
-            onSeek(acc)
-            acc -= acc
+            if (acc !in -1f..1f) {
+                onSeek(acc.toLong())
+                acc -= acc
+            }
+        },
+        onDragEnd = {
+            isDragging.targetState = false
+            acc = 0f
+            onSeekEnd()
+        },
+        onDragCancel = {
+            isDragging.targetState = false
+            acc = 0f
+
+            onSeekEnd()
         }
-    }, onDragEnd = {
-        isDragging.targetState = false
-        acc = 0f
-        onSeekFinished()
-    }, onDragCancel = {
-        isDragging.targetState = false
-        acc = 0f
-
-        onSeekFinished()
-    })
+    )
 }
 
 private suspend fun PointerInputScope.detectTaps(
-    maximumValue: Float,
-    minimumValue: Float,
-    onSeekStarted: (updated: Float) -> Unit,
-    onSeekFinished: () -> Unit
+    range: ClosedRange<Long>,
+    onSeekStart: (updated: Long) -> Unit,
+    onSeekEnd: () -> Unit
 ) {
-    if (maximumValue < minimumValue) return
+    if (range.endInclusive < range.start) return
 
-    detectTapGestures(onPress = { offset ->
-        val updatedOffset = (offset.x / size.width * (maximumValue - minimumValue) + minimumValue)
-        onSeekStarted(updatedOffset)
-    }, onTap = {
-        onSeekFinished()
-    })
+    detectTapGestures(
+        onPress = { offset ->
+            onSeekStart(
+                (offset.x / size.width * (range.endInclusive - range.start).toFloat() + range.start).toLong()
+            )
+        },
+        onTap = { onSeekEnd() }
+    )
 }
 
 private fun ContentDrawScope.drawScrubber(
-    range: ClosedRange<Float>,
-    position: Float,
+    range: ClosedRange<Long>,
+    position: Long,
     color: Color,
     height: Dp
 ) {
-    val minimumValue = range.start
-    val maximumValue = range.endInclusive
-    val scrubberPosition = if (maximumValue < minimumValue) {
-        0f
-    } else {
-        (position - minimumValue) / (maximumValue - minimumValue) * size.width
-    }
+    val scrubberPosition = if (range.endInclusive < range.start) 0f
+    else (position - range.start) / (range.endInclusive - range.start).toFloat() * size.width
 
     drawRoundRect(
-        color,
-        topLeft = Offset(scrubberPosition - 5f, (size.height - height.toPx()) / 2),
-        size = Size(10f, height.toPx()),
+        color = color,
+        topLeft = Offset(
+            x = scrubberPosition - 5f,
+            y = (size.height - height.toPx()) / 2f
+        ),
+        size = Size(
+            width = 10f,
+            height = height.toPx()
+        ),
         cornerRadius = CornerRadius(5f)
     )
 }
 
 @Composable
-private fun SeekBarContent(
+private fun WavySeekBarContent(
     backgroundColor: Color,
     amplitude: () -> Dp,
-    position: Float,
-    minimumValue: Float,
-    maximumValue: Float,
+    position: Long,
+    range: ClosedRange<Long>,
     shape: Shape,
     color: Color
 ) {
-    val fraction = (position - minimumValue) / (maximumValue - minimumValue)
+    val fraction = (position - range.start) / (range.endInclusive - range.start).toFloat()
     val progress by rememberInfiniteTransition(label = "").animateFloat(
-        0f,
-        1f,
-        animationSpec = infiniteRepeatable(
-            tween(2000, easing = LinearEasing)
-        ),
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(2000, easing = LinearEasing)),
         label = ""
     )
 
@@ -320,8 +462,47 @@ private fun SeekBarContent(
     }
 }
 
+@Composable
+private fun Duration(
+    position: Long,
+    duration: Long,
+    show: Boolean
+) {
+    val typography = LocalAppearance.current.typography
+
+    AnimatedVisibility(
+        visible = show,
+        enter = fadeIn() + expandVertically { -it },
+        exit = fadeOut() + shrinkVertically { -it }
+    ) {
+        Column {
+            Spacer(Modifier.height(8.dp))
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                BasicText(
+                    text = formatAsDuration(position),
+                    style = typography.xxs.semiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                if (duration != C.TIME_UNSET) BasicText(
+                    text = formatAsDuration(duration),
+                    style = typography.xxs.semiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+
+}
+
 private fun wavePath(size: Size, progress: Float) = Path().apply {
-    fun f(x: Float) = (sin(x / 15f + progress * 2 * PI.toFloat()) + 1) * size.height / 2
+    fun f(x: Float) = (sin(x / 15f + progress * 2 * PI.toFloat()) + 1) * size.height / 2f
 
     moveTo(0f, f(0f))
     var currentX = 0f

@@ -324,6 +324,10 @@
     <string name="custom_instance">Use Custom Instance</string>
     <string name="base_api_url">Instance API URL</string>
 
+    <string name="seek_bar_style">Seek bar style</string>
+    <string name="static_seek_bar_name">Static</string>
+    <string name="wavy_seek_bar_name">Wavy</string>
+
     <plurals name="song_count_plural">
         <item quantity="one">%1$d song</item>
         <item quantity="other">%1$d songs</item>

@@ -168,6 +168,13 @@ fun AppearanceSettings() {
                 valueText = { it.displayName() }
             )
 
+            EnumValueSelectorSettingsEntry(
+                title = stringResource(R.string.seek_bar_style),
+                selectedValue = PlayerPreferences.seekBarStyle,
+                onValueSelected = { PlayerPreferences.seekBarStyle = it },
+                valueText = { it.displayName() }
+            )
+
             AnimatedVisibility(
                 visible = PlayerPreferences.playerLayout == PlayerPreferences.PlayerLayout.New,
                 label = ""

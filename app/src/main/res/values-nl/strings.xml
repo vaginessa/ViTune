@@ -324,6 +324,10 @@
     <string name="custom_instance">Gebruik andere instantie</string>
     <string name="base_api_url">API URL van de instantie</string>
 
+    <string name="seek_bar_style">Stijl van de zoekbalk</string>
+    <string name="static_seek_bar_name">Statisch</string>
+    <string name="wavy_seek_bar_name">Golvend</string>
+
     <plurals name="song_count_plural">
         <item quantity="one">%1$d nummer</item>
         <item quantity="other">%1$d nummers</item>

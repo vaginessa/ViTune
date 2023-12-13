@@ -2,17 +2,14 @@ package it.vfsfitvnm.vimusic.ui.screens.player
 
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -35,7 +32,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -51,11 +47,9 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
-import androidx.media3.common.C
 import androidx.media3.common.Player
 import it.vfsfitvnm.vimusic.Database
 import it.vfsfitvnm.vimusic.LocalPlayerServiceBinder
@@ -66,7 +60,6 @@ import it.vfsfitvnm.vimusic.models.ui.UiMedia
 import it.vfsfitvnm.vimusic.preferences.PlayerPreferences
 import it.vfsfitvnm.vimusic.query
 import it.vfsfitvnm.vimusic.transaction
-import it.vfsfitvnm.vimusic.ui.components.ClassicSeekBar
 import it.vfsfitvnm.vimusic.ui.components.SeekBar
 import it.vfsfitvnm.vimusic.ui.components.themed.BigIconButton
 import it.vfsfitvnm.vimusic.ui.components.themed.IconButton
@@ -76,9 +69,7 @@ import it.vfsfitvnm.vimusic.ui.styling.favoritesIcon
 import it.vfsfitvnm.vimusic.utils.bold
 import it.vfsfitvnm.vimusic.utils.forceSeekToNext
 import it.vfsfitvnm.vimusic.utils.forceSeekToPrevious
-import it.vfsfitvnm.vimusic.utils.formatAsDuration
 import it.vfsfitvnm.vimusic.utils.horizontalFadingEdge
-import it.vfsfitvnm.vimusic.utils.isCompositionLaunched
 import it.vfsfitvnm.vimusic.utils.px
 import it.vfsfitvnm.vimusic.utils.secondary
 import it.vfsfitvnm.vimusic.utils.semiBold
@@ -90,19 +81,14 @@ import kotlinx.coroutines.withContext
 private const val FORWARD_BACKWARD_OFFSET = 16f
 
 @Composable
-fun ClassicControls(
+fun Controls(
     media: UiMedia,
     shouldBePlaying: Boolean,
     position: Long,
-    modifier: Modifier = Modifier
-) = with(PlayerPreferences) {
-    val (colorPalette, typography) = LocalAppearance.current
-
-    val binder = LocalPlayerServiceBinder.current
-    binder?.player ?: return
-
-    var scrubbingPosition by remember(media) { mutableStateOf<Long?>(null) }
-    var likedAt by rememberSaveable { mutableStateOf<Long?>(null) }
+    modifier: Modifier = Modifier,
+    layout: PlayerPreferences.PlayerLayout = PlayerPreferences.playerLayout
+) {
+    var likedAt by remember { mutableStateOf<Long?>(null) }
 
     LaunchedEffect(media) {
         Database.likedAt(media.id).distinctUntilChanged().collect { likedAt = it }
@@ -110,11 +96,44 @@ fun ClassicControls(
 
     val shouldBePlayingTransition = updateTransition(shouldBePlaying, label = "shouldBePlaying")
 
-    val playPauseRoundness by shouldBePlayingTransition.animateDp(
+    val playButtonRadius by shouldBePlayingTransition.animateDp(
         transitionSpec = { tween(durationMillis = 100, easing = LinearEasing) },
         label = "playPauseRoundness",
         targetValueByState = { if (it) 32.dp else 16.dp }
     )
+
+    when(layout) {
+        PlayerPreferences.PlayerLayout.Classic -> ClassicControls(
+            media = media,
+            shouldBePlaying = shouldBePlaying,
+            position = position,
+            likedAt = likedAt,
+            playButtonRadius = playButtonRadius,
+            modifier = modifier
+        )
+
+        PlayerPreferences.PlayerLayout.New -> ModernControls(
+            media = media,
+            shouldBePlaying = shouldBePlaying,
+            position = position,
+            likedAt = likedAt,
+            playButtonRadius = playButtonRadius,
+            modifier = modifier
+        )
+    }
+}
+
+@Composable
+private fun ClassicControls(
+    media: UiMedia,
+    shouldBePlaying: Boolean,
+    position: Long,
+    likedAt: Long?,
+    playButtonRadius: Dp,
+    modifier: Modifier = Modifier
+) = with(PlayerPreferences) {
+    val (colorPalette) = LocalAppearance.current
+    val binder = LocalPlayerServiceBinder.current ?: return
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -124,49 +143,13 @@ fun ClassicControls(
     ) {
         Spacer(modifier = Modifier.weight(1f))
         MediaInfo(media)
-        Spacer(modifier = Modifier.weight(0.5f))
-
-        ClassicSeekBar(
-            value = scrubbingPosition ?: position,
-            minimumValue = 0,
-            maximumValue = media.duration,
-            onDragStart = { scrubbingPosition = it },
-            onDrag = { delta ->
-                scrubbingPosition = if (media.duration != C.TIME_UNSET) scrubbingPosition
-                    ?.plus(delta)
-                    ?.coerceIn(0, media.duration) else null
-            },
-            onDragEnd = {
-                scrubbingPosition?.let(binder.player::seekTo)
-                scrubbingPosition = null
-            },
-            color = colorPalette.text,
-            backgroundColor = colorPalette.background2,
-            shape = RoundedCornerShape(8.dp)
+        Spacer(modifier = Modifier.weight(1f))
+        SeekBar(
+            binder = binder,
+            position = position,
+            media = media,
+            alwaysShowDuration = true
         )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            BasicText(
-                text = formatAsDuration(scrubbingPosition ?: position),
-                style = typography.xxs.semiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            if (media.duration != C.TIME_UNSET) BasicText(
-                text = formatAsDuration(media.duration),
-                style = typography.xxs.semiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-
         Spacer(modifier = Modifier.weight(1f))
 
         Row(
@@ -212,7 +195,7 @@ fun ClassicControls(
 
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(playPauseRoundness))
+                    .clip(RoundedCornerShape(playButtonRadius))
                     .clickable {
                         if (shouldBePlaying) binder.player.pause() else {
                             if (binder.player.playbackState == Player.STATE_IDLE) binder.player.prepare()
@@ -258,52 +241,16 @@ fun ClassicControls(
 }
 
 @Composable
-fun Controls(
+private fun ModernControls(
     media: UiMedia,
     shouldBePlaying: Boolean,
     position: Long,
-    modifier: Modifier = Modifier
+    likedAt: Long?,
+    playButtonRadius: Dp,
+    modifier: Modifier = Modifier,
+    controlHeight: Dp = 64.dp
 ) {
-    val scope = rememberCoroutineScope()
-    val colorPalette = LocalAppearance.current.colorPalette
-
-    val binder = LocalPlayerServiceBinder.current
-    binder?.player ?: return
-
-    val compositionLaunched = isCompositionLaunched()
-
-    val animatedPosition = remember { Animatable(position.toFloat()) }
-    var isSeeking by remember { mutableStateOf(false) }
-
-    LaunchedEffect(media) {
-        if (compositionLaunched) animatedPosition.animateTo(0f)
-    }
-
-    LaunchedEffect(position) {
-        if (!isSeeking && !animatedPosition.isRunning) animatedPosition.animateTo(position.toFloat())
-    }
-
-    val durationVisible by remember(isSeeking) { derivedStateOf { isSeeking } }
-    var likedAt by rememberSaveable { mutableStateOf<Long?>(null) }
-
-    LaunchedEffect(media.id) {
-        Database.likedAt(media.id).distinctUntilChanged().collect { likedAt = it }
-    }
-
-    val shouldBePlayingTransition = updateTransition(shouldBePlaying, label = "shouldBePlaying")
-
-    val controlHeight = 64.dp
-
-    val playButtonRadius by shouldBePlayingTransition.animateDp(
-        transitionSpec = {
-            tween(
-                durationMillis = 100,
-                easing = LinearEasing
-            )
-        },
-        label = "playPauseRoundness",
-        targetValueByState = { if (it) 32.dp else 16.dp }
-    )
+    val binder = LocalPlayerServiceBinder.current ?: return
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -312,9 +259,7 @@ fun Controls(
             .padding(horizontal = 32.dp)
     ) {
         Spacer(modifier = Modifier.weight(1f))
-
         MediaInfo(media)
-
         Spacer(modifier = Modifier.weight(1f))
 
         Row(
@@ -360,48 +305,12 @@ fun Controls(
                 offsetOnPress = -FORWARD_BACKWARD_OFFSET
             )
 
-            Column(Modifier.weight(4f)) {
+            Column(modifier = Modifier.weight(4f)) {
                 SeekBar(
-                    position = { animatedPosition.value },
-                    range = 0f..media.duration.toFloat(),
-                    onSeekStarted = {
-                        isSeeking = true
-                        scope.launch {
-                            animatedPosition.animateTo(it)
-                        }
-                    },
-                    onSeek = { delta ->
-                        if (media.duration != C.TIME_UNSET) {
-                            isSeeking = true
-                            scope.launch {
-                                animatedPosition.snapTo(
-                                    (animatedPosition.value + delta)
-                                        .coerceIn(0f..media.duration.toFloat())
-                                )
-                            }
-                        }
-                    },
-                    onSeekFinished = {
-                        isSeeking = false
-                        animatedPosition.let {
-                            binder.player.seekTo(it.targetValue.toLong())
-                        }
-                    },
-                    color = colorPalette.text,
-                    isActive = binder.player.isPlaying,
-                    backgroundColor = colorPalette.background2,
-                    shape = RoundedCornerShape(8.dp)
+                    binder = binder,
+                    position = position,
+                    media = media
                 )
-                AnimatedVisibility(
-                    visible = durationVisible,
-                    enter = fadeIn() + expandVertically { -it },
-                    exit = fadeOut() + shrinkVertically { -it }
-                ) {
-                    Column {
-                        Spacer(Modifier.height(8.dp))
-                        Duration(animatedPosition.value, media.duration)
-                    }
-                }
             }
         }
 
@@ -424,23 +333,13 @@ private fun SkipButton(
         iconId = iconId,
         onClick = {
             onClick()
-            scope.launch {
-                offsetDp.animateTo(offsetOnPress)
-            }
+            scope.launch { offsetDp.animateTo(offsetOnPress) }
         },
+        onPress = { scope.launch { offsetDp.animateTo(offsetOnPress) } },
+        onCancel = { scope.launch { offsetDp.animateTo(0f) } },
         modifier = modifier.graphicsLayer {
             with(density) {
                 translationX = offsetDp.value.dp.toPx()
-            }
-        },
-        onPress = {
-            scope.launch {
-                offsetDp.animateTo(offsetOnPress)
-            }
-        },
-        onCancel = {
-            scope.launch {
-                offsetDp.animateTo(0f)
             }
         }
     )
@@ -473,34 +372,6 @@ private fun PlayButton(
             modifier = Modifier
                 .align(Alignment.Center)
                 .size(28.dp)
-        )
-    }
-}
-
-@Composable
-private fun Duration(
-    position: Float,
-    duration: Long
-) {
-    val typography = LocalAppearance.current.typography
-
-    Row(
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        BasicText(
-            text = formatAsDuration(position.toLong()),
-            style = typography.xxs.semiBold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-
-        if (duration != C.TIME_UNSET) BasicText(
-            text = formatAsDuration(duration),
-            style = typography.xxs.semiBold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
         )
     }
 }

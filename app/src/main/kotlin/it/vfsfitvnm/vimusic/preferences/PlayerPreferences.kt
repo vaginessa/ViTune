@@ -25,11 +25,17 @@ object PlayerPreferences : GlobalPreferencesHolder() {
     var horizontalSwipeToClose by boolean(false)
     var horizontalSwipeToRemoveItem by boolean(false)
     var playerLayout by enum(PlayerLayout.New)
+    var seekBarStyle by enum(SeekBarStyle.Wavy)
     var showLike by boolean(false)
 
     enum class PlayerLayout(val displayName: @Composable () -> String) {
         Classic(displayName = { stringResource(R.string.classic_player_layout_name) }),
         New(displayName = { stringResource(R.string.new_player_layout_name) })
+    }
+
+    enum class SeekBarStyle(val displayName: @Composable () -> String) {
+        Static(displayName = { stringResource(R.string.static_seek_bar_name) }),
+        Wavy(displayName = { stringResource(R.string.wavy_seek_bar_name) })
     }
 
     val volumeNormalizationBaseGainRounded get() = (volumeNormalizationBaseGain * 100).toInt()

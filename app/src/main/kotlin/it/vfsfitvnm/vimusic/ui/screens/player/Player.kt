@@ -310,21 +310,12 @@ fun Player(
         val controlsContent: @Composable (modifier: Modifier) -> Unit = { innerModifier ->
             val media = mediaItem.toUiMedia(positionAndDuration.second)
 
-            when (PlayerPreferences.playerLayout) {
-                PlayerPreferences.PlayerLayout.Classic -> ClassicControls(
-                    media = media,
-                    shouldBePlaying = shouldBePlaying,
-                    position = positionAndDuration.first,
-                    modifier = innerModifier
-                )
-
-                PlayerPreferences.PlayerLayout.New -> Controls(
-                    media = media,
-                    shouldBePlaying = shouldBePlaying,
-                    position = positionAndDuration.first,
-                    modifier = innerModifier
-                )
-            }
+            Controls(
+                media = media,
+                shouldBePlaying = shouldBePlaying,
+                position = positionAndDuration.first,
+                modifier = innerModifier
+            )
         }
 
         if (isLandscape) Row(
