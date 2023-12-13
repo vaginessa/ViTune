@@ -74,7 +74,7 @@ fun SeekBar(
     color: Color = LocalAppearance.current.colorPalette.text,
     backgroundColor: Color = LocalAppearance.current.colorPalette.background2,
     shape: Shape = RoundedCornerShape(8.dp),
-    isActive: Boolean = true,
+    isActive: Boolean = binder.player.isPlaying,
     alwaysShowDuration: Boolean = false,
     scrubberRadius: Dp = 6.dp,
     style: PlayerPreferences.SeekBarStyle = PlayerPreferences.seekBarStyle
