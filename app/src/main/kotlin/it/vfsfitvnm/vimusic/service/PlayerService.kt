@@ -1026,15 +1026,14 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                 endpoint?.playlistId,
                 endpoint?.playlistSetVideoId,
                 endpoint?.params
-            ).let {
+            ).let { radioData ->
                 isLoadingRadio = true
                 radioJob = coroutineScope.launch(Dispatchers.Main) {
-                    if (justAdd) {
-                        player.addMediaItems(it.process().drop(1))
-                    } else {
-                        player.forcePlayFromBeginning(it.process())
-                    }
-                    radio = it
+                    val items = radioData.process().let { Database.filterBlacklistedSongs(it) }
+                    if (justAdd) player.addMediaItems(items.drop(1))
+                    else player.forcePlayFromBeginning(items)
+
+                    radio = radioData
                     isLoadingRadio = false
                 }
             }

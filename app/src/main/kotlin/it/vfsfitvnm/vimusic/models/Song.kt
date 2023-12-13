@@ -1,6 +1,7 @@
 package it.vfsfitvnm.vimusic.models
 
 import androidx.compose.runtime.Immutable
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -14,7 +15,9 @@ data class Song(
     val thumbnailUrl: String?,
     val likedAt: Long? = null,
     val totalPlayTimeMs: Long = 0,
-    val loudnessBoost: Float? = null
+    val loudnessBoost: Float? = null,
+    @ColumnInfo(defaultValue = "false")
+    val blacklisted: Boolean = false
 ) {
     fun toggleLike() = copy(likedAt = if (likedAt == null) System.currentTimeMillis() else null)
 }

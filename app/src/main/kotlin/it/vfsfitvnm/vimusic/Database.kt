@@ -393,6 +393,21 @@ interface Database {
     )
     fun songsWithContentLength(): Flow<List<SongWithContentLength>>
 
+    @Query("SELECT id FROM Song WHERE blacklisted")
+    suspend fun blacklistedIds(): List<String>
+
+    @Query("SELECT blacklisted FROM Song WHERE id = :songId")
+    fun blacklisted(songId: String): Flow<Boolean>
+
+    @Transaction
+    @Query("UPDATE Song SET blacklisted = NOT blacklisted WHERE id = :songId")
+    fun toggleBlacklist(songId: String)
+
+    suspend fun filterBlacklistedSongs(songs: List<MediaItem>): List<MediaItem> {
+        val blacklistedIds = blacklistedIds()
+        return songs.filter { it.mediaId !in blacklistedIds }
+    }
+
     @Query(
         """
         UPDATE SongPlaylistMap SET position = 
@@ -605,7 +620,7 @@ interface Database {
     views = [
         SortedSongPlaylistMap::class
     ],
-    version = 26,
+    version = 27,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
@@ -628,7 +643,8 @@ interface Database {
         AutoMigration(from = 21, to = 22, spec = DatabaseInitializer.From21To22Migration::class),
         AutoMigration(from = 23, to = 24),
         AutoMigration(from = 24, to = 25),
-        AutoMigration(from = 25, to = 26)
+        AutoMigration(from = 25, to = 26),
+        AutoMigration(from = 26, to = 27)
     ]
 )
 @TypeConverters(Converters::class)

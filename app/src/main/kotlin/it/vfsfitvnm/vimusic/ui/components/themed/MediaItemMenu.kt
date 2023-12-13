@@ -82,6 +82,7 @@ import it.vfsfitvnm.vimusic.utils.thumbnail
 import it.vfsfitvnm.vimusic.utils.toast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @ExperimentalAnimationApi
@@ -280,6 +281,7 @@ fun MediaItemMenu(
     var isViewingPlaylists by remember { mutableStateOf(false) }
     var height by remember { mutableStateOf(0.dp) }
     var likedAt by remember { mutableStateOf<Long?>(null) }
+    var isBlacklisted by remember { mutableStateOf(false) }
 
     var albumInfo by remember {
         mutableStateOf(
@@ -306,7 +308,8 @@ fun MediaItemMenu(
             if (albumInfo == null) albumInfo = Database.songAlbumInfo(mediaItem.mediaId)
             if (artistsInfo == null) artistsInfo = Database.songArtistInfo(mediaItem.mediaId)
 
-            Database.likedAt(mediaItem.mediaId).collect { likedAt = it }
+            launch { Database.likedAt(mediaItem.mediaId).collect { likedAt = it } }
+            launch { Database.blacklisted(mediaItem.mediaId).collect { isBlacklisted = it } }
         }
     }
 
@@ -481,6 +484,18 @@ fun MediaItemMenu(
                 )
             }
 
+            MenuEntry(
+                icon = R.drawable.remove_circle_outline,
+                text = if (isBlacklisted) stringResource(R.string.remove_from_blacklist)
+                else stringResource(R.string.add_to_blacklist),
+                onClick = {
+                    transaction {
+                        Database.insert(mediaItem)
+                        Database.toggleBlacklist(mediaItem.mediaId)
+                    }
+                }
+            )
+
             onGoToEqualizer?.let { onGoToEqualizer ->
                 MenuEntry(
                     icon = R.drawable.equalizer,
@@ -551,7 +566,10 @@ fun MediaItemMenu(
                                 )
                                 BasicText(
                                     text = "${stringResource(R.string.format_hours, amount / 6)} " +
-                                            stringResource(R.string.format_minutes, (amount % 6) * 10),
+                                            stringResource(
+                                                R.string.format_minutes,
+                                                (amount % 6) * 10
+                                            ),
                                     style = typography.s.semiBold
                                 )
                             }

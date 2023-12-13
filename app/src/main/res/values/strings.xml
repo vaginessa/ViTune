@@ -328,6 +328,9 @@
     <string name="static_seek_bar_name">Static</string>
     <string name="wavy_seek_bar_name">Wavy</string>
 
+    <string name="remove_from_blacklist">Remove from blacklist</string>
+    <string name="add_to_blacklist">Add to blacklist</string>
+
     <plurals name="song_count_plural">
         <item quantity="one">%1$d song</item>
         <item quantity="other">%1$d songs</item>

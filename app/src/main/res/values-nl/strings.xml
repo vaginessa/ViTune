@@ -328,6 +328,9 @@
     <string name="static_seek_bar_name">Statisch</string>
     <string name="wavy_seek_bar_name">Golvend</string>
 
+    <string name="remove_from_blacklist">Haal van blacklist af</string>
+    <string name="add_to_blacklist">Voeg toe aan blacklist</string>
+
     <plurals name="song_count_plural">
         <item quantity="one">%1$d nummer</item>
         <item quantity="other">%1$d nummers</item>
