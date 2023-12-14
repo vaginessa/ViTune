@@ -233,7 +233,7 @@ fun HomePlaylists(
                 ?.filter { it.value?.isNotEmpty() == true }
                 ?.forEach { (session, playlists) ->
                     item(
-                        key = "piped-header-${session.id}",
+                        key = "piped-header-${session.username}",
                         contentType = 0,
                         span = { GridItemSpan(maxLineSpan) }
                     ) {
@@ -244,7 +244,7 @@ fun HomePlaylists(
                     playlists?.let {
                         items(
                             items = playlists,
-                            key = { "piped-${session.id}" }
+                            key = { "piped-${session.username}-${it.id}" }
                         ) { playlist ->
                             PlaylistItem(
                                 name = playlist.name,
