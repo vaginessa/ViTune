@@ -117,7 +117,9 @@
     <string name="error_server_restrictions">Dieses Lied kann aufgrund von Serverbeschränkungen nicht abgespielt werden</string>
     <string name="error_id_mismatch">Die zurückgegebene Video-ID stimmt nicht mit der angeforderten überein</string>
     <string name="error_unknown_playback">Es ist ein unbekannter Wiedergabefehler aufgetreten</string>
-
+    <string name="error_piped_link">Bei der Verknüpfung Ihres Piped-Kontos ist ein unbekannter Fehler aufgetreten. Bitte versuchen Sie es erneut.</string>
+    <string name="error_piped_instances_unavailable">Liste der Piped-Instanzen ist derzeit nicht verfügbar.</string>
+    
     <string name="media_permission_declined">Berechtigung abgelehnt, bitte erteilen Sie die Medienberechtigung in den Einstellungen Ihres Geräts.</string>
     <string name="open_settings">Einstellungen öffnen</string>
     <string name="no_items_found">Keine Elemente gefunden</string>
@@ -308,6 +310,28 @@
     <string name="classic_player_layout_name">Klassisch</string>
     <string name="new_player_layout_name">Modern (neu)</string>
 
+     <string name="piped">Piped</string>
+    <string name="instance">Instanz</string>
+    <string name="click_to_select">Zum Auswählen anklicken</string>
+    <string name="username">Benutzername</string>
+    <string name="password">Passwort</string>
+    <string name="login">Anmelden</string>
+    <string name="sync_description">Sie können Wiedergabelisten hosten und mit ViMusic synchronisieren. Derzeit wird nur Piped unterstützt.</string>
+    <string name="add_account">Account hinzufügen</string>
+    <string name="add_account_description">Verknüpfen Sie ein Piped-Konto mit Ihrer Instanz, Ihrem Benutzernamen und Ihrem Passwort.</string>
+    <string name="learn_more">Mehr erfahren</string>
+    <string name="learn_more_description">Sie wissen nicht, was Piped ist oder haben noch kein Account? Klicken Sie hier, um zu den Dokumentationen weitergeleitet zu werden.</string>
+    <string name="piped_sessions">Piped-Sitzung</string>
+    <string name="custom_instance">Benutzerdefinierte Instanz verwenden</string>
+    <string name="base_api_url">Instanz-API-URL</string>
+
+    <string name="seek_bar_style">Lied-Zeit-Achse</string>
+    <string name="static_seek_bar_name">Statisch</string>
+    <string name="wavy_seek_bar_name">Wellenförmig</string>
+
+    <string name="remove_from_blacklist">Von der schwarzen Liste entfernen</string>
+    <string name="add_to_blacklist">Zur schwarzen Liste hinzufügen</string>
+    
     <plurals name="song_count_plural">
         <item quantity="one">%1$d Lied</item>
         <item quantity="other">%1$d Lieder</item>
