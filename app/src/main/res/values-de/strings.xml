@@ -7,7 +7,7 @@
     <string name="format_db">%1$s dB</string>
     <string name="format_kbps">%1$s kbps</string>
     <string name="format_ms">%1$s ms</string>
-    
+
     <string name="format_go_to_artist">Mehr von %1$s</string>
     <string name="format_top_playlist">Top %1$s</string>
     <string name="format_my_top_playlist">Meine Top %1$s</string>
@@ -119,7 +119,7 @@
     <string name="error_unknown_playback">Es ist ein unbekannter Wiedergabefehler aufgetreten</string>
     <string name="error_piped_link">Bei der Verknüpfung Ihres Piped-Kontos ist ein unbekannter Fehler aufgetreten. Bitte versuchen Sie es erneut.</string>
     <string name="error_piped_instances_unavailable">Liste der Piped-Instanzen ist derzeit nicht verfügbar.</string>
-    
+
     <string name="media_permission_declined">Berechtigung abgelehnt, bitte erteilen Sie die Medienberechtigung in den Einstellungen Ihres Geräts.</string>
     <string name="open_settings">Einstellungen öffnen</string>
     <string name="no_items_found">Keine Elemente gefunden</string>
@@ -310,7 +310,7 @@
     <string name="classic_player_layout_name">Klassisch</string>
     <string name="new_player_layout_name">Modern (neu)</string>
 
-     <string name="piped">Piped</string>
+    <string name="piped">Piped</string>
     <string name="instance">Instanz</string>
     <string name="click_to_select">Zum Auswählen anklicken</string>
     <string name="username">Benutzername</string>
@@ -331,7 +331,7 @@
 
     <string name="remove_from_blacklist">Von der schwarzen Liste entfernen</string>
     <string name="add_to_blacklist">Zur schwarzen Liste hinzufügen</string>
-    
+
     <plurals name="song_count_plural">
         <item quantity="one">%1$d Lied</item>
         <item quantity="other">%1$d Lieder</item>
