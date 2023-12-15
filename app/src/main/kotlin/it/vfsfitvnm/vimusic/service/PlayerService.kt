@@ -123,9 +123,9 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
@@ -276,18 +276,21 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
         coroutineScope.launch {
             var first = true
-            isLikedState.onEach {
+            mediaItemState.zip(isLikedState) { mediaItem, _ ->
                 // work around NPE in other processes
                 if (first) {
                     first = false
-                    return@onEach
+                    return@zip
                 }
+                if (mediaItem == null) return@zip
                 withContext(Dispatchers.Main) {
                     updatePlaybackState()
                     // work around NPE in other processes
                     handler.post {
-                        applicationContext.getSystemService<NotificationManager>()
-                            ?.notify(NOTIFICATION_ID, notification())
+                        runCatching {
+                            applicationContext.getSystemService<NotificationManager>()
+                                ?.notify(NOTIFICATION_ID, notification())
+                        }
                     }
                 }
             }.collect()
