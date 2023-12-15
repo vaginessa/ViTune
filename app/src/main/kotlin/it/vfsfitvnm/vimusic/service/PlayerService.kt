@@ -26,6 +26,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.text.format.DateUtils
+import android.widget.Toast
 import androidx.annotation.OptIn
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -584,16 +585,22 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
     private fun maybeBassBoost() {
         if (!PlayerPreferences.bassBoost) {
-            bassBoost?.enabled = false
-            bassBoost?.release()
+            runCatching {
+                bassBoost?.enabled = false
+                bassBoost?.release()
+            }
             bassBoost = null
             maybeNormalizeVolume()
             return
         }
 
-        if (bassBoost == null) bassBoost = BassBoost(0, player.audioSessionId)
-        bassBoost?.setStrength(PlayerPreferences.bassBoostLevel.toShort())
-        bassBoost?.enabled = true
+        runCatching {
+            if (bassBoost == null) bassBoost = BassBoost(0, player.audioSessionId)
+            bassBoost?.setStrength(PlayerPreferences.bassBoostLevel.toShort())
+            bassBoost?.enabled = true
+        }.onFailure {
+            Toast.makeText(this, R.string.error_bassboost_init, Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun maybeShowSongCoverInLockScreen() = handler.post {
