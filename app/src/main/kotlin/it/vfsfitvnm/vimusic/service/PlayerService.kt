@@ -119,13 +119,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.cancellable
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
@@ -276,13 +276,13 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
         coroutineScope.launch {
             var first = true
-            mediaItemState.zip(isLikedState) { mediaItem, _ ->
+            combine(mediaItemState, isLikedState) { mediaItem, _ ->
                 // work around NPE in other processes
                 if (first) {
                     first = false
-                    return@zip
+                    return@combine
                 }
-                if (mediaItem == null) return@zip
+                if (mediaItem == null) return@combine
                 withContext(Dispatchers.Main) {
                     updatePlaybackState()
                     // work around NPE in other processes
@@ -741,10 +741,8 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                     makeInvincible(true)
                     sendCloseEqualizerIntent()
                 }
-                handler.post {
-                    runCatching {
-                        notificationManager?.notify(NOTIFICATION_ID, notification)
-                    }
+                runCatching {
+                    notificationManager?.notify(NOTIFICATION_ID, notification)
                 }
             }
         }
@@ -810,7 +808,10 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             maybeShowSongCoverInLockScreen()
             handler.post {
                 runCatching {
-                    notificationManager?.notify(NOTIFICATION_ID, builder.setLargeIcon(bitmap).build())
+                    notificationManager?.notify(
+                        NOTIFICATION_ID,
+                        builder.setLargeIcon(bitmap).build()
+                    )
                 }
             }
         }
