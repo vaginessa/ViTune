@@ -58,7 +58,7 @@ fun adaptiveThumbnailContent(
         ) else AsyncImage(
             model = url?.thumbnail(thumbnailSizePx),
             contentDescription = null,
-            modifier = modifier
+            modifier = modifier.background(colorPalette.background1)
         )
     }
 }

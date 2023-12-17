@@ -13,6 +13,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
@@ -68,6 +69,8 @@ fun Thumbnail(
 ) {
     val binder = LocalPlayerServiceBinder.current
     val player = binder?.player ?: return
+
+    val (colorPalette) = LocalAppearance.current
 
     val (thumbnailSizeDp, thumbnailSizePx) = Dimensions.thumbnails.player.song.let {
         it to (it - 64.dp).px
@@ -169,6 +172,7 @@ fun Thumbnail(
                         )
                     }
                     .fillMaxSize()
+                    .background(colorPalette.background0)
             ) else Icon(
                 painter = painterResource(id = R.drawable.ic_launcher_foreground),
                 contentDescription = null,
