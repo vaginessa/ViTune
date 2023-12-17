@@ -1,5 +1,6 @@
 package it.vfsfitvnm.vimusic.ui.screens.home
 
+import android.view.RoundedCorner
 import androidx.annotation.OptIn
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.LinearEasing
@@ -22,6 +23,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -314,7 +317,10 @@ fun HomeSongs(
                                         brush = Brush.verticalGradient(
                                             colors = listOf(Color.Transparent, colorPalette.overlay)
                                         ),
-                                        shape = thumbnailShape
+                                        shape = thumbnailShape.copy(
+                                            topStart = CornerSize(0.dp),
+                                            topEnd = CornerSize(0.dp)
+                                        )
                                     )
                                     .padding(horizontal = 8.dp, vertical = 4.dp)
                                     .align(Alignment.BottomCenter)
