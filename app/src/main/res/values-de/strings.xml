@@ -231,7 +231,6 @@
     <string name="pause_playback_history_description">Stoppt die Verwendung von Wiedergabeereignissen für die Schnellauswahl</string>
     <string name="pause_playback_history_warning">Bitte beachten Sie: Dies hat keine Auswirkungen auf das Offline-Caching!</string>
     <string name="reset_quick_picks">Schnellwahlen zurücksetzen</string>
-    <string name="format_reset_quick_picks_amount">%1$s Wiedergabeereignisse löschen</string>
     <string name="quick_picks_empty">Schnellauswahlen werden gelöscht</string>
     <string name="pause_playback_time">Wiedergabezeit pausieren</string>
     <string name="format_pause_playback_time_description">Stoppt die Speicherung der Wiedergabedauer. Dadurch wird die Statistik in der Wiedergabeliste "Meine Top %1$s" angehalten!</string>

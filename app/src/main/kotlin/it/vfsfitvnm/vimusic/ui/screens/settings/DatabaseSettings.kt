@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import it.vfsfitvnm.vimusic.Database
 import it.vfsfitvnm.vimusic.LocalPlayerAwareWindowInsets
@@ -29,6 +30,7 @@ import it.vfsfitvnm.vimusic.path
 import it.vfsfitvnm.vimusic.preferences.DataPreferences
 import it.vfsfitvnm.vimusic.query
 import it.vfsfitvnm.vimusic.service.PlayerService
+import it.vfsfitvnm.vimusic.transaction
 import it.vfsfitvnm.vimusic.ui.components.themed.Header
 import it.vfsfitvnm.vimusic.ui.screens.Route
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
@@ -49,9 +51,11 @@ fun DatabaseSettings() {
     val context = LocalContext.current
     val (colorPalette) = LocalAppearance.current
 
-    val eventsCount by remember { Database.eventsCount().distinctUntilChanged() }.collectAsState(
-        initial = 0
-    )
+    val eventsCount by remember { Database.eventsCount().distinctUntilChanged() }
+        .collectAsState(initial = 0)
+
+    val blacklistLength by remember { Database.blacklistLength().distinctUntilChanged() }
+        .collectAsState(initial = 0)
 
     val backupLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/vnd.sqlite3")) { uri ->
@@ -117,7 +121,11 @@ fun DatabaseSettings() {
             AnimatedVisibility(visible = !(pauseHistory && eventsCount == 0)) {
                 SettingsEntry(
                     title = stringResource(R.string.reset_quick_picks),
-                    text = if (eventsCount > 0) stringResource(R.string.format_reset_quick_picks_amount, eventsCount)
+                    text = if (eventsCount > 0) pluralStringResource(
+                        R.plurals.format_reset_quick_picks_amount,
+                        eventsCount,
+                        eventsCount
+                    )
                     else stringResource(R.string.quick_picks_empty),
                     onClick = { query(Database::clearEvents) },
                     isEnabled = eventsCount > 0
@@ -132,6 +140,21 @@ fun DatabaseSettings() {
                 ),
                 isChecked = pausePlaytime,
                 onCheckedChange = { pausePlaytime = !pausePlaytime }
+            )
+
+            SettingsEntry(
+                title = stringResource(R.string.reset_blacklist),
+                text = if (blacklistLength > 0) pluralStringResource(
+                    R.plurals.format_reset_blacklist_description,
+                    blacklistLength,
+                    blacklistLength
+                ) else stringResource(R.string.blacklist_empty),
+                isEnabled = blacklistLength > 0,
+                onClick = {
+                    transaction {
+                        Database.resetBlacklist()
+                    }
+                }
             )
 
             SettingsGroupSpacer()

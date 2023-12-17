@@ -399,6 +399,13 @@ interface Database {
     @Query("SELECT blacklisted FROM Song WHERE id = :songId")
     fun blacklisted(songId: String): Flow<Boolean>
 
+    @Query("SELECT COUNT (*) FROM Song where blacklisted")
+    fun blacklistLength(): Flow<Int>
+
+    @Transaction
+    @Query("UPDATE Song SET blacklisted = NOT blacklisted WHERE blacklisted")
+    fun resetBlacklist()
+
     @Transaction
     @Query("UPDATE Song SET blacklisted = NOT blacklisted WHERE id = :songId")
     fun toggleBlacklist(songId: String)
