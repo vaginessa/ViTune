@@ -484,7 +484,7 @@ fun MediaItemMenu(
                 )
             }
 
-            MenuEntry(
+            if (!mediaItem.isLocal) MenuEntry(
                 icon = R.drawable.remove_circle_outline,
                 text = if (isBlacklisted) stringResource(R.string.remove_from_blacklist)
                 else stringResource(R.string.add_to_blacklist),
