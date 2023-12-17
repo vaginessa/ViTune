@@ -377,23 +377,25 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         maybeSavePlayerQueue()
 
     override fun onDestroy() {
-        maybeSavePlayerQueue()
+        runCatching {
+            maybeSavePlayerQueue()
 
-        player.removeListener(this)
-        player.stop()
-        player.release()
+            player.removeListener(this)
+            player.stop()
+            player.release()
 
-        unregisterReceiver(notificationActionReceiver)
+            unregisterReceiver(notificationActionReceiver)
 
-        mediaSession.isActive = false
-        mediaSession.release()
-        cache.release()
+            mediaSession.isActive = false
+            mediaSession.release()
+            cache.release()
 
-        loudnessEnhancer?.release()
+            loudnessEnhancer?.release()
 
-        preferenceUpdaterJob?.cancel()
+            preferenceUpdaterJob?.cancel()
 
-        coroutineScope.cancel()
+            coroutineScope.cancel()
+        }
 
         super.onDestroy()
     }
@@ -401,8 +403,12 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
     override fun shouldBeInvincible() = !player.shouldBePlaying
 
     override fun onConfigurationChanged(newConfig: Configuration) {
-        if (bitmapProvider.setDefaultBitmap() && player.currentMediaItem != null)
-            notificationManager?.notify(NOTIFICATION_ID, notification())
+        handler.post {
+            runCatching {
+                if (bitmapProvider.setDefaultBitmap() && player.currentMediaItem != null)
+                    notificationManager?.notify(NOTIFICATION_ID, notification())
+            }
+        }
         super.onConfigurationChanged(newConfig)
     }
 
@@ -735,7 +741,11 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                     makeInvincible(true)
                     sendCloseEqualizerIntent()
                 }
-                notificationManager?.notify(NOTIFICATION_ID, notification)
+                handler.post {
+                    runCatching {
+                        notificationManager?.notify(NOTIFICATION_ID, notification)
+                    }
+                }
             }
         }
     }
@@ -798,7 +808,11 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
         bitmapProvider.load(mediaMetadata.artworkUri) { bitmap ->
             maybeShowSongCoverInLockScreen()
-            notificationManager?.notify(NOTIFICATION_ID, builder.setLargeIcon(bitmap).build())
+            handler.post {
+                runCatching {
+                    notificationManager?.notify(NOTIFICATION_ID, builder.setLargeIcon(bitmap).build())
+                }
+            }
         }
 
         return builder.build()
