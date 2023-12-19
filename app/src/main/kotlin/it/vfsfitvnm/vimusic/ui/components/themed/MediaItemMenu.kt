@@ -106,7 +106,7 @@ fun InHistoryMediaItemMenu(
             query {
                 runCatching {
                     binder?.cache?.removeResource(song.id)
-                    Database.incrementTotalPlayTimeMs(song.id, -song.totalPlayTimeMs)
+                    Database.delete(song)
                 }
             }
         }

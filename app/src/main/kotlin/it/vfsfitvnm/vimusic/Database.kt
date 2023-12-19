@@ -586,6 +586,9 @@ interface Database {
     fun upsert(artist: Artist)
 
     @Delete
+    fun delete(song: Song)
+
+    @Delete
     fun delete(searchQuery: SearchQuery)
 
     @Delete
