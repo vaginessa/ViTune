@@ -54,6 +54,7 @@ import it.vfsfitvnm.vimusic.ui.items.SongItemPlaceholder
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.ui.styling.px
+import it.vfsfitvnm.vimusic.utils.PlaylistDownloadIcon
 import it.vfsfitvnm.vimusic.utils.asMediaItem
 import it.vfsfitvnm.vimusic.utils.completed
 import it.vfsfitvnm.vimusic.utils.enqueue
@@ -133,6 +134,9 @@ fun PlaylistSongList(
 
             Spacer(modifier = Modifier.weight(1f))
 
+            playlistPage?.songsPage?.items?.map(Innertube.SongItem::asMediaItem)
+                ?.let { PlaylistDownloadIcon(songs = it) }
+
             HeaderIconButton(
                 icon = R.drawable.add,
                 color = colorPalette.text,
@@ -144,17 +148,21 @@ fun PlaylistSongList(
                 color = colorPalette.text,
                 onClick = {
                     (
-                        playlistPage?.url
-                            ?: "https://music.youtube.com/playlist?list=${browseId.removePrefix("VL")}"
-                        ).let { url ->
-                        val sendIntent = Intent().apply {
-                            action = Intent.ACTION_SEND
-                            type = "text/plain"
-                            putExtra(Intent.EXTRA_TEXT, url)
-                        }
+                            playlistPage?.url
+                                ?: "https://music.youtube.com/playlist?list=${
+                                    browseId.removePrefix(
+                                        "VL"
+                                    )
+                                }"
+                            ).let { url ->
+                            val sendIntent = Intent().apply {
+                                action = Intent.ACTION_SEND
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_TEXT, url)
+                            }
 
-                        context.startActivity(Intent.createChooser(sendIntent, null))
-                    }
+                            context.startActivity(Intent.createChooser(sendIntent, null))
+                        }
                 }
             )
         }

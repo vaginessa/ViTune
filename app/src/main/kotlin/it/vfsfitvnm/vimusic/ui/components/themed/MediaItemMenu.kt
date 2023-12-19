@@ -61,6 +61,7 @@ import it.vfsfitvnm.vimusic.models.Playlist
 import it.vfsfitvnm.vimusic.models.Song
 import it.vfsfitvnm.vimusic.models.SongPlaylistMap
 import it.vfsfitvnm.vimusic.query
+import it.vfsfitvnm.vimusic.service.PrecacheService
 import it.vfsfitvnm.vimusic.service.isLocal
 import it.vfsfitvnm.vimusic.transaction
 import it.vfsfitvnm.vimusic.ui.items.SongItem
@@ -75,6 +76,7 @@ import it.vfsfitvnm.vimusic.utils.asMediaItem
 import it.vfsfitvnm.vimusic.utils.enqueue
 import it.vfsfitvnm.vimusic.utils.forcePlay
 import it.vfsfitvnm.vimusic.utils.formatAsDuration
+import it.vfsfitvnm.vimusic.utils.isCached
 import it.vfsfitvnm.vimusic.utils.launchYouTubeMusic
 import it.vfsfitvnm.vimusic.utils.medium
 import it.vfsfitvnm.vimusic.utils.semiBold
@@ -450,6 +452,15 @@ fun MediaItemMenu(
             )
 
             Spacer(Modifier.height(8.dp))
+
+            if (!isLocal && !isCached(mediaItem.mediaId)) MenuEntry(
+                icon = R.drawable.download,
+                text = stringResource(R.string.pre_cache),
+                onClick = {
+                    onDismiss()
+                    PrecacheService.scheduleCache(context.applicationContext, mediaItem)
+                }
+            )
 
             if (!isLocal) onStartRadio?.let { onStartRadio ->
                 MenuEntry(

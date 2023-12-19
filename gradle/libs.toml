@@ -11,6 +11,7 @@ room = "2.6.1"
 media3 = "1.2.0"
 ktor = "2.3.6"
 detekt = "1.23.3"
+workmanager = "2.9.0"
 
 [plugins]
 android_application = { id = "com.android.application", version.ref = "agp" }
@@ -43,6 +44,9 @@ room = { module = "androidx.room:room-ktx", version.ref = "room" }
 room_compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 
 exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "media3" }
+exoplayer_workmanager = { module = "androidx.media3:media3-exoplayer-workmanager", version.ref = "media3" }
+workmanager = { module = "androidx.work:work-runtime", version.ref = "workmanager" }
+workmanager_ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workmanager" }
 
 ktor_http = { module = "io.ktor:ktor-http", version.ref = "ktor" }
 

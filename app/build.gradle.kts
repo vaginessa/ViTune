@@ -112,7 +112,11 @@ dependencies {
     implementation(libs.palette)
 
     implementation(libs.exoplayer)
+    implementation(libs.exoplayer.workmanager)
+    implementation(libs.workmanager)
+    implementation(libs.workmanager.ktx)
 
+    implementation(libs.kotlin.coroutines)
     implementation(libs.kotlin.immutable)
 
     implementation(libs.room)

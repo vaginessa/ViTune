@@ -66,22 +66,22 @@ interface Database {
     companion object : Database by DatabaseInitializer.instance.database
 
     @Transaction
-    @Query("SELECT * FROM Song WHERE totalPlayTimeMs > 0 AND id NOT LIKE '$LOCAL_KEY_PREFIX%' ORDER BY ROWID ASC")
+    @Query("SELECT * FROM Song WHERE id NOT LIKE '$LOCAL_KEY_PREFIX%' ORDER BY ROWID ASC")
     @RewriteQueriesToDropUnusedColumns
     fun songsByRowIdAsc(): Flow<List<Song>>
 
     @Transaction
-    @Query("SELECT * FROM Song WHERE totalPlayTimeMs > 0 AND id NOT LIKE '$LOCAL_KEY_PREFIX%' ORDER BY ROWID DESC")
+    @Query("SELECT * FROM Song WHERE id NOT LIKE '$LOCAL_KEY_PREFIX%' ORDER BY ROWID DESC")
     @RewriteQueriesToDropUnusedColumns
     fun songsByRowIdDesc(): Flow<List<Song>>
 
     @Transaction
-    @Query("SELECT * FROM Song WHERE totalPlayTimeMs > 0 AND id NOT LIKE '$LOCAL_KEY_PREFIX%' ORDER BY title ASC")
+    @Query("SELECT * FROM Song WHERE id NOT LIKE '$LOCAL_KEY_PREFIX%' ORDER BY title ASC")
     @RewriteQueriesToDropUnusedColumns
     fun songsByTitleAsc(): Flow<List<Song>>
 
     @Transaction
-    @Query("SELECT * FROM Song WHERE totalPlayTimeMs > 0 AND id NOT LIKE '$LOCAL_KEY_PREFIX%' ORDER BY title DESC")
+    @Query("SELECT * FROM Song WHERE id NOT LIKE '$LOCAL_KEY_PREFIX%' ORDER BY title DESC")
     @RewriteQueriesToDropUnusedColumns
     fun songsByTitleDesc(): Flow<List<Song>>
 
@@ -89,8 +89,7 @@ interface Database {
     @Query(
         """
         SELECT * FROM Song
-        WHERE totalPlayTimeMs > 0 AND
-        id NOT LIKE '$LOCAL_KEY_PREFIX%'
+        WHERE id NOT LIKE '$LOCAL_KEY_PREFIX%'
         ORDER BY totalPlayTimeMs ASC
         """
     )
@@ -101,8 +100,7 @@ interface Database {
     @Query(
         """
         SELECT * FROM Song
-        WHERE totalPlayTimeMs > 0 AND
-        id NOT LIKE '$LOCAL_KEY_PREFIX%'
+        WHERE id NOT LIKE '$LOCAL_KEY_PREFIX%'
         ORDER BY totalPlayTimeMs DESC
         """
     )
@@ -386,8 +384,7 @@ interface Database {
         """
         SELECT Song.*, contentLength FROM Song
         JOIN Format ON id = songId
-        WHERE contentLength IS NOT NULL AND
-        totalPlayTimeMs > 0
+        WHERE contentLength IS NOT NULL
         ORDER BY Song.ROWID DESC
         """
     )

@@ -58,6 +58,7 @@ import it.vfsfitvnm.vimusic.ui.items.SongItem
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.ui.styling.px
+import it.vfsfitvnm.vimusic.utils.PlaylistDownloadIcon
 import it.vfsfitvnm.vimusic.utils.asMediaItem
 import it.vfsfitvnm.vimusic.utils.completed
 import it.vfsfitvnm.vimusic.utils.enqueue
@@ -161,6 +162,9 @@ fun LocalPlaylistSongs(
                     )
 
                     Spacer(modifier = Modifier.weight(1f))
+
+                    playlistWithSongs?.songs?.map(Song::asMediaItem)
+                        ?.let { PlaylistDownloadIcon(songs = it) }
 
                     HeaderIconButton(
                         icon = R.drawable.ellipsis_horizontal,

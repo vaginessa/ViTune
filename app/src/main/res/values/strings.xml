@@ -334,6 +334,8 @@
     <string name="reset_blacklist">Reset blacklist</string>
     <string name="blacklist_empty">Blacklist empty</string>
 
+    <string name="pre_cache">Pre cache</string>
+
     <plurals name="format_reset_blacklist_description">
         <item quantity="one">Remove %1$s song from the blacklist</item>
         <item quantity="other">Remove all %1$s songs from the blacklist</item>

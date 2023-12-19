@@ -1,6 +1,7 @@
 package it.vfsfitvnm.vimusic
 
 import android.app.Application
+import android.util.Log
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import coil.disk.DiskCache
@@ -8,10 +9,11 @@ import coil.util.DebugLogger
 import it.vfsfitvnm.compose.persist.PersistMap
 import it.vfsfitvnm.compose.persist.PersistMapOwner
 import it.vfsfitvnm.vimusic.preferences.DataPreferences
+import androidx.work.Configuration as WorkManagerConfiguration
 
 val globalPersistMap = PersistMap()
 
-class MainApplication : Application(), ImageLoaderFactory, PersistMapOwner {
+class MainApplication : Application(), ImageLoaderFactory, PersistMapOwner, WorkManagerConfiguration.Provider {
     override fun onCreate() {
         super.onCreate()
         Dependencies.init(this)
@@ -31,4 +33,8 @@ class MainApplication : Application(), ImageLoaderFactory, PersistMapOwner {
         .build()
 
     override val persistMap = globalPersistMap
+
+    override val workManagerConfiguration = WorkManagerConfiguration.Builder()
+        .setMinimumLoggingLevel(if (BuildConfig.DEBUG) Log.DEBUG else Log.INFO)
+        .build()
 }

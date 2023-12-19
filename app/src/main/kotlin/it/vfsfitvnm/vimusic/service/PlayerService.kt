@@ -47,7 +47,6 @@ import androidx.media3.common.Timeline
 import androidx.media3.common.audio.SonicAudioProcessor
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.database.StandaloneDatabaseProvider
-import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DataSpec
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.DefaultHttpDataSource
@@ -225,28 +224,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
         createNotificationChannel()
 
-        val cacheEvictor = when (val size = DataPreferences.exoPlayerDiskCacheMaxSize) {
-            ExoPlayerDiskCacheSize.Unlimited -> NoOpCacheEvictor()
-            else -> LeastRecentlyUsedCacheEvictor(size.bytes)
-        }
-
-        val directory = cacheDir.resolve("exoplayer").also { directory ->
-            if (directory.exists()) return@also
-
-            directory.mkdir()
-
-            cacheDir.listFiles()?.forEach {
-                @Suppress("ComplexCondition")
-                if (
-                    (it.isDirectory && it.name.length == 1 && it.name.isDigitsOnly() || it.extension == "uid") &&
-                    !it.renameTo(directory.resolve(it.name))
-                ) it.deleteRecursively()
-            }
-
-            filesDir.resolve("coil").deleteRecursively()
-        }
-
-        cache = SimpleCache(directory, cacheEvictor, StandaloneDatabaseProvider(this))
+        cache = createCache(this)
 
         player = ExoPlayer.Builder(this, createRendersFactory(), createMediaSourceFactory())
             .setHandleAudioBecomingNoisy(true)
@@ -852,101 +830,18 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         }
     }
 
-    private fun createCacheDataSource() = ConditionalCacheDataSourceFactory(
-        cacheDataSourceFactory = CacheDataSource.Factory().setCache(cache),
-        upstreamDataSourceFactory = DefaultDataSource.Factory(
-            applicationContext,
-            DefaultHttpDataSource.Factory()
-                .setConnectTimeoutMs(16000)
-                .setReadTimeoutMs(8000)
-                .setUserAgent("Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0")
-        )
-    ) { !it.isLocal }
-
-    @Suppress("CyclomaticComplexMethod")
-    private fun createDataSourceFactory(): DataSource.Factory {
-        val chunkLength = 512 * 1024L
-        val ringBuffer = RingBuffer<Pair<String, Uri>?>(2) { null }
-
-        return ResolvingDataSource.Factory(createCacheDataSource()) { dataSpec ->
-            val videoId = dataSpec.key ?: error("A key must be set")
-
-            when {
-                dataSpec.isLocal ||
-                        cache.isCached(videoId, dataSpec.position, chunkLength) -> dataSpec
-
-                videoId == ringBuffer.getOrNull(0)?.first ->
-                    dataSpec.withUri(ringBuffer.getOrNull(0)!!.second)
-
-                videoId == ringBuffer.getOrNull(1)?.first ->
-                    dataSpec.withUri(ringBuffer.getOrNull(1)!!.second)
-
-                else -> {
-                    val body = runBlocking(Dispatchers.IO) {
-                        Innertube.player(PlayerBody(videoId = videoId))
-                    }?.getOrThrow()
-
-                    if (body?.videoDetails?.videoId != videoId) throw VideoIdMismatchException()
-
-                    val url = when (val status = body.playabilityStatus?.status) {
-                        "OK" -> body.streamingData?.highestQualityFormat?.let { format ->
-                            val mediaItem = runBlocking(Dispatchers.Main) {
-                                player.findNextMediaItemById(videoId)
-                            }
-
-                            if (mediaItem?.mediaMetadata?.extras?.getString("durationText") == null)
-                                format.approxDurationMs?.div(1000)
-                                    ?.let(DateUtils::formatElapsedTime)?.removePrefix("0")
-                                    ?.let { durationText ->
-                                        mediaItem?.mediaMetadata?.extras?.putString(
-                                            "durationText",
-                                            durationText
-                                        )
-                                        Database.updateDurationText(videoId, durationText)
-                                    }
-
-                            query {
-                                mediaItem?.let(Database::insert)
-
-                                Database.insert(
-                                    it.vfsfitvnm.vimusic.models.Format(
-                                        songId = videoId,
-                                        itag = format.itag,
-                                        mimeType = format.mimeType,
-                                        bitrate = format.bitrate,
-                                        loudnessDb = body.playerConfig?.audioConfig?.normalizedLoudnessDb,
-                                        contentLength = format.contentLength,
-                                        lastModified = format.lastModified
-                                    )
-                                )
-                            }
-
-                            format.url
-                        } ?: throw PlayableFormatNotFoundException()
-
-                        "UNPLAYABLE" -> throw UnplayableException()
-                        "LOGIN_REQUIRED" -> throw LoginRequiredException()
-
-                        else -> throw PlaybackException(
-                            status,
-                            null,
-                            PlaybackException.ERROR_CODE_REMOTE_ERROR
-                        )
-                    }
-
-                    ringBuffer.append(videoId to url.toUri())
-                    dataSpec.withUri(url.toUri()).subrange(dataSpec.uriPositionOffset, chunkLength)
-                }
-            }
-        }
-    }
-
     private fun createMediaSourceFactory() = DefaultMediaSourceFactory(
-        /* dataSourceFactory = */ createDataSourceFactory(),
-        /* extractorsFactory = */ createExtractorsFactory()
+        /* dataSourceFactory = */ createYouTubeDataSourceResolverFactory(
+            findMediaItem = { videoId ->
+                runBlocking(Dispatchers.Main) {
+                    player.findNextMediaItemById(videoId)
+                }
+            },
+            context = applicationContext,
+            cache = cache
+        ),
+        /* extractorsFactory = */ DefaultExtractorsFactory()
     )
-
-    private fun createExtractorsFactory() = DefaultExtractorsFactory()
 
     private fun createRendersFactory(): RenderersFactory {
         val minimumSilenceDuration = PlayerPreferences.minimumSilence.coerceIn(1000L..2_000_000L)
@@ -1147,11 +1042,147 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         }
     }
 
-    private companion object {
-        const val NOTIFICATION_ID = 1001
-        const val NOTIFICATION_CHANNEL_ID = "default_channel_id"
+    companion object {
+        fun createDatabaseProvider(context: Context) = StandaloneDatabaseProvider(context)
+        fun createCache(context: Context) = with(context) {
+            val cacheEvictor = when (val size = DataPreferences.exoPlayerDiskCacheMaxSize) {
+                ExoPlayerDiskCacheSize.Unlimited -> NoOpCacheEvictor()
+                else -> LeastRecentlyUsedCacheEvictor(size.bytes)
+            }
 
-        const val SLEEP_TIMER_NOTIFICATION_ID = 1002
-        const val SLEEP_TIMER_NOTIFICATION_CHANNEL_ID = "sleep_timer_channel_id"
+            val directory = cacheDir.resolve("exoplayer").also { directory ->
+                if (directory.exists()) return@also
+
+                directory.mkdir()
+
+                cacheDir.listFiles()?.forEach {
+                    @Suppress("ComplexCondition")
+                    if (
+                        (it.isDirectory && it.name.length == 1 && it.name.isDigitsOnly() || it.extension == "uid") &&
+                        !it.renameTo(directory.resolve(it.name))
+                    ) it.deleteRecursively()
+                }
+
+                filesDir.resolve("coil").deleteRecursively()
+            }
+
+            SimpleCache(directory, cacheEvictor, createDatabaseProvider(context))
+        }
+
+        private const val DEFAULT_CHUNK_LENGTH = 512 * 1024L
+
+        // TODO: maybe fix this mess?
+        /**
+         * Creates a ResolvingDataSource.Factory for YouTube video's
+         * Call site MUST either:
+         * 1. Verify that the consumer of the factory always saves the MediaItem to the database
+         * before trying to resolve the MediaItem
+         * 2. Provide a usable MediaItem for the YouTube video with the videoId
+         * 3. Make sure the database has a MediaItem for the given videoId and return null when it
+         * does
+         */
+        fun createYouTubeDataSourceResolverFactory(
+            findMediaItem: (videoId: String) -> MediaItem?,
+            context: Context,
+            cache: Cache,
+            chunkLength: Long? = DEFAULT_CHUNK_LENGTH
+        ): ResolvingDataSource.Factory {
+            val ringBuffer = RingBuffer<Pair<String, Uri>?>(2) { null }
+
+            return ResolvingDataSource.Factory(
+                ConditionalCacheDataSourceFactory(
+                    cacheDataSourceFactory = CacheDataSource.Factory().setCache(cache),
+                    upstreamDataSourceFactory = DefaultDataSource.Factory(
+                        context,
+                        DefaultHttpDataSource.Factory()
+                            .setConnectTimeoutMs(16000)
+                            .setReadTimeoutMs(8000)
+                            .setUserAgent("Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0"),
+                    ),
+                ) { !it.isLocal },
+            ) { dataSpec ->
+                // Thank you Android, for enforcing a Uri in the download request
+                val videoId = dataSpec.key
+                    ?.removePrefix("https://youtube.com/watch?v=") ?: error("A key must be set")
+
+                when {
+                    dataSpec.isLocal || cache.isCached(
+                        videoId,
+                        dataSpec.position,
+                        chunkLength ?: DEFAULT_CHUNK_LENGTH
+                    ) -> dataSpec
+
+                    videoId == ringBuffer.getOrNull(0)?.first ->
+                        dataSpec.withUri(ringBuffer.getOrNull(0)!!.second)
+
+                    videoId == ringBuffer.getOrNull(1)?.first ->
+                        dataSpec.withUri(ringBuffer.getOrNull(1)!!.second)
+
+                    else -> {
+                        val body = runBlocking(Dispatchers.IO) {
+                            Innertube.player(PlayerBody(videoId = videoId))
+                        }?.getOrThrow()
+
+                        if (body?.videoDetails?.videoId != videoId) throw VideoIdMismatchException()
+
+                        val format = body.streamingData?.highestQualityFormat
+                        val url = when (val status = body.playabilityStatus?.status) {
+                            "OK" -> format?.let { _ ->
+                                val mediaItem = findMediaItem(videoId)
+
+                                if (mediaItem?.mediaMetadata?.extras?.getString("durationText") == null)
+                                    format.approxDurationMs?.div(1000)
+                                        ?.let(DateUtils::formatElapsedTime)?.removePrefix("0")
+                                        ?.let { durationText ->
+                                            mediaItem?.mediaMetadata?.extras?.putString(
+                                                "durationText",
+                                                durationText
+                                            )
+                                            Database.updateDurationText(videoId, durationText)
+                                        }
+
+                                query {
+                                    mediaItem?.let(Database::insert)
+
+                                    Database.insert(
+                                        it.vfsfitvnm.vimusic.models.Format(
+                                            songId = videoId,
+                                            itag = format.itag,
+                                            mimeType = format.mimeType,
+                                            bitrate = format.bitrate,
+                                            loudnessDb = body.playerConfig?.audioConfig?.normalizedLoudnessDb,
+                                            contentLength = format.contentLength,
+                                            lastModified = format.lastModified
+                                        )
+                                    )
+                                }
+
+                                format.url
+                            } ?: throw PlayableFormatNotFoundException()
+
+                            "UNPLAYABLE" -> throw UnplayableException()
+                            "LOGIN_REQUIRED" -> throw LoginRequiredException()
+
+                            else -> throw PlaybackException(
+                                status,
+                                null,
+                                PlaybackException.ERROR_CODE_REMOTE_ERROR
+                            )
+                        }
+
+                        ringBuffer.append(videoId to url.toUri())
+                        dataSpec.buildUpon()
+                            .setKey(videoId)
+                            .setUri(url.toUri())
+                            .build()
+                            .let { spec ->
+                                (chunkLength ?: format.contentLength)?.let {
+                                    spec.subrange(dataSpec.uriPositionOffset, it)
+                                } ?: spec
+                            }
+                    }
+                }
+            }
+        }
     }
 }
