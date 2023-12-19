@@ -33,10 +33,15 @@ fun Innertube.SongItem.Companion.from(content: MusicShelfRenderer.Content): Inne
             ?.map(Innertube::Info),
         album = album,
         durationText = otherRuns
-            .lastOrNull()
-            ?.firstOrNull()?.text,
-        thumbnail = content
-            .thumbnail
+            .getOrNull(otherRuns.size - 2)
+            ?.firstOrNull()
+            ?.text
+            ?.takeIf { ':' in it }
+            ?: otherRuns
+                .lastOrNull()
+                ?.firstOrNull()
+                ?.text,
+        thumbnail = content.thumbnail
     ).takeIf { it.info?.endpoint?.videoId != null }
 }
 
@@ -58,8 +63,7 @@ fun Innertube.VideoItem.Companion.from(content: MusicShelfRenderer.Content): Inn
             .getOrNull(otherRuns.lastIndex)
             ?.firstOrNull()
             ?.text,
-        thumbnail = content
-            .thumbnail
+        thumbnail = content.thumbnail
     ).takeIf { it.info?.endpoint?.videoId != null }
 }
 
@@ -83,8 +87,7 @@ fun Innertube.AlbumItem.Companion.from(content: MusicShelfRenderer.Content): Inn
             .getOrNull(otherRuns.lastIndex)
             ?.firstOrNull()
             ?.text,
-        thumbnail = content
-            .thumbnail
+        thumbnail = content.thumbnail
     ).takeIf { it.info?.endpoint?.browseId != null }
 }
 
@@ -105,8 +108,7 @@ fun Innertube.ArtistItem.Companion.from(content: MusicShelfRenderer.Content): In
             .lastOrNull()
             ?.last()
             ?.text,
-        thumbnail = content
-            .thumbnail
+        thumbnail = content.thumbnail
     ).takeIf { it.info?.endpoint?.browseId != null }
 }
 
@@ -134,7 +136,6 @@ fun Innertube.PlaylistItem.Companion.from(content: MusicShelfRenderer.Content): 
             ?.split(' ')
             ?.firstOrNull()
             ?.toIntOrNull(),
-        thumbnail = content
-            .thumbnail
+        thumbnail = content.thumbnail
     ).takeIf { it.info?.endpoint?.browseId != null }
 }

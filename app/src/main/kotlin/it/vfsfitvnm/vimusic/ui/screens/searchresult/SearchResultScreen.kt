@@ -87,7 +87,6 @@ fun SearchResultScreen(query: String, onSearchAgain: () -> Unit) {
                     item(2, stringResource(R.string.artists), R.drawable.person)
                     item(3, stringResource(R.string.videos), R.drawable.film)
                     item(4, stringResource(R.string.playlists), R.drawable.playlist)
-                    item(5, stringResource(R.string.featured), R.drawable.playlist)
                 }
             ) { tabIndex ->
                 saveableStateHolder.SaveableStateProvider(tabIndex) {
@@ -276,30 +275,23 @@ fun SearchResultScreen(query: String, onSearchAgain: () -> Unit) {
                             )
                         }
 
-                        4, 5 -> {
+                        4 -> {
                             val thumbnailSizeDp = Dimensions.thumbnails.playlist
                             val thumbnailSizePx = thumbnailSizeDp.px
 
                             ItemsPage(
-                                tag = "searchResults/$query/${if (tabIndex == 4) "playlists" else "featured"}",
+                                tag = "searchResults/$query/playlists",
                                 itemsPageProvider = { continuation ->
-                                    if (continuation == null) {
-                                        val filter = if (tabIndex == 4) {
-                                            Innertube.SearchFilter.CommunityPlaylist
-                                        } else {
-                                            Innertube.SearchFilter.FeaturedPlaylist
-                                        }
-
-                                        Innertube.searchPage(
-                                            body = SearchBody(query = query, params = filter.value),
-                                            fromMusicShelfRendererContent = Innertube.PlaylistItem::from
-                                        )
-                                    } else {
-                                        Innertube.searchPage(
-                                            body = ContinuationBody(continuation = continuation),
-                                            fromMusicShelfRendererContent = Innertube.PlaylistItem::from
-                                        )
-                                    }
+                                    if (continuation == null) Innertube.searchPage(
+                                        body = SearchBody(
+                                            query = query,
+                                            params = Innertube.SearchFilter.CommunityPlaylist.value
+                                        ),
+                                        fromMusicShelfRendererContent = Innertube.PlaylistItem::from
+                                    ) else Innertube.searchPage(
+                                        body = ContinuationBody(continuation = continuation),
+                                        fromMusicShelfRendererContent = Innertube.PlaylistItem::from
+                                    )
                                 },
                                 emptyItemsText = emptyItemsText,
                                 headerContent = headerContent,
