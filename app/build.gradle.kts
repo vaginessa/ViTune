@@ -96,6 +96,7 @@ ksp {
 
 dependencies {
     implementation(projects.compose.persist)
+    implementation(projects.compose.preferences)
     implementation(projects.compose.routing)
     implementation(projects.compose.reordering)
 

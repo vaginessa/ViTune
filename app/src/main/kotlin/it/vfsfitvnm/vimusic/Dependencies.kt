@@ -1,6 +1,6 @@
 package it.vfsfitvnm.vimusic
 
-import it.vfsfitvnm.vimusic.preferences.PreferencesHolder
+import it.vfsfitvnm.compose.preferences.PreferencesHolder
 
 object Dependencies {
     lateinit var application: MainApplication

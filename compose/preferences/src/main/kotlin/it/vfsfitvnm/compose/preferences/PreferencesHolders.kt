@@ -1,4 +1,4 @@
-package it.vfsfitvnm.vimusic.preferences
+package it.vfsfitvnm.compose.preferences
 
 import android.app.Application
 import android.content.Context
@@ -19,7 +19,17 @@ fun <T : Any> sharedPreferencesProperty(
     getValue: SharedPreferences.(key: String) -> T,
     setValue: SharedPreferences.Editor.(key: String, value: T) -> Unit,
     defaultValue: T
-) = object : ReadWriteProperty<PreferencesHolder, T> {
+) = SharedPreferencesProperty(
+    getValue = getValue,
+    setValue = setValue,
+    defaultValue = defaultValue
+)
+
+data class SharedPreferencesProperty<T : Any> internal constructor(
+    private val getValue: SharedPreferences.(key: String) -> T,
+    private val setValue: SharedPreferences.Editor.(key: String, value: T) -> Unit,
+    private val defaultValue: T
+) : ReadWriteProperty<PreferencesHolder, T> {
     private var state = mutableStateOf(defaultValue)
     private var listener: OnSharedPreferenceChangeListener? = null
 
@@ -45,9 +55,9 @@ fun <T : Any> sharedPreferencesProperty(
 
 /**
  * A snapshottable, thread-safe, compose-first, extensible SharedPreferences wrapper that supports
- * virtually all types, and if it doesn't, one could simply type `fun myNewType(...) = sharedPreferencesProperty(...)`
- * and start implementing. Starts off as given defaultValue until we are allowed to subscribe to SharedPreferences
- * @sample AppearancePreferences
+ * virtually all types, and if it doesn't, one could simply type
+ * `fun myNewType(...) = sharedPreferencesProperty(...)` and start implementing. Starts off as given
+ * defaultValue until we are allowed to subscribe to SharedPreferences.
  */
 open class PreferencesHolder(
     application: Application,
