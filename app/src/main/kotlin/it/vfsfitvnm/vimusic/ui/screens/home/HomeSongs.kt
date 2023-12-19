@@ -63,13 +63,17 @@ import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.enums.SongSortBy
 import it.vfsfitvnm.vimusic.enums.SortOrder
 import it.vfsfitvnm.vimusic.models.Song
+import it.vfsfitvnm.vimusic.preferences.AppearancePreferences
 import it.vfsfitvnm.vimusic.preferences.OrderPreferences
+import it.vfsfitvnm.vimusic.service.isLocal
+import it.vfsfitvnm.vimusic.transaction
 import it.vfsfitvnm.vimusic.ui.components.LocalMenuState
 import it.vfsfitvnm.vimusic.ui.components.themed.FloatingActionsContainerWithScrollToTop
 import it.vfsfitvnm.vimusic.ui.components.themed.Header
 import it.vfsfitvnm.vimusic.ui.components.themed.HeaderIconButton
 import it.vfsfitvnm.vimusic.ui.components.themed.InHistoryMediaItemMenu
 import it.vfsfitvnm.vimusic.ui.items.SongItem
+import it.vfsfitvnm.vimusic.ui.modifiers.swipeToClose
 import it.vfsfitvnm.vimusic.ui.screens.Route
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
@@ -83,6 +87,7 @@ import it.vfsfitvnm.vimusic.utils.forcePlayAtIndex
 import it.vfsfitvnm.vimusic.utils.secondary
 import it.vfsfitvnm.vimusic.utils.semiBold
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 private val Song.formattedTotalPlayTime: String
     @Composable get() {
@@ -105,6 +110,7 @@ fun HomeSongs(
         onSearchClick = onSearchClick,
         songProvider = {
             Database.songs(songSortBy, songSortOrder)
+                .map { songs -> songs.filter { it.totalPlayTimeMs > 0L } }
         },
         sortBy = songSortBy,
         setSortBy = { songSortBy = it },
@@ -175,7 +181,8 @@ fun HomeSongs(
         LazyColumn(
             state = lazyListState,
             contentPadding = LocalPlayerAwareWindowInsets.current
-                .only(WindowInsetsSides.Vertical + WindowInsetsSides.End).asPaddingValues()
+                .only(WindowInsetsSides.Vertical + WindowInsetsSides.End)
+                .asPaddingValues()
         ) {
             item(
                 key = "header",
@@ -317,7 +324,15 @@ fun HomeSongs(
                                 )
                             }
                         )
-                        .animateItemPlacement(),
+                        .animateItemPlacement()
+                        .let {
+                            if (!song.isLocal && AppearancePreferences.swipeToHideSong) it.swipeToClose {
+                                binder?.cache?.removeResource(song.id)
+                                transaction {
+                                    Database.delete(song)
+                                }
+                            } else it
+                        },
                     song = song,
                     thumbnailSizePx = thumbnailSizePx,
                     thumbnailSizeDp = thumbnailSizeDp,

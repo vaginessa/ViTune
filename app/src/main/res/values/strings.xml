@@ -335,6 +335,9 @@
 
     <string name="pre_cache">Pre cache</string>
 
+    <string name="swipe_to_hide_song">Swipe to hide song</string>
+    <string name="swipe_to_hide_song_description">When you swipe a song to the left, it gets removed from the database and cache</string>
+
     <plurals name="format_reset_blacklist_description">
         <item quantity="one">Remove %1$s song from the blacklist</item>
         <item quantity="other">Remove all %1$s songs from the blacklist</item>

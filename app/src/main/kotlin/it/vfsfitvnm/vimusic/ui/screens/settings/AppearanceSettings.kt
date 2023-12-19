@@ -193,6 +193,17 @@ fun AppearanceSettings() {
                 isChecked = PlayerPreferences.horizontalSwipeToRemoveItem,
                 onCheckedChange = { PlayerPreferences.horizontalSwipeToRemoveItem = it }
             )
+
+            SettingsGroupSpacer()
+
+            SettingsEntryGroupText(title = stringResource(R.string.songs))
+
+            SwitchSettingEntry(
+                title = stringResource(R.string.swipe_to_hide_song),
+                text = stringResource(R.string.swipe_to_hide_song_description),
+                isChecked = swipeToHideSong,
+                onCheckedChange = { swipeToHideSong = it }
+            )
         }
     }
 }

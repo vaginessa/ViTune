@@ -190,9 +190,9 @@ fun Modifier.onSwipe(
 
 fun Modifier.swipeToClose(
     state: SwipeState? = null,
-    onClose: () -> Unit,
     delay: Duration = Duration.ZERO,
-    decay: Density.() -> DecayAnimationSpec<Float> = { splineBasedDecay(this) }
+    decay: Density.() -> DecayAnimationSpec<Float> = { splineBasedDecay(this) },
+    onClose: () -> Unit
 ) = this.composed {
     val swipeState = state ?: rememberSwipeState(Unit)
 

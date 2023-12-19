@@ -12,4 +12,5 @@ object AppearancePreferences : GlobalPreferencesHolder() {
     var useSystemFont by boolean(false)
     var applyFontPadding by boolean(false)
     var isShowingThumbnailInLockscreen by boolean(false)
+    var swipeToHideSong by boolean(false)
 }

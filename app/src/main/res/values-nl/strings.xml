@@ -333,6 +333,11 @@
     <string name="reset_blacklist">Reset zwarte lijst</string>
     <string name="blacklist_empty">Zwarte lijst leeg</string>
 
+    <string name="pre_cache">Van tevoren cachen</string>
+
+    <string name="swipe_to_hide_song">Swipe om song te verbergen</string>
+    <string name="swipe_to_hide_song_description">Wanneer je een song naar links swipet wordt deze verwijderd uit de database en cache</string>
+
     <plurals name="format_reset_blacklist_description">
         <item quantity="one">Haal %1$s nummer van de zwarte lijst</item>
         <item quantity="other">Haal %1$s nummers van de zwarte lijst</item>
