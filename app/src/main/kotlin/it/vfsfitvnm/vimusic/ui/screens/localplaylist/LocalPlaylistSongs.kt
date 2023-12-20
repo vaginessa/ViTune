@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -131,8 +130,6 @@ fun LocalPlaylistSongs(
 
     val thumbnailSizeDp = Dimensions.thumbnails.song
     val thumbnailSizePx = thumbnailSizeDp.px
-
-    val rippleIndication = rememberRipple(bounded = false)
 
     Box(modifier = modifier) {
         LazyColumn(
@@ -290,7 +287,8 @@ fun LocalPlaylistSongs(
                                     }
                             }
                         )
-                        .draggedItem(reorderingState = reorderingState, index = index),
+                        .draggedItem(reorderingState = reorderingState, index = index)
+                        .background(colorPalette.background1),
                     song = song,
                     thumbnailSizePx = thumbnailSizePx,
                     thumbnailSizeDp = thumbnailSizeDp
@@ -298,7 +296,7 @@ fun LocalPlaylistSongs(
                     IconButton(
                         icon = R.drawable.reorder,
                         color = colorPalette.textDisabled,
-                        indication = rippleIndication,
+                        indication = null,
                         onClick = {},
                         modifier = Modifier
                             .reorder(reorderingState = reorderingState, index = index)

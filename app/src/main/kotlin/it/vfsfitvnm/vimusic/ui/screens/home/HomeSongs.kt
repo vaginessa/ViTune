@@ -263,7 +263,9 @@ fun HomeSongs(
                                     items.size,
                                     items.size
                                 ),
-                                style = typography.xs.secondary.semiBold
+                                style = typography.xs.secondary.semiBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -287,8 +289,6 @@ fun HomeSongs(
                         color = if (sortBy == SongSortBy.DateAdded) colorPalette.text else colorPalette.textDisabled,
                         onClick = { setSortBy(SongSortBy.DateAdded) }
                     )
-
-                    Spacer(modifier = Modifier.width(2.dp))
 
                     HeaderIconButton(
                         icon = R.drawable.arrow_up,

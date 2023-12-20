@@ -4,6 +4,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.lazy.LazyListItemInfo
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
@@ -175,8 +176,14 @@ class ReorderingState(
     }
 
     private fun overscroll(overscroll: Int) {
-        lazyListState.dispatchRawDelta(-overscroll.toFloat())
+        val newHeight = itemInfo.offset - overscroll
+        if (
+            !(overscroll > 0 && newHeight <= lazyListState.layoutInfo.viewportEndOffset) &&
+            !(overscroll < 0 && newHeight >= lazyListState.layoutInfo.viewportStartOffset)
+        ) return
+
         coroutineScope.launch {
+            lazyListState.scrollBy(-overscroll.toFloat())
             offset.snapTo(offset.value - overscroll)
         }
         overscrolled -= overscroll

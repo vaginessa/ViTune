@@ -36,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -91,6 +92,7 @@ fun QuickPicks(
     val binder = LocalPlayerServiceBinder.current
     val menuState = LocalMenuState.current
     val windowInsets = LocalPlayerAwareWindowInsets.current
+    val density = LocalDensity.current
 
     var trending by persist<Song?>("home/trending")
 
@@ -144,13 +146,15 @@ fun QuickPicks(
         val quickPicksLazyGridItemWidthFactor =
             if (isLandscape && maxWidth * 0.475f >= 320.dp) 0.475f else 0.9f
 
-        val snapLayoutInfoProvider = remember(quickPicksLazyGridState) {
-            SnapLayoutInfoProvider(
-                lazyGridState = quickPicksLazyGridState,
-                positionInLayout = { layoutSize, itemSize ->
-                    (layoutSize * quickPicksLazyGridItemWidthFactor / 2f - itemSize / 2f)
-                }
-            )
+        val snapLayoutInfoProvider = remember(quickPicksLazyGridState, density) {
+            with(density) {
+                SnapLayoutInfoProvider(
+                    lazyGridState = quickPicksLazyGridState,
+                    positionInLayout = { layoutSize, itemSize ->
+                        (layoutSize * quickPicksLazyGridItemWidthFactor / 2f - itemSize / 2f)
+                    }
+                )
+            }
         }
 
         val itemInHorizontalGridWidth = maxWidth * quickPicksLazyGridItemWidthFactor

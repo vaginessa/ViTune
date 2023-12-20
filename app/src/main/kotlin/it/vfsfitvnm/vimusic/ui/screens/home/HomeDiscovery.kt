@@ -40,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -75,6 +76,7 @@ fun HomeDiscovery(
 ) {
     val (colorPalette, typography) = LocalAppearance.current
     val windowInsets = LocalPlayerAwareWindowInsets.current
+    val density = LocalDensity.current
 
     val scrollState = rememberScrollState()
     val lazyGridState = rememberLazyGridState()
@@ -98,13 +100,15 @@ fun HomeDiscovery(
     BoxWithConstraints {
         val moodItemWidthFactor = if (isLandscape && maxWidth * 0.475f >= 320.dp) 0.475f else 0.9f
 
-        val snapLayoutInfoProvider = remember(lazyGridState) {
-            SnapLayoutInfoProvider(
-                lazyGridState = lazyGridState,
-                positionInLayout = { layoutSize, itemSize ->
-                    layoutSize * moodItemWidthFactor / 2f - itemSize / 2f
-                }
-            )
+        val snapLayoutInfoProvider = remember(lazyGridState, density) {
+            with(density) {
+                SnapLayoutInfoProvider(
+                    lazyGridState = lazyGridState,
+                    positionInLayout = { layoutSize, itemSize ->
+                        layoutSize * moodItemWidthFactor / 2f - itemSize / 2f
+                    }
+                )
+            }
         }
 
         val itemWidth = maxWidth * moodItemWidthFactor

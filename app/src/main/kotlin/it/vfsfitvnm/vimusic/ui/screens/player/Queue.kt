@@ -34,7 +34,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -193,10 +192,8 @@ fun Queue(
             lazyListState = rememberLazyListState(initialFirstVisibleItemIndex = mediaItemIndex),
             key = windows,
             onDragEnd = player::moveMediaItem,
-            extraItemCount = 0
+            extraItemCount = 1
         )
-
-        val rippleIndication = rememberRipple(bounded = false)
 
         val musicBarsTransition = updateTransition(targetState = mediaItemIndex, label = "")
 
@@ -226,7 +223,9 @@ fun Queue(
                             thumbnailSizeDp = thumbnailSizeDp,
                             onThumbnailContent = {
                                 musicBarsTransition.AnimatedVisibility(
-                                    visible = { it == window.firstPeriodIndex },
+                                    visible = {
+                                        !reorderingState.isDragging && it == window.firstPeriodIndex
+                                    },
                                     enter = fadeIn(tween(800)),
                                     exit = fadeOut(tween(800))
                                 ) {
@@ -255,7 +254,7 @@ fun Queue(
                                 IconButton(
                                     icon = R.drawable.reorder,
                                     color = colorPalette.textDisabled,
-                                    indication = rippleIndication,
+                                    indication = null,
                                     onClick = {},
                                     modifier = Modifier
                                         .reorder(
@@ -290,6 +289,7 @@ fun Queue(
                                     reorderingState = reorderingState,
                                     index = i
                                 )
+                                .background(colorPalette.background1)
                                 .let {
                                     if (!PlayerPreferences.horizontalSwipeToRemoveItem || isPlayingThisMediaItem) it
                                     else it.swipeToClose(

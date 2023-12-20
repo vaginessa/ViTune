@@ -23,7 +23,7 @@ fun HeaderIconButton(
     color: Color,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    indication: Indication? = null
+    indication: Indication? = rememberRipple(bounded = false)
 ) = IconButton(
     icon = icon,
     color = color,
@@ -42,14 +42,14 @@ fun IconButton(
     color: Color,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    indication: Indication? = null
+    indication: Indication? = rememberRipple(bounded = false)
 ) = Image(
     painter = painterResource(icon),
     contentDescription = null,
     colorFilter = ColorFilter.tint(color),
     modifier = Modifier
         .clickable(
-            indication = indication ?: rememberRipple(bounded = false),
+            indication = indication,
             interactionSource = remember { MutableInteractionSource() },
             enabled = enabled,
             onClick = onClick

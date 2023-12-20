@@ -27,7 +27,8 @@ fun Density.calculateDistanceToDesiredSnapPosition(
 private val LazyGridLayoutInfo.singleAxisViewportSize: Int
     get() = if (orientation == Orientation.Vertical) viewportSize.height else viewportSize.width
 
-@ExperimentalFoundationApi
+context(Density)
+@OptIn(ExperimentalFoundationApi::class)
 fun SnapLayoutInfoProvider(
     lazyGridState: LazyGridState,
     positionInLayout: Density.(layoutSize: Float, itemSize: Float) -> Float =
@@ -37,15 +38,10 @@ fun SnapLayoutInfoProvider(
         get() = lazyGridState.layoutInfo
 
     // Single page snapping is the default
-    override fun Density.calculateApproachOffset(initialVelocity: Float) = 0f
-    override fun Density.calculateSnapStepSize(): Float = with(layoutInfo) {
-        if (visibleItemsInfo.isNotEmpty())
-            visibleItemsInfo.fastSumBy { it.size.width } / visibleItemsInfo.size.toFloat()
-        else 0f
-    }
+    override fun calculateApproachOffset(initialVelocity: Float) = 0f
 
     // ignoring the velocity for now since there is no animation spec in this provider
-    override fun Density.calculateSnappingOffset(currentVelocity: Float): Float {
+    override fun calculateSnappingOffset(currentVelocity: Float): Float {
         var lowerBoundOffset = Float.NEGATIVE_INFINITY
         var upperBoundOffset = Float.POSITIVE_INFINITY
 

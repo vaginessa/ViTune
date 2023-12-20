@@ -1,11 +1,11 @@
 [versions]
-kotlin = "1.9.20"
-ksp = "1.9.20-1.0.14"
+kotlin = "1.9.21"
+ksp = "1.9.21-1.0.15"
 
 jvm = "11"
-agp = "8.3.0-alpha16"
+agp = "8.3.0-alpha18"
 
-compose_compiler = "1.5.5"
+compose_compiler = "1.5.7"
 
 room = "2.6.1"
 media3 = "1.2.0"
@@ -32,13 +32,13 @@ kotlin_immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutab
 
 compose_bom = { module = "androidx.compose:compose-bom", version = "2023.10.01" }
 compose_animation = { module = "androidx.compose.animation:animation" }
-compose_foundation = { module = "androidx.compose.foundation:foundation" }
+compose_foundation = { module = "androidx.compose.foundation:foundation", version = "1.6.0-beta03" }
 compose_ui = { module = "androidx.compose.ui:ui" }
 compose_ui_util = { module = "androidx.compose.ui:ui-util" }
 compose_ripple = { module = "androidx.compose.material:material-ripple" }
 compose_material3 = { module = "androidx.compose.material3:material3" }
 
-compose_activity = { module = "androidx.activity:activity-compose", version = "1.8.1" }
+compose_activity = { module = "androidx.activity:activity-compose", version = "1.8.2" }
 compose_shimmer = { module = "com.valentinilk.shimmer:compose-shimmer", version = "1.0.3" }
 compose_coil = { module = "io.coil-kt:coil-compose", version = "2.5.0" }
 

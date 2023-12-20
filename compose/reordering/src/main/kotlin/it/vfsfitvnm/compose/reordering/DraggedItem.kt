@@ -1,9 +1,14 @@
 package it.vfsfitvnm.compose.reordering
 
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.offset
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 
 fun Modifier.draggedItem(
@@ -30,4 +35,11 @@ fun Modifier.draggedItem(
             Orientation.Horizontal -> IntOffset(offset, 0)
         }
     }
+}.composed {
+    val elevation by animateDpAsState(
+        targetValue = if (reorderingState.draggingIndex == index) 8.dp else 0.dp,
+        label = ""
+    )
+
+    this.shadow(elevation = elevation)
 }
