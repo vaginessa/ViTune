@@ -34,7 +34,7 @@ subprojects {
 
 allprojects {
     group = "it.vfsfitvnm.vimusic"
-    version = "0.5.11"
+    version = "0.6.0"
 
     apply(plugin = "io.gitlab.arturbosch.detekt")
 

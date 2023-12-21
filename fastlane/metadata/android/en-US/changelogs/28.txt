@@ -1,0 +1,15 @@
+* Added more German translations
+* Added Piped playlist sync
+* Fixed a bug that caused the app to crash on some builds of Android 14
+* Added an error message for when Bass Boost is unsupported by your device: the app no longer crashes
+* Added blacklisting: filter songs from radio
+* Added static/wavy seek bar preference
+* Improved thumbnails in the UI: there is no longer a big gap in places where the thumbnail couldn't load
+* Fixed inconsistencies with search
+* Added song count to the Songs and Local tab
+* Added pre-caching
+* Removed Featured in search, YouTube unfortunately no longer provides this data
+* Fixed layout inconsistencies
+* Fixed typo's
+* Added Swipe to hide in the Songs and Local tab
+* Removed version type from settings
