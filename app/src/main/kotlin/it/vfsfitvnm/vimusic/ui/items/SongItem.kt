@@ -97,7 +97,7 @@ fun SongItem(
     onThumbnailContent: @Composable (BoxScope.() -> Unit)? = null,
     trailingContent: @Composable (() -> Unit)? = null
 ) {
-    val (colorPalette, typography) = LocalAppearance.current
+    val (_, typography) = LocalAppearance.current
 
     SongItem(
         title = title,
@@ -108,7 +108,6 @@ fun SongItem(
             Box(
                 modifier = Modifier
                     .clip(LocalAppearance.current.thumbnailShape)
-                    .background(colorPalette.background1)
                     .fillMaxSize()
             ) {
                 AsyncImage(
