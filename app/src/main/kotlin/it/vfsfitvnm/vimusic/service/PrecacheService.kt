@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.ServiceConnection
 import android.net.Uri
 import android.os.IBinder
+import android.widget.Toast
 import androidx.annotation.OptIn
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -186,23 +187,36 @@ class PrecacheService : DownloadService(
         fun scheduleCache(context: Context, mediaItem: MediaItem) {
             if (mediaItem.isLocal) return
 
+            val downloadRequest = DownloadRequest
+                .Builder(
+                    /* id      = */ mediaItem.mediaId,
+                    /* uri     = */ mediaItem.requestMetadata.mediaUri
+                        ?: Uri.parse("https://youtube.com/watch?v=${mediaItem.mediaId}")
+                )
+                .setCustomCacheKey(mediaItem.mediaId)
+                .setData(mediaItem.mediaId.encodeToByteArray())
+                .build()
+
             transaction {
                 Database.insert(mediaItem)
                 coroutineScope.launch {
-                    sendAddDownload(
-                        /* context         = */ context,
-                        /* clazz           = */ PrecacheService::class.java,
-                        /* downloadRequest = */ DownloadRequest
-                            .Builder(
-                                /* id      = */ mediaItem.mediaId,
-                                /* uri     = */ mediaItem.requestMetadata.mediaUri
-                                    ?: Uri.parse("https://youtube.com/watch?v=${mediaItem.mediaId}")
-                            )
-                            .setCustomCacheKey(mediaItem.mediaId)
-                            .setData(mediaItem.mediaId.encodeToByteArray())
-                            .build(),
-                        /* foreground      = */ false
-                    )
+                    runCatching {
+                        sendAddDownload(
+                            /* context         = */ context,
+                            /* clazz           = */ PrecacheService::class.java,
+                            /* downloadRequest = */ downloadRequest,
+                            /* foreground      = */ true
+                        )
+                    }.recoverCatching {
+                        sendAddDownload(
+                            /* context         = */ context,
+                            /* clazz           = */ PrecacheService::class.java,
+                            /* downloadRequest = */ downloadRequest,
+                            /* foreground      = */ false
+                        )
+                    }.exceptionOrNull()?.printStackTrace()?.also {
+                        Toast.makeText(context, R.string.error_pre_cache, Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
