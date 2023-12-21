@@ -1,19 +1,12 @@
 package it.vfsfitvnm.vimusic.ui.screens.settings
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,13 +29,11 @@ import it.vfsfitvnm.compose.persist.persistList
 import it.vfsfitvnm.piped.Piped
 import it.vfsfitvnm.piped.models.Instance
 import it.vfsfitvnm.vimusic.Database
-import it.vfsfitvnm.vimusic.LocalPlayerAwareWindowInsets
 import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.models.PipedSession
 import it.vfsfitvnm.vimusic.transaction
 import it.vfsfitvnm.vimusic.ui.components.themed.DefaultDialog
 import it.vfsfitvnm.vimusic.ui.components.themed.DialogTextButton
-import it.vfsfitvnm.vimusic.ui.components.themed.Header
 import it.vfsfitvnm.vimusic.ui.components.themed.IconButton
 import it.vfsfitvnm.vimusic.ui.components.themed.TextField
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
@@ -120,7 +111,7 @@ fun SyncSettings() {
                         { CircularProgressIndicator(color = colorPalette.accent) }
                     } else null
                 )
-                SwitchSettingEntry(
+                SwitchSettingsEntry(
                     title = stringResource(R.string.custom_instance),
                     text = null,
                     isChecked = customInstance != null,
@@ -200,51 +191,36 @@ fun SyncSettings() {
         }
     }
 
-    Column(
-        modifier = Modifier
-            .background(colorPalette.background0)
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(
-                LocalPlayerAwareWindowInsets.current
-                    .only(WindowInsetsSides.Vertical + WindowInsetsSides.End)
-                    .asPaddingValues()
-            )
-    ) {
-        Header(title = stringResource(R.string.sync))
-
+    SettingsCategoryScreen(title = stringResource(R.string.sync)) {
         SettingsDescription(text = stringResource(R.string.sync_description))
-        SettingsGroupSpacer()
 
-        SettingsEntryGroupText(title = stringResource(R.string.piped))
-
-        SettingsEntry(
-            title = stringResource(R.string.add_account),
-            text = stringResource(R.string.add_account_description),
-            onClick = { linkingPiped = true }
-        )
-        SettingsEntry(
-            title = stringResource(R.string.learn_more),
-            text = stringResource(R.string.learn_more_description),
-            onClick = { uriHandler.openUri("https://github.com/TeamPiped/Piped/blob/master/README.md") }
-        )
-
-        SettingsGroupSpacer()
-        SettingsEntryGroupText(title = stringResource(R.string.piped_sessions))
-
-        pipedSessions.forEach {
+        SettingsGroup(title = stringResource(R.string.piped)) {
             SettingsEntry(
-                title = it.username,
-                text = it.apiBaseUrl.toString(),
-                onClick = { },
-                trailingContent = {
-                    IconButton(
-                        onClick = { transaction { Database.delete(it) } },
-                        icon = R.drawable.delete,
-                        color = colorPalette.text
-                    )
-                }
+                title = stringResource(R.string.add_account),
+                text = stringResource(R.string.add_account_description),
+                onClick = { linkingPiped = true }
             )
+            SettingsEntry(
+                title = stringResource(R.string.learn_more),
+                text = stringResource(R.string.learn_more_description),
+                onClick = { uriHandler.openUri("https://github.com/TeamPiped/Piped/blob/master/README.md") }
+            )
+        }
+        SettingsGroup(title = stringResource(R.string.piped_sessions)) {
+            pipedSessions.forEach {
+                SettingsEntry(
+                    title = it.username,
+                    text = it.apiBaseUrl.toString(),
+                    onClick = { },
+                    trailingContent = {
+                        IconButton(
+                            onClick = { transaction { Database.delete(it) } },
+                            icon = R.drawable.delete,
+                            color = colorPalette.text
+                        )
+                    }
+                )
+            }
         }
     }
 }

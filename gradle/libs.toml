@@ -36,7 +36,7 @@ compose_foundation = { module = "androidx.compose.foundation:foundation", versio
 compose_ui = { module = "androidx.compose.ui:ui" }
 compose_ui_util = { module = "androidx.compose.ui:ui-util" }
 compose_ripple = { module = "androidx.compose.material:material-ripple" }
-compose_material3 = { module = "androidx.compose.material3:material3" }
+compose_material3 = { module = "androidx.compose.material3:material3", version = "1.2.0-beta01" }
 
 compose_activity = { module = "androidx.activity:activity-compose", version = "1.8.2" }
 compose_shimmer = { module = "com.valentinilk.shimmer:compose-shimmer", version = "1.0.3" }

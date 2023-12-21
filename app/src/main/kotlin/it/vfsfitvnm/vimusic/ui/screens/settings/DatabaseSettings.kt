@@ -4,26 +4,14 @@ import android.content.ActivityNotFoundException
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import it.vfsfitvnm.vimusic.Database
-import it.vfsfitvnm.vimusic.LocalPlayerAwareWindowInsets
 import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.internal
 import it.vfsfitvnm.vimusic.path
@@ -31,9 +19,7 @@ import it.vfsfitvnm.vimusic.preferences.DataPreferences
 import it.vfsfitvnm.vimusic.query
 import it.vfsfitvnm.vimusic.service.PlayerService
 import it.vfsfitvnm.vimusic.transaction
-import it.vfsfitvnm.vimusic.ui.components.themed.Header
 import it.vfsfitvnm.vimusic.ui.screens.Route
-import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.utils.intent
 import it.vfsfitvnm.vimusic.utils.toast
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -44,12 +30,10 @@ import java.util.Date
 import java.util.Locale
 import kotlin.system.exitProcess
 
-@ExperimentalAnimationApi
 @Route
 @Composable
-fun DatabaseSettings() {
+fun DatabaseSettings() = with(DataPreferences) {
     val context = LocalContext.current
-    val (colorPalette) = LocalAppearance.current
 
     val eventsCount by remember { Database.eventsCount().distinctUntilChanged() }
         .collectAsState(initial = 0)
@@ -57,57 +41,44 @@ fun DatabaseSettings() {
     val blacklistLength by remember { Database.blacklistLength().distinctUntilChanged() }
         .collectAsState(initial = 0)
 
-    val backupLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/vnd.sqlite3")) { uri ->
-            if (uri == null) return@rememberLauncherForActivityResult
+    val backupLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument(mimeType = "application/vnd.sqlite3")
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
 
-            query {
-                Database.checkpoint()
+        query {
+            Database.checkpoint()
 
-                context.applicationContext.contentResolver.openOutputStream(uri)?.use { output ->
-                    FileInputStream(Database.internal.path).use { input ->
-                        input.copyTo(output)
+            context.applicationContext.contentResolver.openOutputStream(uri)?.use { output ->
+                FileInputStream(Database.internal.path).use { input -> input.copyTo(output) }
+            }
+        }
+    }
+
+    val restoreLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+
+        query {
+            Database.checkpoint()
+            Database.internal.close()
+
+            context.applicationContext.contentResolver.openInputStream(uri)
+                ?.use { inputStream ->
+                    FileOutputStream(Database.internal.path).use { outputStream ->
+                        inputStream.copyTo(outputStream)
                     }
                 }
-            }
+
+            context.stopService(context.intent<PlayerService>())
+            exitProcess(0)
         }
+    }
 
-    val restoreLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-            if (uri == null) return@rememberLauncherForActivityResult
-
-            query {
-                Database.checkpoint()
-                Database.internal.close()
-
-                context.applicationContext.contentResolver.openInputStream(uri)
-                    ?.use { inputStream ->
-                        FileOutputStream(Database.internal.path).use { outputStream ->
-                            inputStream.copyTo(outputStream)
-                        }
-                    }
-
-                context.stopService(context.intent<PlayerService>())
-                exitProcess(0)
-            }
-        }
-    with(DataPreferences) {
-        Column(
-            modifier = Modifier
-                .background(colorPalette.background0)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(
-                    LocalPlayerAwareWindowInsets.current
-                        .only(WindowInsetsSides.Vertical + WindowInsetsSides.End)
-                        .asPaddingValues()
-                )
-        ) {
-            Header(title = stringResource(R.string.database))
-
-            SettingsEntryGroupText(title = stringResource(R.string.cleanup))
-
-            SwitchSettingEntry(
+    SettingsCategoryScreen(title = stringResource(R.string.database)) {
+        SettingsGroup(title = stringResource(R.string.cleanup)) {
+            SwitchSettingsEntry(
                 title = stringResource(R.string.pause_playback_history),
                 text = stringResource(R.string.pause_playback_history_description),
                 isChecked = pauseHistory,
@@ -115,7 +86,10 @@ fun DatabaseSettings() {
             )
 
             AnimatedVisibility(visible = pauseHistory) {
-                ImportantSettingsDescription(text = stringResource(R.string.pause_playback_history_warning))
+                SettingsDescription(
+                    text = stringResource(R.string.pause_playback_history_warning),
+                    important = true
+                )
             }
 
             AnimatedVisibility(visible = !(pauseHistory && eventsCount == 0)) {
@@ -132,7 +106,7 @@ fun DatabaseSettings() {
                 )
             }
 
-            SwitchSettingEntry(
+            SwitchSettingsEntry(
                 title = stringResource(R.string.pause_playback_time),
                 text = stringResource(
                     R.string.format_pause_playback_time_description,
@@ -156,13 +130,11 @@ fun DatabaseSettings() {
                     }
                 }
             )
-
-            SettingsGroupSpacer()
-
-            SettingsEntryGroupText(title = stringResource(R.string.backup))
-
-            SettingsDescription(text = stringResource(R.string.backup_description))
-
+        }
+        SettingsGroup(
+            title = stringResource(R.string.backup),
+            description = stringResource(R.string.backup_description)
+        ) {
             SettingsEntry(
                 title = stringResource(R.string.backup),
                 text = stringResource(R.string.backup_action_description),
@@ -176,12 +148,12 @@ fun DatabaseSettings() {
                     }
                 }
             )
-
-            SettingsGroupSpacer()
-
-            SettingsEntryGroupText(title = stringResource(R.string.restore))
-
-            ImportantSettingsDescription(text = stringResource(R.string.restore_warning))
+        }
+        SettingsGroup(
+            title = stringResource(R.string.restore),
+            description = stringResource(R.string.restore_warning),
+            important = true
+        ) {
 
             SettingsEntry(
                 title = stringResource(R.string.restore),

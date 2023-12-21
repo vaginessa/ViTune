@@ -27,71 +27,63 @@ fun Header(
     title: String,
     modifier: Modifier = Modifier,
     actionsContent: @Composable RowScope.() -> Unit = {}
-) {
-    val typography = LocalAppearance.current.typography
-
-    Header(
-        modifier = modifier,
-        titleContent = {
-            BasicText(
-                text = title,
-                style = typography.xxl.medium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        },
-        actionsContent = actionsContent
-    )
-}
+) = Header(
+    modifier = modifier,
+    titleContent = {
+        BasicText(
+            text = title,
+            style = LocalAppearance.current.typography.xxl.medium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    },
+    actionsContent = actionsContent
+)
 
 @Composable
 fun Header(
     titleContent: @Composable () -> Unit,
     actionsContent: @Composable RowScope.() -> Unit,
     modifier: Modifier = Modifier
+) = Box(
+    contentAlignment = Alignment.CenterEnd,
+    modifier = modifier
+        .padding(horizontal = 16.dp)
+        .height(Dimensions.headerHeight)
+        .fillMaxWidth()
 ) {
-    Box(
-        contentAlignment = Alignment.CenterEnd,
-        modifier = modifier
-            .padding(horizontal = 16.dp)
-            .height(Dimensions.headerHeight)
-            .fillMaxWidth()
-    ) {
-        titleContent()
+    titleContent()
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .heightIn(min = 48.dp),
-            content = actionsContent
-        )
-    }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier
+            .align(Alignment.BottomEnd)
+            .heightIn(min = 48.dp),
+        content = actionsContent
+    )
 }
 
 @Composable
-fun HeaderPlaceholder(modifier: Modifier = Modifier) {
+fun HeaderPlaceholder(modifier: Modifier = Modifier) = Box(
+    contentAlignment = Alignment.CenterEnd,
+    modifier = modifier
+        .padding(horizontal = 16.dp)
+        .height(Dimensions.headerHeight)
+        .fillMaxWidth()
+) {
     val (colorPalette, typography) = LocalAppearance.current
 
     Box(
-        contentAlignment = Alignment.CenterEnd,
-        modifier = modifier
-            .padding(horizontal = 16.dp)
-            .height(Dimensions.headerHeight)
-            .fillMaxWidth()
+        modifier = Modifier
+            .background(colorPalette.shimmer)
+            .fillMaxWidth(remember { 0.25f + Random.nextFloat() * 0.5f })
     ) {
-        Box(
-            modifier = Modifier
-                .background(colorPalette.shimmer)
-                .fillMaxWidth(remember { 0.25f + Random.nextFloat() * 0.5f })
-        ) {
-            BasicText(
-                text = "",
-                style = typography.xxl.medium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
+        BasicText(
+            text = "        ",
+            style = typography.xxl.medium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }

@@ -3,15 +3,24 @@
 package it.vfsfitvnm.vimusic.ui.screens.settings
 
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.Composable
@@ -32,7 +41,9 @@ import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import it.vfsfitvnm.compose.routing.RouteHandler
+import it.vfsfitvnm.vimusic.LocalPlayerAwareWindowInsets
 import it.vfsfitvnm.vimusic.R
+import it.vfsfitvnm.vimusic.ui.components.themed.Header
 import it.vfsfitvnm.vimusic.ui.components.themed.NumberFieldDialog
 import it.vfsfitvnm.vimusic.ui.components.themed.Scaffold
 import it.vfsfitvnm.vimusic.ui.components.themed.Switch
@@ -144,7 +155,7 @@ inline fun <T> ValueSelectorSettingsEntry(
 }
 
 @Composable
-fun SwitchSettingEntry(
+fun SwitchSettingsEntry(
     title: String,
     text: String?,
     isChecked: Boolean,
@@ -164,7 +175,7 @@ fun SwitchSettingEntry(
 }
 
 @Composable
-fun SliderSettingEntry(
+fun SliderSettingsEntry(
     title: String,
     text: String,
     initialValue: Float,
@@ -214,7 +225,7 @@ fun SliderSettingEntry(
 }
 
 @Composable
-inline fun IntSettingEntry(
+inline fun IntSettingsEntry(
     title: String,
     text: String,
     currentValue: Int,
@@ -288,25 +299,15 @@ fun SettingsEntry(
 @Composable
 fun SettingsDescription(
     text: String,
-    modifier: Modifier = Modifier
-) = BasicText(
-    text = text,
-    style = LocalAppearance.current.typography.xxs.secondary,
-    modifier = modifier
-        .padding(start = 16.dp)
-        .padding(horizontal = 16.dp, vertical = 8.dp)
-)
-
-@Composable
-fun ImportantSettingsDescription(
-    text: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    important: Boolean = false
 ) {
     val (colorPalette, typography) = LocalAppearance.current
 
     BasicText(
         text = text,
-        style = typography.xxs.semiBold.color(colorPalette.red),
+        style = if (important) typography.xxs.semiBold.color(colorPalette.red)
+        else typography.xxs.secondary,
         modifier = modifier
             .padding(start = 16.dp)
             .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -332,3 +333,60 @@ fun SettingsEntryGroupText(
 
 @Composable
 fun SettingsGroupSpacer(modifier: Modifier = Modifier) = Spacer(modifier = modifier.height(24.dp))
+
+@Composable
+fun SettingsCategoryScreen(
+    title: String,
+    modifier: Modifier = Modifier,
+    description: String? = null,
+    scrollState: ScrollState? = rememberScrollState(),
+    content: @Composable ColumnScope.() -> Unit
+) {
+    val (colorPalette, typography) = LocalAppearance.current
+
+    Column(
+        modifier = modifier
+            .background(colorPalette.background0)
+            .fillMaxSize()
+            .let { if (scrollState != null) it.verticalScroll(state = scrollState) else it }
+            .padding(
+                LocalPlayerAwareWindowInsets.current
+                    .only(WindowInsetsSides.Vertical + WindowInsetsSides.End)
+                    .asPaddingValues()
+            )
+    ) {
+        Header(title = title) {
+            description?.let { description ->
+                BasicText(
+                    text = description,
+                    style = typography.s.secondary
+                )
+                SettingsGroupSpacer()
+            }
+        }
+
+        content()
+    }
+}
+
+@Composable
+fun SettingsGroup(
+    title: String,
+    modifier: Modifier = Modifier,
+    description: String? = null,
+    important: Boolean = false,
+    content: @Composable ColumnScope.() -> Unit
+) = Column(modifier = modifier) {
+    SettingsEntryGroupText(title = title)
+
+    description?.let { description ->
+        SettingsDescription(
+            text = description,
+            important = important
+        )
+    }
+
+    content()
+
+    SettingsGroupSpacer()
+}
