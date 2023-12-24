@@ -1,0 +1,4 @@
+* Fixed text field dialogs causing a crash
+* Fixed a few inconsistencies
+* Changed the done icon in the keyboard to the search icon when searching for songs
+* Improved snapping behavior
