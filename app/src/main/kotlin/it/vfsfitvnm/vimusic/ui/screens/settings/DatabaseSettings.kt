@@ -154,7 +154,6 @@ fun DatabaseSettings() = with(DataPreferences) {
             description = stringResource(R.string.restore_warning),
             important = true
         ) {
-
             SettingsEntry(
                 title = stringResource(R.string.restore),
                 text = stringResource(R.string.restore_description),

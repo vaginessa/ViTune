@@ -1,6 +1,5 @@
 package it.vfsfitvnm.innertube.utils
 
-import io.ktor.utils.io.CancellationException
 import it.vfsfitvnm.innertube.Innertube
 import it.vfsfitvnm.innertube.models.SectionListRenderer
 

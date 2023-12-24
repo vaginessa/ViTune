@@ -36,12 +36,14 @@ import it.vfsfitvnm.vimusic.ui.components.themed.DefaultDialog
 import it.vfsfitvnm.vimusic.ui.components.themed.DialogTextButton
 import it.vfsfitvnm.vimusic.ui.components.themed.IconButton
 import it.vfsfitvnm.vimusic.ui.components.themed.TextField
+import it.vfsfitvnm.vimusic.ui.screens.Route
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.utils.center
 import it.vfsfitvnm.vimusic.utils.semiBold
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 
+@Route
 @Composable
 fun SyncSettings() {
     val coroutineScope = rememberCoroutineScope()
@@ -148,8 +150,8 @@ fun SyncSettings() {
                 DialogTextButton(
                     text = stringResource(R.string.login),
                     primary = true,
-                    enabled = (customInstance?.isNotBlank() == true || selectedInstance != null)
-                            && username.isNotBlank() && password.isNotBlank(),
+                    enabled = (customInstance?.isNotBlank() == true || selectedInstance != null) &&
+                            username.isNotBlank() && password.isNotBlank(),
                     onClick = {
                         (customInstance?.let {
                             runCatching {

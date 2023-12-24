@@ -102,7 +102,7 @@ fun Controls(
         targetValueByState = { if (it) 32.dp else 16.dp }
     )
 
-    when(layout) {
+    when (layout) {
         PlayerPreferences.PlayerLayout.Classic -> ClassicControls(
             media = media,
             shouldBePlaying = shouldBePlaying,

@@ -223,6 +223,7 @@ class PrecacheService : DownloadService(
     }
 }
 
+@Suppress("TooManyFunctions")
 @OptIn(UnstableApi::class)
 class BlockingDeferredCache(private val cache: Deferred<Cache>) : Cache {
     constructor(init: suspend () -> Cache) : this(coroutineScope.async { init() })

@@ -1,8 +1,5 @@
 package it.vfsfitvnm.vimusic.ui.components.themed
 
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -21,9 +18,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -43,21 +38,14 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.center
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.utils.center
 import it.vfsfitvnm.vimusic.utils.drawCircle
 import it.vfsfitvnm.vimusic.utils.medium
-import it.vfsfitvnm.vimusic.utils.secondary
 import it.vfsfitvnm.vimusic.utils.semiBold
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.delay
@@ -77,59 +65,29 @@ fun TextFieldDialog(
     isTextInputValid: (String) -> Boolean = { it.isNotEmpty() }
 ) {
     val focusRequester = remember { FocusRequester() }
-    val (colorPalette, typography) = LocalAppearance.current
+    val (_, typography) = LocalAppearance.current
 
-    var textFieldValue by rememberSaveable(initialTextInput, stateSaver = TextFieldValue.Saver) {
-        mutableStateOf(
-            TextFieldValue(
-                text = initialTextInput,
-                selection = TextRange(initialTextInput.length)
-            )
-        )
-    }
+    var value by rememberSaveable(initialTextInput) { mutableStateOf(initialTextInput) }
 
     DefaultDialog(
         onDismiss = onDismiss,
         modifier = modifier
     ) {
-        BasicTextField(
-            value = textFieldValue,
-            onValueChange = { textFieldValue = it },
+        TextField(
+            value = value,
+            onValueChange = { value = it },
             textStyle = typography.xs.semiBold.center,
             singleLine = singleLine,
             maxLines = maxLines,
-            keyboardOptions = KeyboardOptions(imeAction = if (singleLine) ImeAction.Done else ImeAction.None),
+            hintText = hintText,
             keyboardActions = KeyboardActions(
                 onDone = {
-                    if (isTextInputValid(textFieldValue.text)) {
+                    if (isTextInputValid(value)) {
                         onDismiss()
-                        onDone(textFieldValue.text)
+                        onDone(value)
                     }
                 }
             ),
-            cursorBrush = SolidColor(colorPalette.text),
-            decorationBox = { innerTextField ->
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .weight(1f)
-                ) {
-                    androidx.compose.animation.AnimatedVisibility(
-                        visible = textFieldValue.text.isEmpty(),
-                        enter = fadeIn(tween(100)),
-                        exit = fadeOut(tween(100))
-                    ) {
-                        BasicText(
-                            text = hintText,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            style = typography.xs.semiBold.secondary
-                        )
-                    }
-
-                    innerTextField()
-                }
-            },
             modifier = Modifier
                 .padding(all = 16.dp)
                 .weight(weight = 1f, fill = false)
@@ -138,8 +96,7 @@ fun TextFieldDialog(
 
         Row(
             horizontalArrangement = Arrangement.SpaceEvenly,
-            modifier = Modifier
-                .fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
         ) {
             DialogTextButton(
                 text = cancelText,
@@ -150,9 +107,9 @@ fun TextFieldDialog(
                 primary = true,
                 text = doneText,
                 onClick = {
-                    if (isTextInputValid(textFieldValue.text)) {
+                    if (isTextInputValid(value)) {
                         onDismiss()
-                        onDone(textFieldValue.text)
+                        onDone(value)
                     }
                 }
             )
@@ -188,12 +145,6 @@ fun <T> NumberFieldDialog(
     onCancel = onCancel,
     isTextInputValid = { true }
 )
-
-fun <T : Comparable<T>> T.coerceIn(range: ClosedRange<T>) = when {
-    this < range.start -> range.start
-    this > range.endInclusive -> range.endInclusive
-    else -> this
-}
 
 @Composable
 fun ConfirmationDialog(
@@ -239,15 +190,12 @@ fun ConfirmationDialog(
 }
 
 @Composable
-inline fun DefaultDialog(
-    noinline onDismiss: () -> Unit,
+fun DefaultDialog(
+    onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     horizontalAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
-    crossinline content: @Composable ColumnScope.() -> Unit
-) = Dialog(
-    onDismissRequest = onDismiss,
-    properties = DialogProperties(usePlatformDefaultWidth = false)
-) {
+    content: @Composable ColumnScope.() -> Unit
+) = Dialog(onDismissRequest = onDismiss) {
     Column(
         horizontalAlignment = horizontalAlignment,
         modifier = modifier
@@ -262,14 +210,14 @@ inline fun DefaultDialog(
 }
 
 @Composable
-inline fun <T> ValueSelectorDialog(
-    noinline onDismiss: () -> Unit,
+fun <T> ValueSelectorDialog(
+    onDismiss: () -> Unit,
     title: String,
     selectedValue: T,
     values: ImmutableList<T>,
-    crossinline onValueSelected: (T) -> Unit,
+    onValueSelected: (T) -> Unit,
     modifier: Modifier = Modifier,
-    crossinline valueText: @Composable (T) -> String = { it.toString() }
+    valueText: @Composable (T) -> String = { it.toString() }
 ) = Dialog(onDismissRequest = onDismiss) {
     ValueSelectorDialogBody(
         onDismiss = onDismiss,
@@ -279,21 +227,24 @@ inline fun <T> ValueSelectorDialog(
         onValueSelected = onValueSelected,
         modifier = modifier
             .padding(all = 48.dp)
-            .background(color = LocalAppearance.current.colorPalette.background1, shape = RoundedCornerShape(8.dp))
+            .background(
+                color = LocalAppearance.current.colorPalette.background1,
+                shape = RoundedCornerShape(8.dp)
+            )
             .padding(vertical = 16.dp),
         valueText = valueText
     )
 }
 
 @Composable
-inline fun <T> ValueSelectorDialogBody(
-    noinline onDismiss: () -> Unit,
+fun <T> ValueSelectorDialogBody(
+    onDismiss: () -> Unit,
     title: String,
     selectedValue: T?,
     values: ImmutableList<T>,
-    crossinline onValueSelected: (T) -> Unit,
+    onValueSelected: (T) -> Unit,
     modifier: Modifier = Modifier,
-    crossinline valueText: @Composable (T) -> String = { it.toString() }
+    valueText: @Composable (T) -> String = { it.toString() }
 ) {
     val (colorPalette, typography) = LocalAppearance.current
 
@@ -370,18 +321,18 @@ inline fun <T> ValueSelectorDialogBody(
 }
 
 @Composable
-inline fun SliderDialog(
-    noinline onDismiss: () -> Unit,
+fun SliderDialog(
+    onDismiss: () -> Unit,
     title: String,
     initialValue: Float,
-    crossinline onSlide: (Float) -> Unit,
-    crossinline onSlideCompleted: (Float) -> Unit,
+    onSlide: (Float) -> Unit,
+    onSlideCompleted: (Float) -> Unit,
     min: Float,
     max: Float,
     modifier: Modifier = Modifier,
-    crossinline toDisplay: @Composable (Float) -> String = { it.toString() },
+    toDisplay: @Composable (Float) -> String = { it.toString() },
     steps: Int = 0,
-    crossinline content: @Composable () -> Unit = { }
+    content: @Composable () -> Unit = { }
 ) {
     var state by rememberSaveable { mutableFloatStateOf(initialValue) }
 
@@ -402,19 +353,19 @@ inline fun SliderDialog(
 }
 
 @Composable
-inline fun SliderDialog(
-    noinline onDismiss: () -> Unit,
+fun SliderDialog(
+    onDismiss: () -> Unit,
     title: String,
     state: Float,
-    crossinline setState: (Float) -> Unit,
-    crossinline onSlide: (Float) -> Unit,
-    crossinline onSlideCompleted: (Float) -> Unit,
+    setState: (Float) -> Unit,
+    onSlide: (Float) -> Unit,
+    onSlideCompleted: (Float) -> Unit,
     min: Float,
     max: Float,
     modifier: Modifier = Modifier,
-    crossinline toDisplay: @Composable (Float) -> String = { it.toString() },
+    toDisplay: @Composable (Float) -> String = { it.toString() },
     steps: Int = 0,
-    crossinline content: @Composable () -> Unit = { }
+    content: @Composable () -> Unit = { }
 ) {
     val (colorPalette, typography) = LocalAppearance.current
 

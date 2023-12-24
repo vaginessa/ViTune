@@ -431,8 +431,7 @@ fun Player(
         }
 
         with(PlayerPreferences) {
-            @Composable
-            fun Actions() {
+            val actions: @Composable () -> Unit = {
                 IconButton(
                     onClick = { speedDialogOpen = true },
                     icon = R.drawable.speed,
@@ -456,7 +455,7 @@ fun Player(
                 layoutState = playerBottomSheetState,
                 beforeContent = {
                     when (playerLayout) {
-                        PlayerPreferences.PlayerLayout.Classic -> Actions()
+                        PlayerPreferences.PlayerLayout.Classic -> actions()
 
                         PlayerPreferences.PlayerLayout.New -> TextToggle(
                             state = trackLoopEnabled,
@@ -466,7 +465,7 @@ fun Player(
                     }
                 },
                 afterContent = {
-                    if (playerLayout == PlayerPreferences.PlayerLayout.New) Actions()
+                    if (playerLayout == PlayerPreferences.PlayerLayout.New) actions()
 
                     IconButton(
                         icon = R.drawable.ellipsis_horizontal,

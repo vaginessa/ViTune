@@ -61,6 +61,7 @@ import it.vfsfitvnm.vimusic.utils.enqueue
 import it.vfsfitvnm.vimusic.utils.forcePlayAtIndex
 import it.vfsfitvnm.vimusic.utils.forcePlayFromBeginning
 import it.vfsfitvnm.vimusic.utils.isLandscape
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -135,7 +136,7 @@ fun PlaylistSongList(
             Spacer(modifier = Modifier.weight(1f))
 
             playlistPage?.songsPage?.items?.map(Innertube.SongItem::asMediaItem)
-                ?.let { PlaylistDownloadIcon(songs = it) }
+                ?.let { PlaylistDownloadIcon(songs = it.toImmutableList()) }
 
             HeaderIconButton(
                 icon = R.drawable.add,

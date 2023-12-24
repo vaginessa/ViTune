@@ -56,7 +56,8 @@ import java.util.UUID
 @Composable
 fun PipedPlaylistSongList(
     session: Session,
-    playlistId: UUID
+    playlistId: UUID,
+    modifier: Modifier = Modifier
 ) {
     val (colorPalette) = LocalAppearance.current
     val binder = LocalPlayerServiceBinder.current
@@ -83,7 +84,10 @@ fun PipedPlaylistSongList(
         url = playlist?.thumbnailUrl?.toString()
     )
 
-    LayoutWithAdaptiveThumbnail(thumbnailContent = thumbnailContent) {
+    LayoutWithAdaptiveThumbnail(
+        thumbnailContent = thumbnailContent,
+        modifier = modifier
+    ) {
         Box {
             LazyColumn(
                 state = lazyListState,

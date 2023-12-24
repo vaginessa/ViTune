@@ -104,10 +104,10 @@ fun SettingsScreen() {
 inline fun <reified T : Enum<T>> EnumValueSelectorSettingsEntry(
     title: String,
     selectedValue: T,
-    crossinline onValueSelected: (T) -> Unit,
+    noinline onValueSelected: (T) -> Unit,
     modifier: Modifier = Modifier,
     isEnabled: Boolean = true,
-    crossinline valueText: @Composable (T) -> String = { it.name },
+    noinline valueText: @Composable (T) -> String = { it.name },
     noinline trailingContent: (@Composable () -> Unit)? = null
 ) = ValueSelectorSettingsEntry(
     title = title,
@@ -121,16 +121,16 @@ inline fun <reified T : Enum<T>> EnumValueSelectorSettingsEntry(
 )
 
 @Composable
-inline fun <T> ValueSelectorSettingsEntry(
+fun <T> ValueSelectorSettingsEntry(
     title: String,
     selectedValue: T,
     values: ImmutableList<T>,
-    crossinline onValueSelected: (T) -> Unit,
+    onValueSelected: (T) -> Unit,
     modifier: Modifier = Modifier,
     isEnabled: Boolean = true,
     usePadding: Boolean = true,
-    crossinline valueText: @Composable (T) -> String = { it.toString() },
-    noinline trailingContent: (@Composable () -> Unit)? = null
+    valueText: @Composable (T) -> String = { it.toString() },
+    trailingContent: (@Composable () -> Unit)? = null
 ) {
     var isShowingDialog by remember { mutableStateOf(false) }
 

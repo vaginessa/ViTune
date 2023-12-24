@@ -367,7 +367,7 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(playerAwareWindowInsets.asPaddingValues())
                     ) {
                         LinearProgressIndicator(
-                            progress = animatedProgress,
+                            progress = { animatedProgress },
                             color = appearance.colorPalette.accent,
                             trackColor = appearance.colorPalette.background1,
                             modifier = Modifier

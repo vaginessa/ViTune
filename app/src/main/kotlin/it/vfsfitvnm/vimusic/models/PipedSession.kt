@@ -5,7 +5,6 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import io.ktor.http.Url
-import it.vfsfitvnm.piped.models.Session
 import it.vfsfitvnm.piped.models.authenticatedWith
 
 @Immutable

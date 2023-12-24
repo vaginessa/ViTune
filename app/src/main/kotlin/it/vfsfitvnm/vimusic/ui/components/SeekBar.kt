@@ -498,7 +498,6 @@ private fun Duration(
             }
         }
     }
-
 }
 
 private fun wavePath(size: Size, progress: Float) = Path().apply {

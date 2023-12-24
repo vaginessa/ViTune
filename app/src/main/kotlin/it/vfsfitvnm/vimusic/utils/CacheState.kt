@@ -17,10 +17,11 @@ import it.vfsfitvnm.vimusic.models.Format
 import it.vfsfitvnm.vimusic.service.PrecacheService
 import it.vfsfitvnm.vimusic.ui.components.themed.HeaderIconButton
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.distinctUntilChanged
 
 @Composable
-fun PlaylistDownloadIcon(songs: List<MediaItem>) {
+fun PlaylistDownloadIcon(songs: ImmutableList<MediaItem>) {
     val context = LocalContext.current
     val (colorPalette) = LocalAppearance.current
 

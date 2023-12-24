@@ -65,6 +65,7 @@ import it.vfsfitvnm.vimusic.utils.forcePlayAtIndex
 import it.vfsfitvnm.vimusic.utils.forcePlayFromBeginning
 import it.vfsfitvnm.vimusic.utils.launchYouTubeMusic
 import it.vfsfitvnm.vimusic.utils.toast
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.runBlocking
@@ -161,7 +162,7 @@ fun LocalPlaylistSongs(
                     Spacer(modifier = Modifier.weight(1f))
 
                     playlistWithSongs?.songs?.map(Song::asMediaItem)
-                        ?.let { PlaylistDownloadIcon(songs = it) }
+                        ?.let { PlaylistDownloadIcon(songs = it.toImmutableList()) }
 
                     HeaderIconButton(
                         icon = R.drawable.ellipsis_horizontal,

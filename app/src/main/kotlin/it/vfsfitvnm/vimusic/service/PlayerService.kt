@@ -1081,6 +1081,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
          * 3. Make sure the database has a MediaItem for the given videoId and return null when it
          * does
          */
+        @Suppress("CyclomaticComplexMethod")
         fun createYouTubeDataSourceResolverFactory(
             findMediaItem: (videoId: String) -> MediaItem?,
             context: Context,
@@ -1097,13 +1098,13 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                         DefaultHttpDataSource.Factory()
                             .setConnectTimeoutMs(16000)
                             .setReadTimeoutMs(8000)
-                            .setUserAgent("Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0"),
-                    ),
-                ) { !it.isLocal },
+                            .setUserAgent("Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0")
+                    )
+                ) { !it.isLocal }
             ) { dataSpec ->
                 // Thank you Android, for enforcing a Uri in the download request
-                val videoId = dataSpec.key
-                    ?.removePrefix("https://youtube.com/watch?v=") ?: error("A key must be set")
+                val videoId = dataSpec.key?.removePrefix("https://youtube.com/watch?v=")
+                    ?: error("A key must be set")
 
                 when {
                     dataSpec.isLocal || cache.isCached(

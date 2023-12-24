@@ -6,8 +6,6 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -26,7 +24,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
@@ -38,14 +35,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -72,6 +67,7 @@ import it.vfsfitvnm.vimusic.ui.components.themed.FloatingActionsContainerWithScr
 import it.vfsfitvnm.vimusic.ui.components.themed.Header
 import it.vfsfitvnm.vimusic.ui.components.themed.HeaderIconButton
 import it.vfsfitvnm.vimusic.ui.components.themed.InHistoryMediaItemMenu
+import it.vfsfitvnm.vimusic.ui.components.themed.TextField
 import it.vfsfitvnm.vimusic.ui.items.SongItem
 import it.vfsfitvnm.vimusic.ui.modifiers.swipeToClose
 import it.vfsfitvnm.vimusic.ui.screens.Route
@@ -121,7 +117,6 @@ fun HomeSongs(
 }
 
 @kotlin.OptIn(
-    ExperimentalComposeUiApi::class,
     ExperimentalFoundationApi::class,
     ExperimentalAnimationApi::class
 )
@@ -202,40 +197,16 @@ fun HomeSongs(
                                 focusRequester.requestFocus()
                             }
 
-                            BasicTextField(
+                            TextField(
                                 value = filter.orEmpty(),
                                 onValueChange = { filter = it },
-                                textStyle = typography.xs.semiBold,
                                 singleLine = true,
-                                maxLines = 1,
-                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                                keyboardActions = KeyboardActions(onDone = {
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                keyboardActions = KeyboardActions(onSearch = {
                                     if (filter.isNullOrBlank()) filter = ""
                                     focusManager.clearFocus()
                                 }),
-                                cursorBrush = SolidColor(colorPalette.text),
-                                decorationBox = { innerTextField ->
-                                    Box(
-                                        contentAlignment = Alignment.CenterStart,
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        androidx.compose.animation.AnimatedVisibility(
-                                            visible = filter?.isEmpty() ?: true,
-                                            enter = fadeIn(tween(100)),
-                                            exit = fadeOut(tween(100))
-                                        ) {
-                                            BasicText(
-                                                text = stringResource(R.string.filter_placeholder),
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis,
-                                                style = typography.xs.semiBold.secondary
-                                                    .copy(color = colorPalette.textDisabled)
-                                            )
-                                        }
-
-                                        innerTextField()
-                                    }
-                                },
+                                hintText = stringResource(R.string.filter_placeholder),
                                 modifier = Modifier
                                     .focusRequester(focusRequester)
                                     .onFocusChanged {
