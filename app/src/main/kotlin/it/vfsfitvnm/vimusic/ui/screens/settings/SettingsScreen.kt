@@ -21,8 +21,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -46,6 +44,7 @@ import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.ui.components.themed.Header
 import it.vfsfitvnm.vimusic.ui.components.themed.NumberFieldDialog
 import it.vfsfitvnm.vimusic.ui.components.themed.Scaffold
+import it.vfsfitvnm.vimusic.ui.components.themed.Slider
 import it.vfsfitvnm.vimusic.ui.components.themed.Switch
 import it.vfsfitvnm.vimusic.ui.components.themed.ValueSelectorDialog
 import it.vfsfitvnm.vimusic.ui.screens.GlobalRoutes
@@ -178,9 +177,8 @@ fun SwitchSettingsEntry(
 fun SliderSettingsEntry(
     title: String,
     text: String,
-    initialValue: Float,
-    min: Float,
-    max: Float,
+    state: Float,
+    range: ClosedFloatingPointRange<Float>,
     modifier: Modifier = Modifier,
     onSlide: (Float) -> Unit = { },
     onSlideCompleted: (Float) -> Unit = { },
@@ -189,10 +187,6 @@ fun SliderSettingsEntry(
     isEnabled: Boolean = true,
     usePadding: Boolean = true
 ) = Column(modifier = modifier) {
-    val (colorPalette) = LocalAppearance.current
-
-    var state by rememberSaveable { mutableFloatStateOf(initialValue) }
-
     SettingsEntry(
         title = title,
         text = "$text (${toDisplay(state)})",
@@ -202,25 +196,19 @@ fun SliderSettingsEntry(
     )
 
     Slider(
-        value = state,
-        onValueChange = {
-            state = it
-            onSlide(it)
+        state = state,
+        onSlide = onSlide,
+        onSlideCompleted = {
+            onSlideCompleted(state)
         },
-        onValueChangeFinished = { onSlideCompleted(state) },
+        range = range,
+        steps = steps,
         modifier = Modifier
             .height(36.dp)
             .alpha(if (isEnabled) 1f else 0.5f)
             .let { if (usePadding) it.padding(start = 32.dp, end = 16.dp) else it }
             .padding(vertical = 16.dp)
-            .fillMaxWidth(),
-        colors = SliderDefaults.colors(
-            thumbColor = colorPalette.onAccent,
-            activeTrackColor = colorPalette.accent,
-            inactiveTrackColor = colorPalette.text.copy(alpha = 0.75f)
-        ),
-        valueRange = min..max,
-        steps = steps
+            .fillMaxWidth()
     )
 }
 

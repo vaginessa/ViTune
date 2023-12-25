@@ -12,9 +12,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -77,21 +80,23 @@ fun PlayerSettings() = with(PlayerPreferences) {
                 }
             )
 
-            val currentValue = { minimumSilence.toFloat() / 1000.0f }
-            var initialValue by rememberSaveable { mutableFloatStateOf(currentValue()) }
-            var changed by rememberSaveable { mutableStateOf(false) }
-
             AnimatedVisibility(visible = skipSilence) {
+                val initialValue by derivedStateOf { minimumSilence.toFloat() }
+                var newValue by remember(initialValue) { mutableFloatStateOf(initialValue) }
+                var changed by rememberSaveable { mutableStateOf(false) }
+
                 Column {
                     SliderSettingsEntry(
                         title = stringResource(R.string.minimum_silence_length),
                         text = stringResource(R.string.minimum_silence_length_description),
-                        initialValue = initialValue,
-                        onSlide = { changed = it != initialValue },
-                        onSlideCompleted = { minimumSilence = (it * 1000.0f).toLong() },
-                        toDisplay = { stringResource(R.string.format_ms, it.toInt()) },
-                        min = 1.00f,
-                        max = 2000.000f
+                        state = newValue,
+                        onSlide = { newValue = it },
+                        onSlideCompleted = {
+                            minimumSilence = it.toLong()
+                            changed = true
+                        },
+                        toDisplay = { stringResource(R.string.format_ms, it.toLong()) },
+                        range = 1.00f..2000.000f
                     )
 
                     AnimatedVisibility(visible = changed) {
@@ -105,7 +110,6 @@ fun PlayerSettings() = with(PlayerPreferences) {
                                 text = stringResource(R.string.restart_service),
                                 onClick = {
                                     binder?.restartForegroundOrStop()?.let { changed = false }
-                                    initialValue = currentValue()
                                 },
                                 modifier = Modifier
                                     .weight(1f)
@@ -124,14 +128,18 @@ fun PlayerSettings() = with(PlayerPreferences) {
             )
 
             AnimatedVisibility(visible = volumeNormalization) {
+                var newValue by remember(volumeNormalizationBaseGain) {
+                    mutableFloatStateOf(volumeNormalizationBaseGain)
+                }
+
                 SliderSettingsEntry(
                     title = stringResource(R.string.loudness_base_gain),
                     text = stringResource(R.string.loudness_base_gain_description),
-                    initialValue = volumeNormalizationBaseGain,
-                    onSlideCompleted = { volumeNormalizationBaseGain = it },
+                    state = newValue,
+                    onSlide = { newValue = it },
+                    onSlideCompleted = { volumeNormalizationBaseGain = newValue },
                     toDisplay = { stringResource(R.string.format_db, "%.2f".format(it)) },
-                    min = -20.00f,
-                    max = 20.00f
+                    range = -20.00f..20.00f
                 )
             }
 
@@ -143,14 +151,16 @@ fun PlayerSettings() = with(PlayerPreferences) {
             )
 
             AnimatedVisibility(visible = bassBoost) {
+                var newValue by remember(bassBoostLevel) { mutableFloatStateOf(bassBoostLevel.toFloat()) }
+
                 SliderSettingsEntry(
                     title = stringResource(R.string.bass_boost_level),
                     text = stringResource(R.string.bass_boost_level_description),
-                    initialValue = bassBoostLevel / 1000.0f,
-                    onSlideCompleted = { bassBoostLevel = floor(it * 1000f).toInt() },
-                    toDisplay = { floor(it * 1000f).toInt().toString() },
-                    min = 0f,
-                    max = 1f
+                    state = newValue,
+                    onSlide = { newValue = it },
+                    onSlideCompleted = { bassBoostLevel = newValue.toInt() },
+                    toDisplay = { it.toInt().toString() },
+                    range = 0f..1f
                 )
             }
 

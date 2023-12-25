@@ -359,33 +359,39 @@ fun Player(
 
         var speedDialogOpen by rememberSaveable { mutableStateOf(false) }
 
-        if (speedDialogOpen) SliderDialog(
-            onDismiss = { speedDialogOpen = false },
-            title = stringResource(R.string.playback_speed),
-            initialValue = PlayerPreferences.speed * 100f,
-            onSlide = { },
-            onSlideCompleted = { PlayerPreferences.speed = it.roundToInt() / 100f },
-            min = 0f,
-            max = 200f,
-            toDisplay = {
-                if (it <= 1f) stringResource(R.string.minimum_speed_value)
-                else stringResource(
-                    R.string.format_speed_multiplier,
-                    "%.2f".format(it.roundToInt() / 100f)
-                )
-            }
-        ) {
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
+        if (speedDialogOpen) {
+            var newValue by remember(PlayerPreferences.speed) { mutableFloatStateOf(PlayerPreferences.speed) }
+
+            fun submit() { PlayerPreferences.speed = newValue }
+
+            SliderDialog(
+                onDismiss = {
+                    speedDialogOpen = false
+                    submit()
+                },
+                title = stringResource(R.string.playback_speed),
+                state = newValue,
+                onSlide = { newValue = it },
+                onSlideCompleted = { submit() },
+                min = 0f,
+                max = 2f,
+                toDisplay = {
+                    if (it <= 0.01f) stringResource(R.string.minimum_speed_value)
+                    else stringResource(R.string.format_speed_multiplier, "%.2f".format(it))
+                }
             ) {
-                SecondaryTextButton(
-                    text = stringResource(R.string.reset),
-                    onClick = {
-                        PlayerPreferences.speed = 1f
-                        speedDialogOpen = false
-                    }
-                )
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    SecondaryTextButton(
+                        text = stringResource(R.string.reset),
+                        onClick = {
+                            newValue = 1f
+                            submit()
+                        }
+                    )
+                }
             }
         }
 
@@ -405,15 +411,12 @@ fun Player(
                     submit()
                 },
                 title = stringResource(R.string.song_volume_boost),
-                state = newValue * 100f,
-                setState = { newValue = it / 100f },
-                onSlide = { },
+                state = newValue,
+                onSlide = { newValue = it },
                 onSlideCompleted = { submit() },
-                min = -2000f,
-                max = 2000f,
-                toDisplay = {
-                    stringResource(R.string.format_db, "%.2f".format(it.roundToInt() / 100f))
-                }
+                min = -20f,
+                max = 20f,
+                toDisplay = { stringResource(R.string.format_db, "%.2f".format(it)) }
             ) {
                 Box(
                     modifier = Modifier.fillMaxWidth(),
@@ -441,7 +444,7 @@ fun Player(
                         .size(20.dp)
                 )
 
-                IconButton(
+                if (volumeNormalization) IconButton(
                     onClick = { boostDialogOpen = true },
                     icon = R.drawable.volume_up,
                     color = colorPalette.text,

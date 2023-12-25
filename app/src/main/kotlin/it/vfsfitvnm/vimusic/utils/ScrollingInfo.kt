@@ -18,23 +18,22 @@ data class ScrollingInfo(
 @Composable
 fun LazyListState.scrollingInfo(): ScrollingInfo {
     var previousIndex by remember(this) { mutableIntStateOf(firstVisibleItemIndex) }
-
     var previousScrollOffset by remember(this) { mutableIntStateOf(firstVisibleItemScrollOffset) }
 
     return remember(this) {
         derivedStateOf {
-            val isScrollingDown = if (previousIndex == firstVisibleItemIndex) {
-                firstVisibleItemScrollOffset > previousScrollOffset
-            } else {
-                firstVisibleItemIndex > previousIndex
-            }
-
+            val isScrollingDown =
+                if (previousIndex == firstVisibleItemIndex) firstVisibleItemScrollOffset > previousScrollOffset
+                else firstVisibleItemIndex > previousIndex
             val isFar = firstVisibleItemIndex > layoutInfo.visibleItemsInfo.size
 
             previousIndex = firstVisibleItemIndex
             previousScrollOffset = firstVisibleItemScrollOffset
 
-            ScrollingInfo(isScrollingDown, isFar)
+            ScrollingInfo(
+                isScrollingDown = isScrollingDown,
+                isFar = isFar
+            )
         }
     }.value
 }
@@ -46,18 +45,18 @@ fun LazyGridState.scrollingInfo(): ScrollingInfo {
 
     return remember(this) {
         derivedStateOf {
-            val isScrollingDown = if (previousIndex == firstVisibleItemIndex) {
-                firstVisibleItemScrollOffset > previousScrollOffset
-            } else {
-                firstVisibleItemIndex > previousIndex
-            }
-
+            val isScrollingDown =
+                if (previousIndex == firstVisibleItemIndex) firstVisibleItemScrollOffset > previousScrollOffset
+                else firstVisibleItemIndex > previousIndex
             val isFar = firstVisibleItemIndex > layoutInfo.visibleItemsInfo.size
 
             previousIndex = firstVisibleItemIndex
             previousScrollOffset = firstVisibleItemScrollOffset
 
-            ScrollingInfo(isScrollingDown, isFar)
+            ScrollingInfo(
+                isScrollingDown = isScrollingDown,
+                isFar = isFar
+            )
         }
     }.value
 }
@@ -69,10 +68,12 @@ fun ScrollState.scrollingInfo(): ScrollingInfo {
     return remember(this) {
         derivedStateOf {
             val isScrollingDown = value > previousValue
-
             previousValue = value
 
-            ScrollingInfo(isScrollingDown, false)
+            ScrollingInfo(
+                isScrollingDown = isScrollingDown,
+                isFar = false
+            )
         }
     }.value
 }

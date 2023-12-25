@@ -289,7 +289,7 @@ fun LocalPlaylistSongs(
                             }
                         )
                         .draggedItem(reorderingState = reorderingState, index = index)
-                        .background(colorPalette.background1),
+                        .background(colorPalette.background0),
                     song = song,
                     thumbnailSizePx = thumbnailSizePx,
                     thumbnailSizeDp = thumbnailSizeDp

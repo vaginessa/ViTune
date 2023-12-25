@@ -10,24 +10,14 @@ import androidx.compose.ui.text.style.TextAlign
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 
 fun TextStyle.style(style: FontStyle) = copy(fontStyle = style)
-
 fun TextStyle.weight(weight: FontWeight) = copy(fontWeight = weight)
-
 fun TextStyle.align(align: TextAlign) = copy(textAlign = align)
-
 fun TextStyle.color(color: Color) = copy(color = color)
 
-inline val TextStyle.medium: TextStyle
-    get() = weight(FontWeight.Medium)
-
-inline val TextStyle.semiBold: TextStyle
-    get() = weight(FontWeight.SemiBold)
-
-inline val TextStyle.bold: TextStyle
-    get() = weight(FontWeight.Bold)
-
-inline val TextStyle.center: TextStyle
-    get() = align(TextAlign.Center)
+inline val TextStyle.medium get() = weight(FontWeight.Medium)
+inline val TextStyle.semiBold get() = weight(FontWeight.SemiBold)
+inline val TextStyle.bold get() = weight(FontWeight.Bold)
+inline val TextStyle.center get() = align(TextAlign.Center)
 
 inline val TextStyle.secondary: TextStyle
     @Composable

@@ -163,21 +163,3 @@ fun <T> Flow<T>.onFirst(block: suspend (T) -> Unit): Flow<T> {
         isFirst = false
     }
 }
-
-inline val isAtLeastAndroid6
-    get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-
-inline val isAtLeastAndroid8
-    get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
-
-inline val isAtLeastAndroid10
-    get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
-
-inline val isAtLeastAndroid11
-    get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
-
-inline val isAtLeastAndroid12
-    get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-
-inline val isAtLeastAndroid13
-    get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU

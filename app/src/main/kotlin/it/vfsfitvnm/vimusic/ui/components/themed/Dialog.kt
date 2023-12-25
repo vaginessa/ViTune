@@ -1,5 +1,6 @@
 package it.vfsfitvnm.vimusic.ui.components.themed
 
+import androidx.annotation.IntRange
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,13 +20,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -39,6 +38,7 @@ import androidx.compose.ui.geometry.center
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import it.vfsfitvnm.vimusic.R
@@ -62,7 +62,8 @@ fun TextFieldDialog(
     singleLine: Boolean = true,
     maxLines: Int = 1,
     onCancel: () -> Unit = onDismiss,
-    isTextInputValid: (String) -> Boolean = { it.isNotEmpty() }
+    isTextInputValid: (String) -> Boolean = { it.isNotEmpty() },
+    keyboardOptions: KeyboardOptions = KeyboardOptions()
 ) {
     val focusRequester = remember { FocusRequester() }
     val (_, typography) = LocalAppearance.current
@@ -88,6 +89,7 @@ fun TextFieldDialog(
                     }
                 }
             ),
+            keyboardOptions = keyboardOptions,
             modifier = Modifier
                 .padding(all = 16.dp)
                 .weight(weight = 1f, fill = false)
@@ -143,7 +145,8 @@ fun <T> NumberFieldDialog(
     doneText = doneText,
     initialTextInput = initialValue.toString(),
     onCancel = onCancel,
-    isTextInputValid = { true }
+    isTextInputValid = { true },
+    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
 )
 
 @Composable
@@ -245,78 +248,75 @@ fun <T> ValueSelectorDialogBody(
     onValueSelected: (T) -> Unit,
     modifier: Modifier = Modifier,
     valueText: @Composable (T) -> String = { it.toString() }
-) {
+) = Column(modifier = modifier) {
     val (colorPalette, typography) = LocalAppearance.current
 
-    Column(modifier = modifier) {
-        BasicText(
-            text = title,
-            style = typography.s.semiBold,
-            modifier = Modifier.padding(vertical = 8.dp, horizontal = 24.dp)
-        )
+    BasicText(
+        text = title,
+        style = typography.s.semiBold,
+        modifier = Modifier.padding(vertical = 8.dp, horizontal = 24.dp)
+    )
 
-        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-            values.forEach { value ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+        values.forEach { value ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier
+                    .clickable(
+                        onClick = {
+                            onDismiss()
+                            onValueSelected(value)
+                        }
+                    )
+                    .padding(vertical = 12.dp, horizontal = 24.dp)
+                    .fillMaxWidth()
+            ) {
+                if (selectedValue == value) Canvas(
                     modifier = Modifier
-                        .clickable(
-                            onClick = {
-                                onDismiss()
-                                onValueSelected(value)
-                            }
+                        .size(18.dp)
+                        .background(
+                            color = colorPalette.accent,
+                            shape = CircleShape
                         )
-                        .padding(vertical = 12.dp, horizontal = 24.dp)
-                        .fillMaxWidth()
                 ) {
-                    if (selectedValue == value) Canvas(
-                        modifier = Modifier
-                            .size(18.dp)
-                            .background(
-                                color = colorPalette.accent,
-                                shape = CircleShape
-                            )
-                    ) {
-                        drawCircle(
-                            color = colorPalette.onAccent,
-                            radius = 4.dp.toPx(),
-                            center = size.center,
-                            shadow = Shadow(
-                                color = Color.Black.copy(alpha = 0.4f),
-                                blurRadius = 4.dp.toPx(),
-                                offset = Offset(x = 0f, y = 1.dp.toPx())
-                            )
+                    drawCircle(
+                        color = colorPalette.onAccent,
+                        radius = 4.dp.toPx(),
+                        center = size.center,
+                        shadow = Shadow(
+                            color = Color.Black.copy(alpha = 0.4f),
+                            blurRadius = 4.dp.toPx(),
+                            offset = Offset(x = 0f, y = 1.dp.toPx())
                         )
-                    } else Spacer(
-                        modifier = Modifier
-                            .size(18.dp)
-                            .border(
-                                width = 1.dp,
-                                color = colorPalette.textDisabled,
-                                shape = CircleShape
-                            )
                     )
+                } else Spacer(
+                    modifier = Modifier
+                        .size(18.dp)
+                        .border(
+                            width = 1.dp,
+                            color = colorPalette.textDisabled,
+                            shape = CircleShape
+                        )
+                )
 
-                    BasicText(
-                        text = valueText(value),
-                        style = typography.xs.medium
-                    )
-                }
+                BasicText(
+                    text = valueText(value),
+                    style = typography.xs.medium
+                )
             }
         }
+    }
 
-        Box(
-            modifier = Modifier
-                .align(Alignment.End)
-                .padding(end = 24.dp)
-        ) {
-            DialogTextButton(
-                text = stringResource(R.string.cancel),
-                onClick = onDismiss,
-                modifier = Modifier
-            )
-        }
+    Box(
+        modifier = Modifier
+            .align(Alignment.End)
+            .padding(end = 24.dp)
+    ) {
+        DialogTextButton(
+            text = stringResource(R.string.cancel),
+            onClick = onDismiss
+        )
     }
 }
 
@@ -324,105 +324,62 @@ fun <T> ValueSelectorDialogBody(
 fun SliderDialog(
     onDismiss: () -> Unit,
     title: String,
-    initialValue: Float,
-    onSlide: (Float) -> Unit,
-    onSlideCompleted: (Float) -> Unit,
-    min: Float,
-    max: Float,
-    modifier: Modifier = Modifier,
-    toDisplay: @Composable (Float) -> String = { it.toString() },
-    steps: Int = 0,
-    content: @Composable () -> Unit = { }
-) {
-    var state by rememberSaveable { mutableFloatStateOf(initialValue) }
-
-    SliderDialog(
-        onDismiss = onDismiss,
-        title = title,
-        state = state,
-        setState = { state = it },
-        onSlide = onSlide,
-        onSlideCompleted = onSlideCompleted,
-        modifier = modifier,
-        toDisplay = toDisplay,
-        min = min,
-        max = max,
-        steps = steps,
-        content = content
-    )
-}
-
-@Composable
-fun SliderDialog(
-    onDismiss: () -> Unit,
-    title: String,
     state: Float,
-    setState: (Float) -> Unit,
     onSlide: (Float) -> Unit,
-    onSlideCompleted: (Float) -> Unit,
+    onSlideCompleted: () -> Unit,
     min: Float,
     max: Float,
     modifier: Modifier = Modifier,
     toDisplay: @Composable (Float) -> String = { it.toString() },
-    steps: Int = 0,
+    @IntRange(from = 0) steps: Int = 0,
     content: @Composable () -> Unit = { }
-) {
+) = Dialog(onDismissRequest = onDismiss) {
     val (colorPalette, typography) = LocalAppearance.current
 
-    Dialog(onDismissRequest = onDismiss) {
-        Column(
-            modifier = modifier
-                .padding(all = 48.dp)
-                .background(color = colorPalette.background1, shape = RoundedCornerShape(8.dp))
-                .padding(vertical = 16.dp)
+    Column(
+        modifier = modifier
+            .padding(all = 48.dp)
+            .background(color = colorPalette.background1, shape = RoundedCornerShape(8.dp))
+            .padding(vertical = 16.dp)
+    ) {
+        BasicText(
+            text = title,
+            style = typography.s.semiBold,
+            modifier = Modifier.padding(vertical = 8.dp, horizontal = 24.dp)
+        )
+
+        Slider(
+            state = state,
+            onSlide = onSlide,
+            onSlideCompleted = onSlideCompleted,
+            range = min..max,
+            steps = steps,
+            modifier = Modifier
+                .height(36.dp)
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+        )
+
+        BasicText(
+            text = toDisplay(state),
+            style = typography.s.semiBold,
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(vertical = 8.dp)
+        )
+
+        content()
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.End)
+                .padding(end = 24.dp)
         ) {
-            BasicText(
-                text = title,
-                style = typography.s.semiBold,
-                modifier = Modifier.padding(vertical = 8.dp, horizontal = 24.dp)
-            )
-
-            Slider(
-                value = state,
-                onValueChange = {
-                    setState(it)
-                    onSlide(it)
-                },
-                onValueChangeFinished = { onSlideCompleted(state) },
+            DialogTextButton(
+                text = stringResource(R.string.confirm),
+                onClick = onDismiss,
                 modifier = Modifier
-                    .height(36.dp)
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
-                colors = SliderDefaults.colors(
-                    thumbColor = colorPalette.onAccent,
-                    activeTrackColor = colorPalette.accent,
-                    inactiveTrackColor = colorPalette.text.copy(alpha = 0.75f)
-                ),
-                valueRange = min..max,
-                steps = steps
             )
-
-            BasicText(
-                text = toDisplay(state),
-                style = typography.s.semiBold,
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(vertical = 8.dp)
-            )
-
-            content()
-
-            Box(
-                modifier = Modifier
-                    .align(Alignment.End)
-                    .padding(end = 24.dp)
-            ) {
-                DialogTextButton(
-                    text = stringResource(R.string.cancel),
-                    onClick = onDismiss,
-                    modifier = Modifier
-                )
-            }
         }
     }
 }

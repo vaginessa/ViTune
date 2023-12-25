@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
@@ -21,7 +22,10 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.distinctUntilChanged
 
 @Composable
-fun PlaylistDownloadIcon(songs: ImmutableList<MediaItem>) {
+fun PlaylistDownloadIcon(
+    songs: ImmutableList<MediaItem>,
+    modifier: Modifier = Modifier
+) {
     val context = LocalContext.current
     val (colorPalette) = LocalAppearance.current
 
@@ -32,7 +36,8 @@ fun PlaylistDownloadIcon(songs: ImmutableList<MediaItem>) {
             songs.forEach {
                 PrecacheService.scheduleCache(context.applicationContext, it)
             }
-        }
+        },
+        modifier = modifier
     )
 }
 

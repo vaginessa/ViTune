@@ -11,8 +11,6 @@ import it.vfsfitvnm.compose.persist.PersistMapOwner
 import it.vfsfitvnm.vimusic.preferences.DataPreferences
 import androidx.work.Configuration as WorkManagerConfiguration
 
-val globalPersistMap = PersistMap()
-
 class MainApplication : Application(), ImageLoaderFactory, PersistMapOwner, WorkManagerConfiguration.Provider {
     override fun onCreate() {
         super.onCreate()
@@ -32,7 +30,7 @@ class MainApplication : Application(), ImageLoaderFactory, PersistMapOwner, Work
         .let { if (BuildConfig.DEBUG) it.logger(DebugLogger()) else it }
         .build()
 
-    override val persistMap = globalPersistMap
+    override val persistMap = PersistMap()
 
     override val workManagerConfiguration = WorkManagerConfiguration.Builder()
         .setMinimumLoggingLevel(if (BuildConfig.DEBUG) Log.DEBUG else Log.INFO)
