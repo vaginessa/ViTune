@@ -118,7 +118,9 @@
     <string name="error_unknown_playback">Es ist ein unbekannter Wiedergabefehler aufgetreten</string>
     <string name="error_piped_link">Bei der Verknüpfung Ihres Piped-Kontos ist ein unbekannter Fehler aufgetreten. Bitte versuchen Sie es erneut.</string>
     <string name="error_piped_instances_unavailable">Liste der Piped-Instanzen ist derzeit nicht verfügbar.</string>
-
+    <string name="error_bassboost_init">Es ist ein Fehler bei der Initialisierung von Bass Boost aufgetreten. Wahrscheinlich unterstützt Ihr Gerät diese Funktion nicht. Ändern Sie den Bassverstärkungspegel oder versuchen Sie es erneut.</string>
+    <string name="error_pre_cache">An unknown error occurred during pre-caching. Please try again.</string>
+    
     <string name="media_permission_declined">Berechtigung abgelehnt, bitte erteilen Sie die Medienberechtigung in den Einstellungen Ihres Geräts.</string>
     <string name="open_settings">Einstellungen öffnen</string>
     <string name="no_items_found">Keine Elemente gefunden</string>
@@ -171,6 +173,7 @@
     <string name="search_placeholder">Suchen…</string>
     <string name="format_version_credits">v%1$s von vfsfitvnm</string>
     <string name="social">Soziales</string>
+     <string name="contact">Kontakt</string>
     <string name="github">GitHub</string>
     <string name="view_source">Den Quellcode anzeigen</string>
     <string name="report_bug">Ein Problem melden</string>
@@ -217,7 +220,7 @@
     <string name="swipe_to_remove_item_description">Wischen Sie nach links, um ein Element aus der Warteschlange zu entfernen</string>
 
     <string name="cache">Zwischenspeicher</string>
-    <string name="cache_description">Wenn der Platz im Zwischenspeicher voll ist, werden die Ressourcen, auf die am längsten nicht mehr zugegriffen wurde, geleert.</string>
+    <string name="cache_description">Wenn der Platz im Zwischenspeicher voll ist, werden die Ressourcen, auf die am längsten nicht mehr zugegriffen wurde, gelöscht.</string>
     <string name="image_cache">Bild-Zwischenspeicher</string>
     <string name="max_size">Max. Größe</string>
     <string name="format_cache_space_used">%1$s verwendet (%2$s%%)</string>
@@ -329,7 +332,24 @@
 
     <string name="remove_from_blacklist">Von der schwarzen Liste entfernen</string>
     <string name="add_to_blacklist">Zur schwarzen Liste hinzufügen</string>
+    <string name="reset_blacklist">Schwarze Liste zurücksetzen</string>
+    <string name="blacklist_empty">Schwarze Liste ist leer</string>
 
+    <string name="pre_cache">Zwischenspeichern</string>
+
+    <string name="swipe_to_hide_song">Wischen, um Lied zu löschen</string>
+    <string name="swipe_to_hide_song_description">Wenn Sie einen Titel nach links wischen, wird er aus der Datenbank und dem Zwischenspeicher entfernt.</string>
+
+    <plurals name="format_reset_blacklist_description">
+        <item quantity="one">Entferne %1$s Lied von der schwarzen Liste</item>
+        <item quantity="other">Alle %1$s Songs von der Schwarzen Liste entfernen</item>
+    </plurals>
+
+       <plurals name="format_reset_quick_picks_amount">
+        <item quantity="one">Wiedergabeereignis %1$s löschen</item>
+        <item quantity="other">%1$s Wiedergabeereignisse löschen</item>
+    </plurals>
+    
     <plurals name="song_count_plural">
         <item quantity="one">%1$d Lied</item>
         <item quantity="other">%1$d Lieder</item>
