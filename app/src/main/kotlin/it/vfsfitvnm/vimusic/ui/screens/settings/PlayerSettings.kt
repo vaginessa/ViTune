@@ -159,7 +159,7 @@ fun PlayerSettings() = with(PlayerPreferences) {
                     state = newValue,
                     onSlide = { newValue = it },
                     onSlideCompleted = { bassBoostLevel = newValue.toInt() },
-                    toDisplay = { it.toInt().toString() },
+                    toDisplay = { (it * 1000f).toInt().toString() },
                     range = 0f..1f
                 )
             }
