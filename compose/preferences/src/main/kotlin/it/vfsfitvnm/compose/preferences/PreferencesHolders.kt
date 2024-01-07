@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.core.content.edit
@@ -20,25 +21,27 @@ fun <T : Any> sharedPreferencesProperty(
     setValue: SharedPreferences.Editor.(key: String, value: T) -> Unit,
     defaultValue: T
 ) = SharedPreferencesProperty(
-    getValue = getValue,
-    setValue = setValue,
-    defaultValue = defaultValue
+    get = getValue,
+    set = setValue,
+    default = defaultValue
 )
 
+@Stable
 data class SharedPreferencesProperty<T : Any> internal constructor(
-    private val getValue: SharedPreferences.(key: String) -> T,
-    private val setValue: SharedPreferences.Editor.(key: String, value: T) -> Unit,
-    private val defaultValue: T
+    private val get: SharedPreferences.(key: String) -> T,
+    private val set: SharedPreferences.Editor.(key: String, value: T) -> Unit,
+    private val default: T
 ) : ReadWriteProperty<PreferencesHolder, T> {
-    private var state = mutableStateOf(defaultValue)
+    private val state = mutableStateOf(default)
     private var listener: OnSharedPreferenceChangeListener? = null
 
     override fun getValue(thisRef: PreferencesHolder, property: KProperty<*>): T {
         if (listener == null && !Snapshot.current.readOnly && !Snapshot.current.root.readOnly) {
-            state.value = thisRef.getValue(property.name)
+            state.value = thisRef.get(property.name)
             listener = OnSharedPreferenceChangeListener { preferences, key ->
-                if (key == property.name) preferences.getValue(property.name)
-                    .let { if (it != state && !Snapshot.current.readOnly) state.value = it }
+                if (key == property.name) preferences.get(property.name).let {
+                    if (it != state.value && !Snapshot.current.readOnly) state.value = it
+                }
             }
             thisRef.registerOnSharedPreferenceChangeListener(listener)
         }
@@ -48,7 +51,7 @@ data class SharedPreferencesProperty<T : Any> internal constructor(
     override fun setValue(thisRef: PreferencesHolder, property: KProperty<*>, value: T) =
         coroutineScope.launch {
             thisRef.edit(commit = true) {
-                setValue(property.name, value)
+                set(property.name, value)
             }
         }.let { }
 }
@@ -57,7 +60,8 @@ data class SharedPreferencesProperty<T : Any> internal constructor(
  * A snapshottable, thread-safe, compose-first, extensible SharedPreferences wrapper that supports
  * virtually all types, and if it doesn't, one could simply type
  * `fun myNewType(...) = sharedPreferencesProperty(...)` and start implementing. Starts off as given
- * defaultValue until we are allowed to subscribe to SharedPreferences.
+ * defaultValue until we are allowed to subscribe to SharedPreferences. Caution: the type of the
+ * preference has to be [Stable], otherwise UB will occur.
  */
 open class PreferencesHolder(
     application: Application,
@@ -96,7 +100,8 @@ open class PreferencesHolder(
 
     inline fun <reified T : Enum<T>> enum(defaultValue: T) = sharedPreferencesProperty(
         getValue = {
-            getString(it, null)?.let { runCatching { enumValueOf<T>(it) }.getOrNull() } ?: defaultValue
+            getString(it, null)?.let { runCatching { enumValueOf<T>(it) }.getOrNull() }
+                ?: defaultValue
         },
         setValue = { k, v -> putString(k, v.name) },
         defaultValue

@@ -2,15 +2,15 @@
 kotlin = "1.9.21"
 ksp = "1.9.21-1.0.15"
 
-jvm = "11"
-agp = "8.3.0-alpha18"
+jvm = "17"
+agp = "8.4.0-alpha03"
 
 compose_compiler = "1.5.7"
 
 room = "2.6.1"
 media3 = "1.2.0"
-ktor = "2.3.6"
-detekt = "1.23.3"
+ktor = "2.3.7"
+detekt = "1.23.4"
 workmanager = "2.9.0"
 
 [plugins]
@@ -26,9 +26,9 @@ detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 [libraries]
 core_ktx = { module = "androidx.core:core-ktx", version = "1.12.0" }
 
-kotlin_coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version = "1.7.3" }
-kotlin_datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version = "0.4.1" }
-kotlin_immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version = "0.3.6" }
+kotlin_coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version = "1.8.0-RC2" }
+kotlin_datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version = "0.5.0" }
+kotlin_immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version = "0.3.7" }
 
 compose_bom = { module = "androidx.compose:compose-bom", version = "2023.10.01" }
 compose_animation = { module = "androidx.compose.animation:animation" }
@@ -39,7 +39,7 @@ compose_ripple = { module = "androidx.compose.material:material-ripple" }
 compose_material3 = { module = "androidx.compose.material3:material3", version = "1.2.0-beta01" }
 
 compose_activity = { module = "androidx.activity:activity-compose", version = "1.8.2" }
-compose_shimmer = { module = "com.valentinilk.shimmer:compose-shimmer", version = "1.0.3" }
+compose_shimmer = { module = "com.valentinilk.shimmer:compose-shimmer", version = "1.2.0" }
 compose_coil = { module = "io.coil-kt:coil-compose", version = "2.5.0" }
 
 room = { module = "androidx.room:room-ktx", version.ref = "room" }
@@ -65,5 +65,5 @@ palette = { module = "androidx.palette:palette", version = "1.0.0" }
 
 desugaring = { module = "com.android.tools:desugar_jdk_libs", version = "2.0.4" }
 
-detekt_compose = { module = "io.nlopez.compose.rules:detekt", version = "0.3.4" }
+detekt_compose = { module = "io.nlopez.compose.rules:detekt", version = "0.3.8" }
 detekt_formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt" }

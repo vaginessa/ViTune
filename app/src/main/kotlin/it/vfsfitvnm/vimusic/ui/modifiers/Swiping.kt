@@ -41,7 +41,9 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.time.Duration
 
-class SwipeState internal constructor() {
+data class SwipeState internal constructor(
+    internal val offset: Animatable<Float, AnimationVector1D> = acquire()
+) {
     private companion object {
         private val animatables = mutableListOf<Animatable<Float, AnimationVector1D>>()
         private val coroutineScope = CoroutineScope(Dispatchers.IO)
@@ -54,8 +56,6 @@ class SwipeState internal constructor() {
             }
         }
     }
-
-    internal val offset = acquire()
 
     @Composable
     fun calculateOffset(bounds: ClosedRange<Dp>? = null) =

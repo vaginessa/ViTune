@@ -8,13 +8,6 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven("https://jitpack.io")
-    }
-
-    versionCatalogs {
-        create("libs") {
-            from(files("./gradle/libs.toml"))
-        }
     }
 }
 
