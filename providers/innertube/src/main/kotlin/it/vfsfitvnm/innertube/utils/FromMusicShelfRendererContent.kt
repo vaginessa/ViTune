@@ -33,12 +33,12 @@ fun Innertube.SongItem.Companion.from(content: MusicShelfRenderer.Content): Inne
             ?.map(Innertube::Info),
         album = album,
         durationText = otherRuns
-            .getOrNull(otherRuns.size - 2)
+            .lastOrNull()
             ?.firstOrNull()
             ?.text
             ?.takeIf { ':' in it }
             ?: otherRuns
-                .lastOrNull()
+                .getOrNull(otherRuns.size - 2)
                 ?.firstOrNull()
                 ?.text,
         thumbnail = content.thumbnail
