@@ -2,18 +2,23 @@ package it.vfsfitvnm.compose.persist
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.SnapshotMutationPolicy
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.structuralEqualityPolicy
 
 @Suppress("UNCHECKED_CAST")
 @Composable
-fun <T> persist(tag: String, initialValue: T): MutableState<T> {
-    val context = LocalContext.current
+fun <T> persist(
+    tag: String,
+    initialValue: T,
+    policy: SnapshotMutationPolicy<T> = structuralEqualityPolicy()
+): MutableState<T> {
+    val persistMap = LocalPersistMap.current
 
-    return remember {
-        context.persistMap?.getOrPut(tag) { mutableStateOf(initialValue) } as? MutableState<T>
-            ?: mutableStateOf(initialValue)
+    return remember(persistMap) {
+        persistMap?.map?.getOrPut(tag) { mutableStateOf(initialValue, policy) } as? MutableState<T>
+            ?: mutableStateOf(initialValue, policy)
     }
 }
 

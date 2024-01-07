@@ -70,6 +70,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import com.valentinilk.shimmer.LocalShimmerTheme
 import com.valentinilk.shimmer.defaultShimmerTheme
+import it.vfsfitvnm.compose.persist.LocalPersistMap
 import it.vfsfitvnm.innertube.Innertube
 import it.vfsfitvnm.innertube.models.bodies.BrowseBody
 import it.vfsfitvnm.innertube.requests.playlistPage
@@ -346,7 +347,8 @@ class MainActivity : ComponentActivity() {
                     LocalShimmerTheme provides shimmerTheme,
                     LocalPlayerServiceBinder provides binder,
                     LocalPlayerAwareWindowInsets provides playerAwareWindowInsets,
-                    LocalLayoutDirection provides LayoutDirection.Ltr
+                    LocalLayoutDirection provides LayoutDirection.Ltr,
+                    LocalPersistMap provides Dependencies.application.persistMap
                 ) {
                     val progress by downloadProgress.collectAsState()
                     val animatedProgress by animateFloatAsState(

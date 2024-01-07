@@ -58,7 +58,7 @@ fun AlbumScreen(browseId: String) {
     var album by persist<Album?>("album/$browseId/album")
     var albumPage by persist<Innertube.PlaylistOrAlbumPage?>("album/$browseId/albumPage")
 
-    PersistMapCleanup(tagPrefix = "album/$browseId/")
+    PersistMapCleanup(prefix = "album/$browseId/")
 
     LaunchedEffect(Unit) {
         Database

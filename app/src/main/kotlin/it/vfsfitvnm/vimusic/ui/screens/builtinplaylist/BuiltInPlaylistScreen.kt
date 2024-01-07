@@ -32,7 +32,7 @@ fun BuiltInPlaylistScreen(builtInPlaylist: BuiltInPlaylist) {
         )
     }
 
-    PersistMapCleanup(tagPrefix = "${builtInPlaylist.name}/")
+    PersistMapCleanup(prefix = "${builtInPlaylist.name}/")
 
     RouteHandler(listenToGlobalEmitter = true) {
         GlobalRoutes()

@@ -64,7 +64,7 @@ import kotlinx.coroutines.withContext
 fun ArtistScreen(browseId: String) {
     val saveableStateHolder = rememberSaveableStateHolder()
 
-    PersistMapCleanup(tagPrefix = "artist/$browseId/")
+    PersistMapCleanup(prefix = "artist/$browseId/")
 
     var artist by persist<Artist?>("artist/$browseId/artist")
 

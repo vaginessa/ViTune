@@ -29,7 +29,7 @@ fun PipedPlaylistScreen(
     val saveableStateHolder = rememberSaveableStateHolder()
     val session by remember { derivedStateOf { apiBaseUrl authenticatedWith sessionToken } }
 
-    PersistMapCleanup(tagPrefix = "pipedplaylist/$playlistId")
+    PersistMapCleanup(prefix = "pipedplaylist/$playlistId")
 
     RouteHandler(listenToGlobalEmitter = true) {
         GlobalRoutes()

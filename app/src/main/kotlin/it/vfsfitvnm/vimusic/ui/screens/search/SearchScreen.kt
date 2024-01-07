@@ -51,7 +51,7 @@ fun SearchScreen(
         )
     }
 
-    PersistMapCleanup(tagPrefix = "search/")
+    PersistMapCleanup(prefix = "search/")
 
     RouteHandler(listenToGlobalEmitter = true) {
         GlobalRoutes()

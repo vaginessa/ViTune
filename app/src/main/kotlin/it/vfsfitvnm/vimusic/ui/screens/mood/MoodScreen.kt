@@ -18,7 +18,7 @@ import it.vfsfitvnm.vimusic.ui.screens.Route
 fun MoodScreen(mood: Mood) {
     val saveableStateHolder = rememberSaveableStateHolder()
 
-    PersistMapCleanup(tagPrefix = "playlist/$DEFAULT_BROWSE_ID")
+    PersistMapCleanup(prefix = "playlist/$DEFAULT_BROWSE_ID")
 
     RouteHandler(listenToGlobalEmitter = true) {
         GlobalRoutes()

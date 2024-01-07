@@ -9,11 +9,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import it.vfsfitvnm.compose.persist.LocalPersistMap
 import it.vfsfitvnm.compose.persist.PersistMapCleanup
-import it.vfsfitvnm.compose.persist.persistMap
 import it.vfsfitvnm.compose.routing.RouteHandler
 import it.vfsfitvnm.innertube.Innertube
 import it.vfsfitvnm.innertube.models.bodies.ContinuationBody
@@ -51,10 +50,10 @@ import it.vfsfitvnm.vimusic.utils.forcePlay
 @Route
 @Composable
 fun SearchResultScreen(query: String, onSearchAgain: () -> Unit) {
-    val context = LocalContext.current
+    val persistMap = LocalPersistMap.current
     val saveableStateHolder = rememberSaveableStateHolder()
 
-    PersistMapCleanup(tagPrefix = "searchResults/$query/")
+    PersistMapCleanup(prefix = "searchResults/$query/")
 
     RouteHandler(listenToGlobalEmitter = true) {
         GlobalRoutes()
@@ -65,9 +64,7 @@ fun SearchResultScreen(query: String, onSearchAgain: () -> Unit) {
                     title = query,
                     modifier = Modifier.pointerInput(Unit) {
                         detectTapGestures {
-                            context.persistMap?.keys?.removeAll {
-                                it.startsWith("searchResults/$query/")
-                            }
+                            persistMap?.clean("searchResults/$query/")
                             onSearchAgain()
                         }
                     }

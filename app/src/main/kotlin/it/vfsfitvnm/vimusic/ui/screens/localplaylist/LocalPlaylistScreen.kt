@@ -18,7 +18,7 @@ import it.vfsfitvnm.vimusic.ui.screens.Route
 fun LocalPlaylistScreen(playlistId: Long) {
     val saveableStateHolder = rememberSaveableStateHolder()
 
-    PersistMapCleanup(tagPrefix = "localPlaylist/$playlistId/")
+    PersistMapCleanup(prefix = "localPlaylist/$playlistId/")
 
     RouteHandler(listenToGlobalEmitter = true) {
         GlobalRoutes()
