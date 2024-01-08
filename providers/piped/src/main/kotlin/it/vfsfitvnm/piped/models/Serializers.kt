@@ -30,7 +30,6 @@ object SecondLocalDateTimeSerializer : KSerializer<LocalDateTime> {
 
     override fun serialize(encoder: Encoder, value: LocalDateTime) =
         encoder.encodeLong(value.toInstant(TimeZone.UTC).epochSeconds)
-
 }
 
 typealias DateTimeSeconds = @Serializable(with = SecondLocalDateTimeSerializer::class) LocalDateTime

@@ -17,7 +17,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -32,7 +31,6 @@ import it.vfsfitvnm.vimusic.ui.components.themed.SecondaryTextButton
 import it.vfsfitvnm.vimusic.ui.screens.Route
 import it.vfsfitvnm.vimusic.utils.isAtLeastAndroid6
 import it.vfsfitvnm.vimusic.utils.toast
-import kotlin.math.floor
 
 @OptIn(UnstableApi::class)
 @Route
@@ -81,7 +79,7 @@ fun PlayerSettings() = with(PlayerPreferences) {
             )
 
             AnimatedVisibility(visible = skipSilence) {
-                val initialValue by derivedStateOf { minimumSilence.toFloat() }
+                val initialValue by remember { derivedStateOf { minimumSilence.toFloat() / 1000L } }
                 var newValue by remember(initialValue) { mutableFloatStateOf(initialValue) }
                 var changed by rememberSaveable { mutableStateOf(false) }
 
@@ -92,7 +90,7 @@ fun PlayerSettings() = with(PlayerPreferences) {
                         state = newValue,
                         onSlide = { newValue = it },
                         onSlideCompleted = {
-                            minimumSilence = it.toLong()
+                            minimumSilence = it.toLong() * 1000L
                             changed = true
                         },
                         toDisplay = { stringResource(R.string.format_ms, it.toLong()) },

@@ -177,6 +177,7 @@ class ReorderingState(
 
     private fun overscroll(overscroll: Int) {
         val newHeight = itemInfo.offset - overscroll
+        @Suppress("ComplexCondition")
         if (
             !(overscroll > 0 && newHeight <= lazyListState.layoutInfo.viewportEndOffset) &&
             !(overscroll < 0 && newHeight >= lazyListState.layoutInfo.viewportStartOffset)

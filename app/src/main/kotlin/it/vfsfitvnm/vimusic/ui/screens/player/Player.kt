@@ -94,7 +94,6 @@ import it.vfsfitvnm.vimusic.utils.shouldBePlaying
 import it.vfsfitvnm.vimusic.utils.thumbnail
 import it.vfsfitvnm.vimusic.utils.toast
 import kotlin.math.absoluteValue
-import kotlin.math.roundToInt
 
 private fun onDismiss(binder: PlayerService.Binder) {
     binder.stopRadio()

@@ -74,6 +74,10 @@ exceptions:
       - ActivityNotFoundException
 
 formatting:
+  AnnotationOnSeparateLine:
+    active: true
+    ignoreAnnotated:
+      - kotlinx.serialization.Serializable
   CommentWrapping:
     # Because argument names in comment are a thing: Java API's do not support named arguments
     active: false

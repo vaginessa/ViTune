@@ -4,7 +4,6 @@ package it.vfsfitvnm.vimusic.utils
 
 import android.content.ContentUris
 import android.net.Uri
-import android.os.Build
 import android.provider.MediaStore
 import android.text.format.DateUtils
 import androidx.annotation.OptIn

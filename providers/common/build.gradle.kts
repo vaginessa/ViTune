@@ -5,6 +5,9 @@ plugins {
 
 dependencies {
     implementation(libs.kotlin.coroutines)
+
+    detektPlugins(libs.detekt.compose)
+    detektPlugins(libs.detekt.formatting)
 }
 
 kotlin {
