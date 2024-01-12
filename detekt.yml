@@ -106,6 +106,8 @@ naming:
     constantPattern: '[A-Z][_A-Z0-9]*'
 
 style:
+  ForbiddenComment:
+    active: false
   MagicNumber:
     active: false # For now, since there are way too many of them
   MaxLineLength:
