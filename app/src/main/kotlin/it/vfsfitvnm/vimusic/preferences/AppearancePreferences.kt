@@ -11,6 +11,7 @@ object AppearancePreferences : GlobalPreferencesHolder() {
     var thumbnailRoundness by enum(ThumbnailRoundness.Light)
     var useSystemFont by boolean(false)
     var applyFontPadding by boolean(false)
-    var isShowingThumbnailInLockscreen by boolean(false)
+    val isShowingThumbnailInLockscreenProperty = boolean(false)
+    var isShowingThumbnailInLockscreen by isShowingThumbnailInLockscreenProperty
     var swipeToHideSong by boolean(false)
 }

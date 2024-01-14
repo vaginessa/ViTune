@@ -31,7 +31,6 @@ import androidx.annotation.OptIn
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.startForegroundService
@@ -293,46 +292,55 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
         maybeResumePlaybackWhenDeviceConnected()
 
-        fun <T> CoroutineScope.stateCallback(
-            runner: suspend (suspend () -> Unit) -> Unit = { withContext(Dispatchers.Main) { it() } },
-            state: () -> T,
-            callback: suspend () -> Unit
-        ) = launch { snapshotFlow(state).collectLatest { runner(callback) } }
+        fun <T> CoroutineScope.subscribe(
+            state: StateFlow<T>,
+            runner: (() -> Unit) -> Unit = { handler.post(it) },
+            callback: suspend (T) -> () -> Unit
+        ) = launch {
+            state.collectLatest {
+                runner(callback(it))
+            }
+        }
 
         preferenceUpdaterJob = coroutineScope.launch {
-            with(PlayerPreferences) {
-                stateCallback(
-                    state = { resumePlaybackWhenDeviceConnected },
-                    callback = ::maybeResumePlaybackWhenDeviceConnected
-                )
-                stateCallback(
-                    state = { AppearancePreferences.isShowingThumbnailInLockscreen },
-                    callback = ::maybeShowSongCoverInLockScreen
-                )
-                stateCallback(state = { trackLoopEnabled }, callback = ::updateRepeatMode)
-                stateCallback(state = { queueLoopEnabled }, callback = ::updateRepeatMode)
-                stateCallback(state = { volumeNormalization }, callback = ::maybeNormalizeVolume)
-                stateCallback(
-                    state = { volumeNormalizationBaseGain },
-                    callback = ::maybeNormalizeVolume
-                )
-                stateCallback(state = { bassBoost }, callback = ::maybeBassBoost)
-                stateCallback(state = { bassBoostLevel }, callback = ::maybeBassBoost)
-                stateCallback(
-                    state = { speed },
-                    callback = { player.setPlaybackSpeed(speed.coerceAtLeast(0.01f)) }
-                )
-                stateCallback(
-                    state = { isInvincibilityEnabled },
-                    callback = {
-                        this@PlayerService.isInvincibilityEnabled = isInvincibilityEnabled
-                    }
-                )
-                stateCallback(
-                    state = { skipSilence },
-                    callback = { player.skipSilenceEnabled = skipSilence },
-                    runner = { handler.post { runBlocking { it() } } }
-                )
+            subscribe(PlayerPreferences.resumePlaybackWhenDeviceConnectedProperty.stateFlow) {
+                ::maybeResumePlaybackWhenDeviceConnected
+            }
+            subscribe(AppearancePreferences.isShowingThumbnailInLockscreenProperty.stateFlow) {
+                ::maybeShowSongCoverInLockScreen
+            }
+            subscribe(PlayerPreferences.trackLoopEnabledProperty.stateFlow) {
+                ::updateRepeatMode
+            }
+            subscribe(PlayerPreferences.queueLoopEnabledProperty.stateFlow) {
+                ::updateRepeatMode
+            }
+            subscribe(PlayerPreferences.volumeNormalizationProperty.stateFlow) {
+                ::maybeNormalizeVolume
+            }
+            subscribe(PlayerPreferences.volumeNormalizationBaseGainProperty.stateFlow) {
+                ::maybeNormalizeVolume
+            }
+            subscribe(PlayerPreferences.bassBoostProperty.stateFlow) {
+                ::maybeBassBoost
+            }
+            subscribe(PlayerPreferences.bassBoostLevelProperty.stateFlow) {
+                ::maybeBassBoost
+            }
+            subscribe(PlayerPreferences.speedProperty.stateFlow) {
+                {
+                    player.setPlaybackSpeed(it.coerceAtLeast(0.01f))
+                }
+            }
+            subscribe(PlayerPreferences.isInvincibilityEnabledProperty.stateFlow) {
+                {
+                    this@PlayerService.isInvincibilityEnabled = it
+                }
+            }
+            subscribe(PlayerPreferences.skipSilenceProperty.stateFlow) {
+                {
+                    player.skipSilenceEnabled = it
+                }
             }
         }
     }
