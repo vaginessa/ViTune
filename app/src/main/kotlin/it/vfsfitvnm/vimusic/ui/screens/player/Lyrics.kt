@@ -121,71 +121,75 @@ fun Lyrics(
         var invalidLrc by remember(mediaId, isShowingSynchronizedLyrics) { mutableStateOf(false) }
 
         LaunchedEffect(mediaId, isShowingSynchronizedLyrics) {
-            withContext(Dispatchers.IO) {
-                Database.lyrics(mediaId).collect { currentLyrics ->
-                    when {
-                        isShowingSynchronizedLyrics && currentLyrics?.synced == null -> {
-                            lyrics = null
-                            val mediaMetadata = mediaMetadataProvider()
-                            var duration = withContext(Dispatchers.Main) { durationProvider() }
+            runCatching {
+                ensureSongInserted()
 
-                            while (duration == C.TIME_UNSET) {
-                                delay(100)
-                                duration = withContext(Dispatchers.Main) { durationProvider() }
-                            }
+                withContext(Dispatchers.IO) {
+                    Database.lyrics(mediaId).collect { currentLyrics ->
+                        when {
+                            isShowingSynchronizedLyrics && currentLyrics?.synced == null -> {
+                                lyrics = null
+                                val mediaMetadata = mediaMetadataProvider()
+                                var duration = withContext(Dispatchers.Main) { durationProvider() }
 
-                            val album = mediaMetadata.albumTitle?.toString()
-                            val artist = mediaMetadata.artist?.toString().orEmpty()
-                            val title = mediaMetadata.title?.toString().orEmpty()
+                                while (duration == C.TIME_UNSET) {
+                                    delay(100)
+                                    duration = withContext(Dispatchers.Main) { durationProvider() }
+                                }
 
-                            LrcLib.lyrics(
-                                artist = artist,
-                                title = title,
-                                duration = duration.milliseconds,
-                                album = album
-                            )?.onSuccess {
-                                Database.upsert(
-                                    Lyrics(
-                                        songId = mediaId,
-                                        fixed = currentLyrics?.fixed,
-                                        synced = it?.text.orEmpty()
-                                    )
-                                )
-                            }?.onFailure {
-                                KuGou.lyrics(
+                                val album = mediaMetadata.albumTitle?.toString().orEmpty()
+                                val artist = mediaMetadata.artist?.toString().orEmpty()
+                                val title = mediaMetadata.title?.toString().orEmpty()
+
+                                LrcLib.lyrics(
                                     artist = artist,
                                     title = title,
-                                    duration = duration / 1000
+                                    duration = duration.milliseconds,
+                                    album = album
                                 )?.onSuccess {
                                     Database.upsert(
                                         Lyrics(
                                             songId = mediaId,
                                             fixed = currentLyrics?.fixed,
-                                            synced = it?.value.orEmpty()
+                                            synced = it?.text.orEmpty()
+                                        )
+                                    )
+                                }?.onFailure {
+                                    KuGou.lyrics(
+                                        artist = artist,
+                                        title = title,
+                                        duration = duration / 1000
+                                    )?.onSuccess {
+                                        Database.upsert(
+                                            Lyrics(
+                                                songId = mediaId,
+                                                fixed = currentLyrics?.fixed,
+                                                synced = it?.value.orEmpty()
+                                            )
+                                        )
+                                    }?.onFailure {
+                                        isError = true
+                                    }
+                                }
+                            }
+
+                            !isShowingSynchronizedLyrics && currentLyrics?.fixed == null -> {
+                                lyrics = null
+                                Innertube.lyrics(NextBody(videoId = mediaId))?.onSuccess {
+                                    Database.upsert(
+                                        Lyrics(
+                                            songId = mediaId,
+                                            fixed = it.orEmpty(),
+                                            synced = currentLyrics?.synced
                                         )
                                     )
                                 }?.onFailure {
                                     isError = true
                                 }
                             }
-                        }
 
-                        !isShowingSynchronizedLyrics && currentLyrics?.fixed == null -> {
-                            lyrics = null
-                            Innertube.lyrics(NextBody(videoId = mediaId))?.onSuccess {
-                                Database.upsert(
-                                    Lyrics(
-                                        songId = mediaId,
-                                        fixed = it.orEmpty(),
-                                        synced = currentLyrics?.synced
-                                    )
-                                )
-                            }?.onFailure {
-                                isError = true
-                            }
+                            else -> lyrics = currentLyrics
                         }
-
-                        else -> lyrics = currentLyrics
                     }
                 }
             }
