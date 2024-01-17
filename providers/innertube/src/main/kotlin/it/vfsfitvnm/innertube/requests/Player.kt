@@ -50,7 +50,7 @@ suspend fun Innertube.player(body: PlayerBody) = runCatchingCancellable {
             return@runCatchingCancellable response
         }
 
-        val audioStreams = client.get("https://watchapi.whatever.social/streams/${body.videoId}") {
+        val audioStreams = client.get("https://pipedapi.adminforge.de/streams/${body.videoId}") {
             contentType(ContentType.Application.Json)
         }.body<PipedResponse>().audioStreams
 
