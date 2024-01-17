@@ -224,20 +224,16 @@ fun SearchResultScreen(query: String, onSearchAgain: () -> Unit) {
                             ItemsPage(
                                 tag = "searchResults/$query/videos",
                                 itemsPageProvider = { continuation ->
-                                    if (continuation == null) {
-                                        Innertube.searchPage(
-                                            body = SearchBody(
-                                                query = query,
-                                                params = Innertube.SearchFilter.Video.value
-                                            ),
-                                            fromMusicShelfRendererContent = Innertube.VideoItem::from
-                                        )
-                                    } else {
-                                        Innertube.searchPage(
-                                            body = ContinuationBody(continuation = continuation),
-                                            fromMusicShelfRendererContent = Innertube.VideoItem::from
-                                        )
-                                    }
+                                    if (continuation == null) Innertube.searchPage(
+                                        body = SearchBody(
+                                            query = query,
+                                            params = Innertube.SearchFilter.Video.value
+                                        ),
+                                        fromMusicShelfRendererContent = Innertube.VideoItem::from
+                                    ) else Innertube.searchPage(
+                                        body = ContinuationBody(continuation = continuation),
+                                        fromMusicShelfRendererContent = Innertube.VideoItem::from
+                                    )
                                 },
                                 emptyItemsText = emptyItemsText,
                                 headerContent = headerContent,

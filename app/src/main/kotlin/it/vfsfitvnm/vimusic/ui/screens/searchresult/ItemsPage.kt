@@ -73,7 +73,7 @@ inline fun <T : Innertube.Item> ItemsPage(
                     } else {
                         itemsPage += it
                     }
-                }
+                }?.exceptionOrNull()?.printStackTrace()
             }
     }
 
