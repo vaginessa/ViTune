@@ -84,6 +84,7 @@ import it.vfsfitvnm.vimusic.utils.semiBold
 import it.vfsfitvnm.vimusic.utils.toast
 import it.vfsfitvnm.vimusic.utils.verticalFadingEdge
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -122,8 +123,6 @@ fun Lyrics(
 
         LaunchedEffect(mediaId, isShowingSynchronizedLyrics) {
             runCatching {
-                ensureSongInserted()
-
                 withContext(Dispatchers.IO) {
                     Database.lyrics(mediaId).collect { currentLyrics ->
                         when {
@@ -137,7 +136,7 @@ fun Lyrics(
                                     duration = withContext(Dispatchers.Main) { durationProvider() }
                                 }
 
-                                val album = mediaMetadata.albumTitle?.toString().orEmpty()
+                                val album = mediaMetadata.albumTitle?.toString()
                                 val artist = mediaMetadata.artist?.toString().orEmpty()
                                 val title = mediaMetadata.title?.toString().orEmpty()
 
@@ -192,7 +191,7 @@ fun Lyrics(
                         }
                     }
                 }
-            }
+            }.exceptionOrNull()?.let { if (it !is CancellationException) it.printStackTrace() }
         }
 
         if (isEditing) TextFieldDialog(
