@@ -180,7 +180,7 @@ fun SliderSettingsEntry(
     range: ClosedFloatingPointRange<Float>,
     modifier: Modifier = Modifier,
     onSlide: (Float) -> Unit = { },
-    onSlideCompleted: (Float) -> Unit = { },
+    onSlideCompleted: () -> Unit = { },
     toDisplay: @Composable (Float) -> String = { it.toString() },
     steps: Int = 0,
     isEnabled: Boolean = true,
@@ -197,9 +197,7 @@ fun SliderSettingsEntry(
     Slider(
         state = state,
         onSlide = onSlide,
-        onSlideCompleted = {
-            onSlideCompleted(state)
-        },
+        onSlideCompleted = onSlideCompleted,
         range = range,
         steps = steps,
         modifier = Modifier

@@ -4,13 +4,7 @@ import androidx.annotation.IntRange
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.pointerInput
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
-
-// TODO: due to changes in the Material Slider there are unknown glitches that occur
-// Update 12-31-2023: this is likely caused by the fact that the behavior of onValueChangeFinished
-// changed and should not update `value`'s state
 
 @Composable
 fun Slider(
@@ -25,17 +19,11 @@ fun Slider(
 
     androidx.compose.material3.Slider(
         value = state,
-        onValueChange = { onSlide(it) },
+        onValueChange = onSlide,
+        onValueChangeFinished = onSlideCompleted,
         valueRange = range,
+        modifier = modifier,
         steps = steps,
-        modifier = modifier.pointerInput(Unit) {
-            awaitPointerEventScope {
-                while (true) {
-                    val event = awaitPointerEvent()
-                    if (event.type == PointerEventType.Release) onSlideCompleted()
-                }
-            }
-        },
         colors = SliderDefaults.colors(
             thumbColor = colorPalette.onAccent,
             activeTrackColor = colorPalette.accent,

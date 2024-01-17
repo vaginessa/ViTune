@@ -90,7 +90,7 @@ fun PlayerSettings() = with(PlayerPreferences) {
                         state = newValue,
                         onSlide = { newValue = it },
                         onSlideCompleted = {
-                            minimumSilence = it.toLong() * 1000L
+                            minimumSilence = newValue.toLong() * 1000L
                             changed = true
                         },
                         toDisplay = { stringResource(R.string.format_ms, it.toLong()) },
