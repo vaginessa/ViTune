@@ -556,7 +556,9 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             return
         }
 
-        if (loudnessEnhancer == null) loudnessEnhancer = LoudnessEnhancer(player.audioSessionId)
+        runCatching {
+            if (loudnessEnhancer == null) loudnessEnhancer = LoudnessEnhancer(player.audioSessionId)
+        }.onFailure { return }
 
         val songId = player.currentMediaItem?.mediaId ?: return
         volumeNormalizationJob?.cancel()
