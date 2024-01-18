@@ -1,0 +1,14 @@
+* Optimized performance
+* Fixed edge cases that caused the duration of a song to appear incorrectly
+* Fixed an issue that caused ghost files to appear in Local music in some cases
+* Fixed an edge case that caused the app to crash when non-synchronized lyrics are enabled
+* Move to adminforge.de as the main Piped instance to bypass some restrictions and avoid downtime
+* Fixed slider behavior
+* Fixed an issue that caused the app to crash when your device is out of memory or doesn't support normalization
+* Fixed an issue where some search queries caused searching for video's to load infinitely
+* Reduced item sizes in horizontal grids in portrait mode to only 75% of the maximum available size
+* Optimized network traffic while fetching mood data
+* Improved consistency in Discover tab
+* Added suggestions to the queue
+* Fixed an issue that caused a crash while pre-caching when no songs have ever been played or pre-cached
+* Simplified player interfaces
