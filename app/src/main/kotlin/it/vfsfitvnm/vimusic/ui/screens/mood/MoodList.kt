@@ -63,6 +63,7 @@ fun MoodList(
     var moodPage by persist<Result<BrowseResult>>("playlist/$browseId${mood.params?.let { "/$it" }.orEmpty()}")
 
     LaunchedEffect(Unit) {
+        if (moodPage?.isSuccess != true)
         moodPage = Innertube.browse(BrowseBody(browseId = browseId, params = mood.params))
     }
 
