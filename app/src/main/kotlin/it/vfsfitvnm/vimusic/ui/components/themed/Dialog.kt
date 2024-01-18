@@ -24,6 +24,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -324,9 +325,8 @@ fun <T> ValueSelectorDialogBody(
 fun SliderDialog(
     onDismiss: () -> Unit,
     title: String,
-    state: Float,
-    onSlide: (Float) -> Unit,
-    onSlideCompleted: () -> Unit,
+    provideState: @Composable () -> MutableState<Float>,
+    onSlideCompleted: (newState: Float) -> Unit,
     min: Float,
     max: Float,
     modifier: Modifier = Modifier,
@@ -335,6 +335,7 @@ fun SliderDialog(
     content: @Composable () -> Unit = { }
 ) = Dialog(onDismissRequest = onDismiss) {
     val (colorPalette, typography) = LocalAppearance.current
+    var state by provideState()
 
     Column(
         modifier = modifier
@@ -350,8 +351,8 @@ fun SliderDialog(
 
         Slider(
             state = state,
-            onSlide = onSlide,
-            onSlideCompleted = onSlideCompleted,
+            setState = { state = it },
+            onSlideCompleted = { onSlideCompleted(state) },
             range = min..max,
             steps = steps,
             modifier = Modifier

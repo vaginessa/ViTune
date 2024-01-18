@@ -196,7 +196,7 @@ fun SliderSettingsEntry(
 
     Slider(
         state = state,
-        onSlide = onSlide,
+        setState = onSlide,
         onSlideCompleted = onSlideCompleted,
         range = range,
         steps = steps,

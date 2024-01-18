@@ -9,7 +9,7 @@ import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 @Composable
 fun Slider(
     state: Float,
-    onSlide: (Float) -> Unit,
+    setState: (Float) -> Unit,
     onSlideCompleted: () -> Unit,
     range: ClosedFloatingPointRange<Float>,
     modifier: Modifier = Modifier,
@@ -19,7 +19,7 @@ fun Slider(
 
     androidx.compose.material3.Slider(
         value = state,
-        onValueChange = onSlide,
+        onValueChange = setState,
         onValueChangeFinished = onSlideCompleted,
         valueRange = range,
         modifier = modifier,

@@ -33,7 +33,7 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -65,9 +65,9 @@ import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.enums.ThumbnailRoundness
 import it.vfsfitvnm.vimusic.models.ui.toUiMedia
 import it.vfsfitvnm.vimusic.preferences.PlayerPreferences
-import it.vfsfitvnm.vimusic.query
 import it.vfsfitvnm.vimusic.roundedShape
 import it.vfsfitvnm.vimusic.service.PlayerService
+import it.vfsfitvnm.vimusic.transaction
 import it.vfsfitvnm.vimusic.ui.components.BottomSheet
 import it.vfsfitvnm.vimusic.ui.components.BottomSheetState
 import it.vfsfitvnm.vimusic.ui.components.LocalMenuState
@@ -76,7 +76,6 @@ import it.vfsfitvnm.vimusic.ui.components.themed.BaseMediaItemMenu
 import it.vfsfitvnm.vimusic.ui.components.themed.IconButton
 import it.vfsfitvnm.vimusic.ui.components.themed.SecondaryTextButton
 import it.vfsfitvnm.vimusic.ui.components.themed.SliderDialog
-import it.vfsfitvnm.vimusic.ui.components.themed.TextToggle
 import it.vfsfitvnm.vimusic.ui.modifiers.onSwipe
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
@@ -93,6 +92,7 @@ import it.vfsfitvnm.vimusic.utils.semiBold
 import it.vfsfitvnm.vimusic.utils.shouldBePlaying
 import it.vfsfitvnm.vimusic.utils.thumbnail
 import it.vfsfitvnm.vimusic.utils.toast
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlin.math.absoluteValue
 
 private fun onDismiss(binder: PlayerService.Binder) {
@@ -359,19 +359,15 @@ fun Player(
         var speedDialogOpen by rememberSaveable { mutableStateOf(false) }
 
         if (speedDialogOpen) {
-            var newValue by remember(PlayerPreferences.speed) { mutableFloatStateOf(PlayerPreferences.speed) }
-
-            fun submit() { PlayerPreferences.speed = newValue }
-
             SliderDialog(
-                onDismiss = {
-                    speedDialogOpen = false
-                    submit()
-                },
+                onDismiss = { speedDialogOpen = false },
                 title = stringResource(R.string.playback_speed),
-                state = newValue,
-                onSlide = { newValue = it },
-                onSlideCompleted = { submit() },
+                provideState = {
+                    remember(PlayerPreferences.speed) {
+                        mutableFloatStateOf(PlayerPreferences.speed)
+                    }
+                },
+                onSlideCompleted = { PlayerPreferences.speed = it },
                 min = 0f,
                 max = 2f,
                 toDisplay = {
@@ -386,8 +382,7 @@ fun Player(
                     SecondaryTextButton(
                         text = stringResource(R.string.reset),
                         onClick = {
-                            newValue = 1f
-                            submit()
+                            PlayerPreferences.speed = 1f
                         }
                     )
                 }
@@ -397,22 +392,29 @@ fun Player(
         var boostDialogOpen by rememberSaveable { mutableStateOf(false) }
 
         if (boostDialogOpen) {
-            val state by Database.loudnessBoost(mediaItem.mediaId).collectAsState(initial = null)
-            var newValue by remember(state) { mutableFloatStateOf(state ?: 0f) }
-
-            fun submit() = query {
-                Database.setLoudnessBoost(mediaItem.mediaId, if (newValue == 0f) null else newValue)
+            fun submit(state: Float) = transaction {
+                Database.setLoudnessBoost(
+                    songId = mediaItem.mediaId,
+                    loudnessBoost = state.takeUnless { it == 0f }
+                )
             }
 
             SliderDialog(
-                onDismiss = {
-                    boostDialogOpen = false
-                    submit()
-                },
+                onDismiss = { boostDialogOpen = false },
                 title = stringResource(R.string.song_volume_boost),
-                state = newValue,
-                onSlide = { newValue = it },
-                onSlideCompleted = { submit() },
+                provideState = {
+                    val state = remember { mutableFloatStateOf(0f) }
+
+                    LaunchedEffect(mediaItem.mediaId) {
+                        Database
+                            .loudnessBoost(mediaItem.mediaId)
+                            .distinctUntilChanged()
+                            .collect { state.floatValue = it ?: 0f }
+                    }
+
+                    state
+                },
+                onSlideCompleted = { submit(it) },
                 min = -20f,
                 max = 20f,
                 toDisplay = { stringResource(R.string.format_db, "%.2f".format(it)) }
@@ -423,52 +425,26 @@ fun Player(
                 ) {
                     SecondaryTextButton(
                         text = stringResource(R.string.reset),
-                        onClick = {
-                            newValue = 0f
-                            submit()
-                        }
+                        onClick = { submit(0f) }
                     )
                 }
             }
         }
 
         with(PlayerPreferences) {
-            val actions: @Composable () -> Unit = {
-                IconButton(
-                    onClick = { speedDialogOpen = true },
-                    icon = R.drawable.speed,
-                    color = colorPalette.text,
-                    modifier = Modifier
-                        .padding(vertical = 8.dp)
-                        .size(20.dp)
-                )
-
-                if (volumeNormalization) IconButton(
-                    onClick = { boostDialogOpen = true },
-                    icon = R.drawable.volume_up,
-                    color = colorPalette.text,
-                    modifier = Modifier
-                        .padding(vertical = 8.dp)
-                        .size(20.dp)
-                )
-            }
-
             Queue(
                 layoutState = playerBottomSheetState,
                 beforeContent = {
-                    when (playerLayout) {
-                        PlayerPreferences.PlayerLayout.Classic -> actions()
-
-                        PlayerPreferences.PlayerLayout.New -> TextToggle(
-                            state = trackLoopEnabled,
-                            toggleState = { trackLoopEnabled = !trackLoopEnabled },
-                            name = stringResource(R.string.song_loop)
-                        )
-                    }
+                    if (playerLayout == PlayerPreferences.PlayerLayout.New) IconButton(
+                        onClick = { trackLoopEnabled = !trackLoopEnabled },
+                        icon = R.drawable.infinite,
+                        color = if (trackLoopEnabled) colorPalette.text else colorPalette.textDisabled,
+                        modifier = Modifier
+                            .padding(vertical = 8.dp)
+                            .size(20.dp)
+                    ) else Spacer(modifier = Modifier.width(20.dp))
                 },
                 afterContent = {
-                    if (playerLayout == PlayerPreferences.PlayerLayout.New) actions()
-
                     IconButton(
                         icon = R.drawable.ellipsis_horizontal,
                         color = colorPalette.text,
@@ -477,7 +453,10 @@ fun Player(
                                 PlayerMenu(
                                     onDismiss = menuState::hide,
                                     mediaItem = mediaItem,
-                                    binder = binder
+                                    binder = binder,
+                                    onShowSpeedDialog = { speedDialogOpen = true },
+                                    onShowNormalizationDialog =
+                                    if (volumeNormalization) ({ boostDialogOpen = true }) else null
                                 )
                             }
                         },
@@ -499,7 +478,9 @@ fun Player(
 private fun PlayerMenu(
     binder: PlayerService.Binder,
     mediaItem: MediaItem,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onShowSpeedDialog: (() -> Unit)? = null,
+    onShowNormalizationDialog: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
 
@@ -527,6 +508,8 @@ private fun PlayerMenu(
             }
         },
         onShowSleepTimer = {},
-        onDismiss = onDismiss
+        onDismiss = onDismiss,
+        onShowSpeedDialog = onShowSpeedDialog,
+        onShowNormalizationDialog = onShowNormalizationDialog
     )
 }

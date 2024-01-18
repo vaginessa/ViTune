@@ -206,7 +206,9 @@ fun BaseMediaItemMenu(
     onRemoveFromQueue: (() -> Unit)? = null,
     onRemoveFromPlaylist: (() -> Unit)? = null,
     onHideFromDatabase: (() -> Unit)? = null,
-    onRemoveFromQuickPicks: (() -> Unit)? = null
+    onRemoveFromQuickPicks: (() -> Unit)? = null,
+    onShowSpeedDialog: (() -> Unit)? = null,
+    onShowNormalizationDialog: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
 
@@ -248,6 +250,8 @@ fun BaseMediaItemMenu(
             context.startActivity(Intent.createChooser(sendIntent, null))
         },
         onRemoveFromQuickPicks = onRemoveFromQuickPicks,
+        onShowSpeedDialog = onShowSpeedDialog,
+        onShowNormalizationDialog = onShowNormalizationDialog,
         modifier = modifier
     )
 }
@@ -270,7 +274,9 @@ fun MediaItemMenu(
     onAddToPlaylist: ((Playlist, Int) -> Unit)? = null,
     onGoToAlbum: ((String) -> Unit)? = null,
     onGoToArtist: ((String) -> Unit)? = null,
-    onRemoveFromQuickPicks: (() -> Unit)? = null
+    onRemoveFromQuickPicks: (() -> Unit)? = null,
+    onShowSpeedDialog: (() -> Unit)? = null,
+    onShowNormalizationDialog: (() -> Unit)? = null
 ) {
     val (colorPalette) = LocalAppearance.current
     val density = LocalDensity.current
@@ -469,6 +475,28 @@ fun MediaItemMenu(
                     onClick = {
                         onDismiss()
                         onStartRadio()
+                    }
+                )
+            }
+
+            onShowSpeedDialog?.let { onShowSpeedDialog ->
+                MenuEntry(
+                    icon = R.drawable.speed,
+                    text = stringResource(R.string.playback_speed),
+                    onClick = {
+                        onDismiss()
+                        onShowSpeedDialog()
+                    }
+                )
+            }
+
+            onShowNormalizationDialog?.let { onShowNormalizationDialog ->
+                MenuEntry(
+                    icon = R.drawable.volume_up,
+                    text = stringResource(R.string.song_volume_boost),
+                    onClick = {
+                        onDismiss()
+                        onShowNormalizationDialog()
                     }
                 )
             }
