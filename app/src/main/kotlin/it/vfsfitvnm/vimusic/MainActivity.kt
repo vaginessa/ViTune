@@ -352,7 +352,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val progress by downloadProgress.collectAsState()
                     val animatedProgress by animateFloatAsState(
-                        targetValue = progress ?: 1f,
+                        targetValue = progress?.takeIf { !it.isNaN() } ?: 1f,
                         label = ""
                     )
 

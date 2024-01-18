@@ -97,6 +97,8 @@ class PrecacheService : DownloadService(
         }
     }
 
+    @get:Synchronized
+    @set:Synchronized
     private var bound = false
     private var binder: PlayerService.Binder? = null
 
@@ -104,7 +106,11 @@ class PrecacheService : DownloadService(
 
     @kotlin.OptIn(FlowPreview::class)
     override fun getDownloadManager(): DownloadManager {
-        bindService(intent<PlayerService>(), serviceConnection, Context.BIND_AUTO_CREATE)
+        runCatching {
+            if (bound) unbindService(serviceConnection)
+            bindService(intent<PlayerService>(), serviceConnection, Context.BIND_AUTO_CREATE)
+        }
+
         val cache = BlockingDeferredCache {
             suspendCoroutine {
                 waiters += { it.resume(Unit) }
@@ -180,7 +186,9 @@ class PrecacheService : DownloadService(
     override fun onDestroy() {
         super.onDestroy()
 
-        if (bound) unbindService(serviceConnection)
+        runCatching {
+            if (bound) unbindService(serviceConnection)
+        }
     }
 
     companion object {
