@@ -30,12 +30,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -59,9 +62,14 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.Timeline
 import com.valentinilk.shimmer.shimmer
+import it.vfsfitvnm.compose.persist.PersistMapCleanup
+import it.vfsfitvnm.compose.persist.persist
 import it.vfsfitvnm.compose.reordering.draggedItem
 import it.vfsfitvnm.compose.reordering.rememberReorderingState
 import it.vfsfitvnm.compose.reordering.reorder
+import it.vfsfitvnm.innertube.Innertube
+import it.vfsfitvnm.innertube.models.bodies.NextBody
+import it.vfsfitvnm.innertube.requests.nextPage
 import it.vfsfitvnm.vimusic.Database
 import it.vfsfitvnm.vimusic.LocalPlayerServiceBinder
 import it.vfsfitvnm.vimusic.R
@@ -75,7 +83,9 @@ import it.vfsfitvnm.vimusic.ui.components.BottomSheet
 import it.vfsfitvnm.vimusic.ui.components.BottomSheetState
 import it.vfsfitvnm.vimusic.ui.components.LocalMenuState
 import it.vfsfitvnm.vimusic.ui.components.MusicBars
+import it.vfsfitvnm.vimusic.ui.components.themed.BaseMediaItemMenu
 import it.vfsfitvnm.vimusic.ui.components.themed.FloatingActionsContainerWithScrollToTop
+import it.vfsfitvnm.vimusic.ui.components.themed.HorizontalDivider
 import it.vfsfitvnm.vimusic.ui.components.themed.IconButton
 import it.vfsfitvnm.vimusic.ui.components.themed.Menu
 import it.vfsfitvnm.vimusic.ui.components.themed.MenuEntry
@@ -91,6 +101,9 @@ import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.ui.styling.onOverlay
 import it.vfsfitvnm.vimusic.ui.styling.px
 import it.vfsfitvnm.vimusic.utils.DisposableListener
+import it.vfsfitvnm.vimusic.utils.addNext
+import it.vfsfitvnm.vimusic.utils.asMediaItem
+import it.vfsfitvnm.vimusic.utils.enqueue
 import it.vfsfitvnm.vimusic.utils.medium
 import it.vfsfitvnm.vimusic.utils.onFirst
 import it.vfsfitvnm.vimusic.utils.semiBold
@@ -100,6 +113,7 @@ import it.vfsfitvnm.vimusic.utils.smoothScrollToTop
 import it.vfsfitvnm.vimusic.utils.windows
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.time.Duration.Companion.milliseconds
 
 @ExperimentalFoundationApi
@@ -119,7 +133,12 @@ fun Queue(
     val windowInsets = WindowInsets.systemBars
 
     val horizontalBottomPaddingValues = windowInsets
-        .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom).asPaddingValues()
+        .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)
+        .asPaddingValues()
+
+    var suggestions by persist<Result<List<MediaItem>?>?>(tag = "queue/suggestions")
+
+    PersistMapCleanup(prefix = "queue/suggestions")
 
     BottomSheet(
         state = layoutState,
@@ -165,6 +184,15 @@ fun Queue(
         var windows by remember { mutableStateOf(player.currentTimeline.windows) }
         var shouldBePlaying by remember { mutableStateOf(player.shouldBePlaying) }
 
+        val visibleSuggestions by remember(suggestions) {
+            derivedStateOf {
+                suggestions
+                    ?.getOrNull()
+                    .orEmpty()
+                    .filter { windows.none { window -> window.mediaItem.mediaId == it.mediaId } }
+            }
+        }
+
         player.DisposableListener {
             object : Player.Listener {
                 override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
@@ -185,6 +213,18 @@ fun Queue(
                 override fun onPlaybackStateChanged(playbackState: Int) {
                     shouldBePlaying = binder.player.shouldBePlaying
                 }
+            }
+        }
+
+        LaunchedEffect(mediaItemIndex) {
+            withContext(Dispatchers.IO) {
+                suggestions = runCatching {
+                    Innertube.nextPage(
+                        NextBody(
+                            videoId = windows[mediaItemIndex].mediaItem.mediaId
+                        )
+                    )?.mapCatching { it.itemsPage?.items?.map(Innertube.SongItem::asMediaItem) }
+                }.getOrNull()
             }
         }
 
@@ -303,16 +343,65 @@ fun Queue(
                     }
 
                     item {
-                        if (binder.isLoadingRadio) Column(modifier = Modifier.shimmer()) {
-                            repeat(3) { index ->
-                                SongItemPlaceholder(
-                                    thumbnailSizeDp = thumbnailSizeDp,
-                                    modifier = Modifier
-                                        .alpha(1f - index * 0.125f)
-                                        .fillMaxWidth()
+                        if (visibleSuggestions.isNotEmpty()) HorizontalDivider(
+                            modifier = Modifier.padding(start = 28.dp + thumbnailSizeDp)
+                        )
+                    }
+
+                    items(visibleSuggestions) {
+                        SongItem(
+                            song = it,
+                            thumbnailSizeDp = thumbnailSizeDp,
+                            thumbnailSizePx = thumbnailSizePx,
+                            modifier = Modifier.clickable {
+                                menuState.display {
+                                    BaseMediaItemMenu(
+                                        onDismiss = { menuState.hide() },
+                                        mediaItem = it,
+                                        onEnqueue = { binder.player.enqueue(it) },
+                                        onPlayNext = { binder.player.addNext(it) }
+                                    )
+                                }
+                            }
+                        ) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(
+                                    space = 12.dp,
+                                    alignment = Alignment.End
+                                )
+                            ) {
+                                IconButton(
+                                    icon = R.drawable.play_skip_forward,
+                                    color = colorPalette.text,
+                                    onClick = {
+                                        binder.player.addNext(it)
+                                    },
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                IconButton(
+                                    icon = R.drawable.enqueue,
+                                    color = colorPalette.text,
+                                    onClick = {
+                                        binder.player.enqueue(it)
+                                    },
+                                    modifier = Modifier.size(18.dp)
                                 )
                             }
                         }
+                    }
+
+                    item {
+                        if (binder.isLoadingRadio || suggestions == null)
+                            Column(modifier = Modifier.shimmer()) {
+                                repeat(3) { index ->
+                                    SongItemPlaceholder(
+                                        thumbnailSizeDp = thumbnailSizeDp,
+                                        modifier = Modifier
+                                            .alpha(1f - index * 0.125f)
+                                            .fillMaxWidth()
+                                    )
+                                }
+                            }
                     }
                 }
 
