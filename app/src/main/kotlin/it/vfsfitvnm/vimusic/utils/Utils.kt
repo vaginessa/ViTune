@@ -15,7 +15,6 @@ import androidx.media3.common.util.UnstableApi
 import it.vfsfitvnm.innertube.Innertube
 import it.vfsfitvnm.innertube.models.bodies.ContinuationBody
 import it.vfsfitvnm.innertube.requests.playlistPage
-import it.vfsfitvnm.innertube.utils.plus
 import it.vfsfitvnm.piped.models.Playlist
 import it.vfsfitvnm.vimusic.models.Song
 import it.vfsfitvnm.vimusic.service.LOCAL_KEY_PREFIX
@@ -133,23 +132,30 @@ fun formatAsDuration(millis: Long) = DateUtils.formatElapsedTime(millis / 1000).
 
 suspend fun Result<Innertube.PlaylistOrAlbumPage>.completed(
     maxDepth: Int = Int.MAX_VALUE
-): Result<Innertube.PlaylistOrAlbumPage>? {
-    var playlistPage = getOrNull() ?: return null
+) = runCatching {
+    val page = getOrThrow()
+    val songs = page.songsPage?.items.orEmpty().toMutableSet()
+    var continuation = page.songsPage?.continuation
 
     var depth = 0
-    while (playlistPage.songsPage?.continuation != null && depth++ < maxDepth) {
-        val newSongs = Innertube.playlistPage(
-            body = ContinuationBody(continuation = playlistPage.songsPage?.continuation!!)
-        )?.getOrNull()?.takeIf { result ->
-            result.items?.let { items ->
-                items.isNotEmpty() && playlistPage.songsPage?.items?.none { it in items } != false
-            } != false
-        } ?: break
 
-        playlistPage = playlistPage.copy(songsPage = playlistPage.songsPage + newSongs)
+    while (continuation != null && depth++ < maxDepth) {
+        val newSongs = Innertube.playlistPage(
+            body = ContinuationBody(continuation = continuation)
+        )?.getOrNull()?.takeUnless { it.items.isNullOrEmpty() } ?: break
+
+        if (newSongs.items?.any { it in songs } != false) break
+
+        newSongs.items?.let { songs += it }
+        continuation = newSongs.continuation
     }
 
-    return Result.success(playlistPage)
+    page.copy(
+        songsPage = Innertube.ItemsPage(
+            items = songs.toList(),
+            continuation = null
+        )
+    )
 }
 
 fun <T> Flow<T>.onFirst(block: suspend (T) -> Unit): Flow<T> {

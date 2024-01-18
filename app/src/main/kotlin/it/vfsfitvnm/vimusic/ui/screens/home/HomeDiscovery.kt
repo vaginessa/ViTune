@@ -92,6 +92,7 @@ fun HomeDiscovery(
     var discoverPage by persist<Result<Innertube.DiscoverPage>>("home/discovery")
 
     LaunchedEffect(Unit) {
+        if (discoverPage?.isSuccess != true)
         discoverPage = Innertube.discoverPage()
     }
 

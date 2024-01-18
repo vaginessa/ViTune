@@ -2,15 +2,16 @@ package it.vfsfitvnm.innertube
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
-import io.ktor.client.plugins.BrowserUserAgent
 import io.ktor.client.plugins.compression.ContentEncoding
 import io.ktor.client.plugins.compression.brotli
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.header
+import io.ktor.client.request.headers
 import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
+import io.ktor.http.contentType
+import io.ktor.http.parameters
 import io.ktor.serialization.kotlinx.json.json
 import it.vfsfitvnm.innertube.models.MusicNavigationButtonRenderer
 import it.vfsfitvnm.innertube.models.NavigationEndpoint
@@ -21,8 +22,6 @@ import kotlinx.serialization.json.Json
 
 object Innertube {
     val client = HttpClient(OkHttp) {
-        BrowserUserAgent()
-
         expectSuccess = true
 
         install(ContentNegotiation) {
@@ -37,17 +36,28 @@ object Innertube {
         }
 
         install(ContentEncoding) {
-            brotli()
+            brotli(1.0f)
+            gzip(0.9f)
+            deflate(0.8f)
         }
 
         defaultRequest {
             url(scheme = "https", host = "music.youtube.com") {
-                headers.append(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                headers.append("X-Goog-Api-Key", "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8")
-                parameters.append("prettyPrint", "false")
+                contentType(ContentType.Application.Json)
+                headers {
+                    append("X-Goog-Api-Key", API_KEY)
+                    append("x-origin", ORIGIN)
+                }
+                parameters {
+                    append("prettyPrint", "false")
+                    append("key", API_KEY)
+                }
             }
         }
     }
+
+    private const val API_KEY = "AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30"
+    private const val ORIGIN = "https://music.youtube.com"
 
     internal const val BROWSE = "/youtubei/v1/browse"
     internal const val NEXT = "/youtubei/v1/next"

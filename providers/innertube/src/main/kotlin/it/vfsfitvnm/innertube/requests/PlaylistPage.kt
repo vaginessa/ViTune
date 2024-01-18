@@ -1,6 +1,7 @@
 package it.vfsfitvnm.innertube.requests
 
 import io.ktor.client.call.body
+import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import it.vfsfitvnm.extensions.runCatchingCancellable
@@ -16,8 +17,7 @@ import it.vfsfitvnm.innertube.utils.from
 suspend fun Innertube.playlistPage(body: BrowseBody) = runCatchingCancellable {
     val response = client.post(BROWSE) {
         setBody(body)
-        @Suppress("all")
-        mask("contents.singleColumnBrowseResultsRenderer.tabs.tabRenderer.content.sectionListRenderer.contents(musicPlaylistShelfRenderer(continuations,contents.$MUSIC_RESPONSIVE_LIST_ITEM_RENDERER_MASK),musicCarouselShelfRenderer.contents.$MUSIC_TWO_ROW_ITEM_RENDERER_MASK),header.musicDetailHeaderRenderer(title,subtitle,thumbnail),microformat")
+        body.context.apply()
     }.body<BrowseResponse>()
 
     val musicDetailHeaderRenderer = response
@@ -79,8 +79,10 @@ suspend fun Innertube.playlistPage(body: BrowseBody) = runCatchingCancellable {
 suspend fun Innertube.playlistPage(body: ContinuationBody) = runCatchingCancellable {
     val response = client.post(BROWSE) {
         setBody(body)
-        @Suppress("all")
-        mask("continuationContents.musicPlaylistShelfContinuation(continuations,contents.$MUSIC_RESPONSIVE_LIST_ITEM_RENDERER_MASK)")
+        parameter("continuation", body.continuation)
+        parameter("ctoken", body.continuation)
+        parameter("type", "next")
+        body.context.apply()
     }.body<ContinuationResponse>()
 
     response
