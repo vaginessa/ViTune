@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -32,6 +31,7 @@ import it.vfsfitvnm.vimusic.Database
 import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.models.PipedSession
 import it.vfsfitvnm.vimusic.transaction
+import it.vfsfitvnm.vimusic.ui.components.themed.CircularProgressIndicator
 import it.vfsfitvnm.vimusic.ui.components.themed.DefaultDialog
 import it.vfsfitvnm.vimusic.ui.components.themed.DialogTextButton
 import it.vfsfitvnm.vimusic.ui.components.themed.IconButton
@@ -68,10 +68,7 @@ fun SyncSettings() {
                 modifier = Modifier.padding(all = 24.dp)
             )
 
-            isLoading -> CircularProgressIndicator(
-                modifier = Modifier.padding(all = 8.dp),
-                color = colorPalette.accent
-            )
+            isLoading -> CircularProgressIndicator(modifier = Modifier.padding(all = 8.dp))
 
             else -> Column(modifier = Modifier.fillMaxWidth()) {
                 var instances: List<Instance> by persistList(tag = "settings/sync/piped/instances")
@@ -110,7 +107,7 @@ fun SyncSettings() {
                     isEnabled = !instancesUnavailable && canSelect,
                     usePadding = false,
                     trailingContent = if (loadingInstances) {
-                        { CircularProgressIndicator(color = colorPalette.accent) }
+                        { CircularProgressIndicator() }
                     } else null
                 )
                 SwitchSettingsEntry(

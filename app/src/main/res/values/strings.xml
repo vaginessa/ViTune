@@ -340,6 +340,14 @@
     <string name="swipe_to_hide_song">Swipe to hide song</string>
     <string name="swipe_to_hide_song_description">When you swipe a song to the left, it gets removed from the database and cache</string>
 
+    <string name="version">Version</string>
+    <string name="check_new_version">Check for updates</string>
+    <string name="current_version">You\'re currently running version v%1$s</string>
+    <string name="error_github">An unknown error occurred while fetching data from GitHub</string>
+    <string name="new_version_available">A new version is available</string>
+    <string name="more_information">More information</string>
+    <string name="up_to_date">You\'re currently up-to-date: no updates available</string>
+
     <plurals name="format_reset_blacklist_description">
         <item quantity="one">Remove %1$s song from the blacklist</item>
         <item quantity="other">Remove all %1$s songs from the blacklist</item>

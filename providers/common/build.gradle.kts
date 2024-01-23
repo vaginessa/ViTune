@@ -5,6 +5,10 @@ plugins {
 
 dependencies {
     implementation(libs.kotlin.coroutines)
+    implementation(libs.kotlin.datetime)
+
+    implementation(libs.ktor.http)
+    implementation(libs.ktor.serialization.json)
 
     detektPlugins(libs.detekt.compose)
     detektPlugins(libs.detekt.formatting)

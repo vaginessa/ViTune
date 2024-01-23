@@ -340,6 +340,14 @@
     <string name="swipe_to_hide_song">Swipe om song te verbergen</string>
     <string name="swipe_to_hide_song_description">Wanneer je een song naar links swipet wordt deze verwijderd uit de database en cache</string>
 
+    <string name="version">Versie</string>
+    <string name="check_new_version">Zoek naar updates</string>
+    <string name="current_version">Je gebruikt momenteel versie v%1$s</string>
+    <string name="error_github">Een onbekende fout heeft zich voorgedaan tijdens het verkrijgen van data bij GitHub</string>
+    <string name="new_version_available">Er is een nieuwe versie beschikbaar</string>
+    <string name="more_information">Meer informatie</string>
+    <string name="up_to_date">Je bent up-to-date: er is geen update beschikbaar</string>
+
     <plurals name="format_reset_blacklist_description">
         <item quantity="one">Haal %1$s nummer van de zwarte lijst</item>
         <item quantity="other">Haal %1$s nummers van de zwarte lijst</item>

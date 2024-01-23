@@ -123,6 +123,7 @@ dependencies {
     implementation(libs.room)
     ksp(libs.room.compiler)
 
+    implementation(projects.providers.github)
     implementation(projects.providers.innertube)
     implementation(projects.providers.kugou)
     implementation(projects.providers.lrclib)
