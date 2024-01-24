@@ -274,6 +274,22 @@ interface Database {
     @Query("SELECT * FROM PipedSession")
     fun pipedSessions(): Flow<List<PipedSession>>
 
+    @Query("SELECT * FROM Playlist WHERE id = :id")
+    fun playlist(id: Long): Flow<Playlist?>
+
+    // TODO: apparently this is an edge-case now?
+    @RewriteQueriesToDropUnusedColumns
+    @Transaction
+    @Query(
+        """
+        SELECT * FROM SortedSongPlaylistMap
+        INNER JOIN Song on Song.id = SortedSongPlaylistMap.songId
+        WHERE playlistId = :id
+        ORDER BY SortedSongPlaylistMap.position
+        """
+    )
+    fun playlistSongs(id: Long): Flow<List<Song>?>
+
     @Transaction
     @Query("SELECT * FROM Playlist WHERE id = :id")
     fun playlistWithSongs(id: Long): Flow<PlaylistWithSongs?>
@@ -412,6 +428,7 @@ interface Database {
         return songs.filter { it.mediaId !in blacklistedIds }
     }
 
+    @Transaction
     @Query(
         """
         UPDATE SongPlaylistMap SET position = 
@@ -624,9 +641,7 @@ interface Database {
         Lyrics::class,
         PipedSession::class
     ],
-    views = [
-        SortedSongPlaylistMap::class
-    ],
+    views = [SortedSongPlaylistMap::class],
     version = 27,
     exportSchema = true,
     autoMigrations = [

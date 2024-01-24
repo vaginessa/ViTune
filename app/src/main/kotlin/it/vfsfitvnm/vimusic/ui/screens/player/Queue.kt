@@ -53,6 +53,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -64,9 +65,9 @@ import androidx.media3.common.Timeline
 import com.valentinilk.shimmer.shimmer
 import it.vfsfitvnm.compose.persist.PersistMapCleanup
 import it.vfsfitvnm.compose.persist.persist
+import it.vfsfitvnm.compose.reordering.animateItemPlacement
 import it.vfsfitvnm.compose.reordering.draggedItem
 import it.vfsfitvnm.compose.reordering.rememberReorderingState
-import it.vfsfitvnm.compose.reordering.reorder
 import it.vfsfitvnm.innertube.Innertube
 import it.vfsfitvnm.innertube.models.bodies.NextBody
 import it.vfsfitvnm.innertube.requests.nextPage
@@ -90,6 +91,7 @@ import it.vfsfitvnm.vimusic.ui.components.themed.IconButton
 import it.vfsfitvnm.vimusic.ui.components.themed.Menu
 import it.vfsfitvnm.vimusic.ui.components.themed.MenuEntry
 import it.vfsfitvnm.vimusic.ui.components.themed.QueuedMediaItemMenu
+import it.vfsfitvnm.vimusic.ui.components.themed.ReorderHandle
 import it.vfsfitvnm.vimusic.ui.components.themed.SecondaryTextButton
 import it.vfsfitvnm.vimusic.ui.components.themed.TextFieldDialog
 import it.vfsfitvnm.vimusic.ui.components.themed.TextToggle
@@ -229,13 +231,24 @@ fun Queue(
         }
 
         val reorderingState = rememberReorderingState(
-            lazyListState = rememberLazyListState(initialFirstVisibleItemIndex = mediaItemIndex),
+            lazyListState = rememberLazyListState(),
             key = windows,
             onDragEnd = player::moveMediaItem,
-            extraItemCount = 1
+            extraItemCount = 0
         )
 
-        val musicBarsTransition = updateTransition(targetState = mediaItemIndex, label = "")
+        LaunchedEffect(Unit) {
+            reorderingState.lazyListState.scrollToItem(index = mediaItemIndex.coerceAtLeast(0))
+        }
+
+        val scrollConnection = remember {
+            layoutState.preUpPostDownNestedScrollConnection
+        }
+
+        val musicBarsTransition = updateTransition(
+            targetState = if (reorderingState.isDragging) -1L else mediaItemIndex,
+            label = ""
+        )
 
         Column {
             Box(
@@ -243,165 +256,158 @@ fun Queue(
                     .background(colorPalette.background1)
                     .weight(1f)
             ) {
-                LazyColumn(
-                    state = reorderingState.lazyListState,
-                    contentPadding = windowInsets
-                        .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
-                        .asPaddingValues(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.nestedScroll(layoutState.preUpPostDownNestedScrollConnection)
-                ) {
-                    itemsIndexed(
-                        items = windows,
-                        key = { i, window -> i to window.uid.hashCode() }
-                    ) { i, window ->
-                        val isPlayingThisMediaItem = mediaItemIndex == window.firstPeriodIndex
+                LookaheadScope {
+                    LazyColumn(
+                        state = reorderingState.lazyListState,
+                        contentPadding = windowInsets
+                            .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
+                            .asPaddingValues(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.nestedScroll(scrollConnection)
+                    ) {
+                        itemsIndexed(
+                            items = windows,
+                            key = { _, window -> window.uid.hashCode() }
+                        ) { i, window ->
+                            val isPlayingThisMediaItem = mediaItemIndex == window.firstPeriodIndex
 
-                        SongItem(
-                            song = window.mediaItem,
-                            thumbnailSizePx = thumbnailSizePx,
-                            thumbnailSizeDp = thumbnailSizeDp,
-                            onThumbnailContent = {
-                                musicBarsTransition.AnimatedVisibility(
-                                    visible = {
-                                        !reorderingState.isDragging && it == window.firstPeriodIndex
-                                    },
-                                    enter = fadeIn(tween(800)),
-                                    exit = fadeOut(tween(800))
-                                ) {
-                                    Box(
-                                        contentAlignment = Alignment.Center,
-                                        modifier = Modifier
-                                            .background(
-                                                color = Color.Black.copy(alpha = 0.25f),
-                                                shape = thumbnailShape
-                                            )
-                                            .size(Dimensions.thumbnails.song)
+                            SongItem(
+                                song = window.mediaItem,
+                                thumbnailSizePx = thumbnailSizePx,
+                                thumbnailSizeDp = thumbnailSizeDp,
+                                onThumbnailContent = {
+                                    musicBarsTransition.AnimatedVisibility(
+                                        visible = { it == window.firstPeriodIndex },
+                                        enter = fadeIn(tween(800)),
+                                        exit = fadeOut(tween(800))
                                     ) {
-                                        if (shouldBePlaying) MusicBars(
-                                            color = colorPalette.onOverlay,
-                                            modifier = Modifier.height(24.dp)
-                                        ) else Image(
-                                            painter = painterResource(R.drawable.play),
-                                            contentDescription = null,
-                                            colorFilter = ColorFilter.tint(colorPalette.onOverlay),
-                                            modifier = Modifier.size(24.dp)
-                                        )
-                                    }
-                                }
-                            },
-                            trailingContent = {
-                                IconButton(
-                                    icon = R.drawable.reorder,
-                                    color = colorPalette.textDisabled,
-                                    indication = null,
-                                    onClick = {},
-                                    modifier = Modifier
-                                        .reorder(
-                                            reorderingState = reorderingState,
-                                            index = i
-                                        )
-                                        .size(18.dp)
-                                )
-                            },
-                            modifier = Modifier
-                                .combinedClickable(
-                                    onLongClick = {
-                                        menuState.display {
-                                            QueuedMediaItemMenu(
-                                                mediaItem = window.mediaItem,
-                                                indexInQueue = if (isPlayingThisMediaItem) null
-                                                else window.firstPeriodIndex,
-                                                onDismiss = menuState::hide
+                                        Box(
+                                            contentAlignment = Alignment.Center,
+                                            modifier = Modifier
+                                                .background(
+                                                    color = Color.Black.copy(alpha = 0.25f),
+                                                    shape = thumbnailShape
+                                                )
+                                                .size(Dimensions.thumbnails.song)
+                                        ) {
+                                            if (shouldBePlaying) MusicBars(
+                                                color = colorPalette.onOverlay,
+                                                modifier = Modifier.height(24.dp)
+                                            ) else Image(
+                                                painter = painterResource(R.drawable.play),
+                                                contentDescription = null,
+                                                colorFilter = ColorFilter.tint(colorPalette.onOverlay),
+                                                modifier = Modifier.size(24.dp)
                                             )
                                         }
-                                    },
-                                    onClick = {
-                                        if (isPlayingThisMediaItem) {
-                                            if (shouldBePlaying) player.pause() else player.play()
-                                        } else {
-                                            player.seekToDefaultPosition(window.firstPeriodIndex)
-                                            player.playWhenReady = true
-                                        }
                                     }
-                                )
-                                .draggedItem(
-                                    reorderingState = reorderingState,
-                                    index = i
-                                )
-                                .background(colorPalette.background1)
-                                .let {
-                                    if (!PlayerPreferences.horizontalSwipeToRemoveItem || isPlayingThisMediaItem) it
-                                    else it.swipeToClose(
-                                        delay = 100.milliseconds,
-                                        onClose = {
-                                            player.removeMediaItem(window.firstPeriodIndex)
+                                },
+                                trailingContent = {
+                                    ReorderHandle(
+                                        reorderingState = reorderingState,
+                                        index = i
+                                    )
+                                },
+                                modifier = Modifier
+                                    .combinedClickable(
+                                        onLongClick = {
+                                            menuState.display {
+                                                QueuedMediaItemMenu(
+                                                    mediaItem = window.mediaItem,
+                                                    indexInQueue = if (isPlayingThisMediaItem) null
+                                                    else window.firstPeriodIndex,
+                                                    onDismiss = menuState::hide
+                                                )
+                                            }
+                                        },
+                                        onClick = {
+                                            if (isPlayingThisMediaItem) {
+                                                if (shouldBePlaying) player.pause() else player.play()
+                                            } else {
+                                                player.seekToDefaultPosition(window.firstPeriodIndex)
+                                                player.playWhenReady = true
+                                            }
                                         }
                                     )
+                                    .animateItemPlacement(reorderingState)
+                                    .draggedItem(
+                                        reorderingState = reorderingState,
+                                        index = i
+                                    )
+                                    .background(colorPalette.background1)
+                                    .let {
+                                        if (PlayerPreferences.horizontalSwipeToRemoveItem && !isPlayingThisMediaItem)
+                                            it.swipeToClose(
+                                                key = windows,
+                                                delay = 100.milliseconds,
+                                                onClose = { player.removeMediaItem(window.firstPeriodIndex) }
+                                            )
+                                        else it
+                                    }
+                            )
+                        }
+
+                        item {
+                            if (visibleSuggestions.isNotEmpty()) HorizontalDivider(
+                                modifier = Modifier.padding(start = 28.dp + thumbnailSizeDp)
+                            )
+                        }
+
+                        items(visibleSuggestions) {
+                            SongItem(
+                                song = it,
+                                thumbnailSizeDp = thumbnailSizeDp,
+                                thumbnailSizePx = thumbnailSizePx,
+                                modifier = Modifier.clickable {
+                                    menuState.display {
+                                        BaseMediaItemMenu(
+                                            onDismiss = { menuState.hide() },
+                                            mediaItem = it,
+                                            onEnqueue = { binder.player.enqueue(it) },
+                                            onPlayNext = { binder.player.addNext(it) }
+                                        )
+                                    }
                                 }
-                        )
-                    }
-
-                    item {
-                        if (visibleSuggestions.isNotEmpty()) HorizontalDivider(
-                            modifier = Modifier.padding(start = 28.dp + thumbnailSizeDp)
-                        )
-                    }
-
-                    items(visibleSuggestions) {
-                        SongItem(
-                            song = it,
-                            thumbnailSizeDp = thumbnailSizeDp,
-                            thumbnailSizePx = thumbnailSizePx,
-                            modifier = Modifier.clickable {
-                                menuState.display {
-                                    BaseMediaItemMenu(
-                                        onDismiss = { menuState.hide() },
-                                        mediaItem = it,
-                                        onEnqueue = { binder.player.enqueue(it) },
-                                        onPlayNext = { binder.player.addNext(it) }
+                            ) {
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(
+                                        space = 12.dp,
+                                        alignment = Alignment.End
+                                    )
+                                ) {
+                                    IconButton(
+                                        icon = R.drawable.play_skip_forward,
+                                        color = colorPalette.text,
+                                        onClick = {
+                                            binder.player.addNext(it)
+                                        },
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    IconButton(
+                                        icon = R.drawable.enqueue,
+                                        color = colorPalette.text,
+                                        onClick = {
+                                            binder.player.enqueue(it)
+                                        },
+                                        modifier = Modifier.size(18.dp)
                                     )
                                 }
-                            }
-                        ) {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(
-                                    space = 12.dp,
-                                    alignment = Alignment.End
-                                )
-                            ) {
-                                IconButton(
-                                    icon = R.drawable.play_skip_forward,
-                                    color = colorPalette.text,
-                                    onClick = {
-                                        binder.player.addNext(it)
-                                    },
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                IconButton(
-                                    icon = R.drawable.enqueue,
-                                    color = colorPalette.text,
-                                    onClick = {
-                                        binder.player.enqueue(it)
-                                    },
-                                    modifier = Modifier.size(18.dp)
-                                )
                             }
                         }
-                    }
 
-                    item {
-                        if (binder.isLoadingRadio || suggestions == null)
-                            Column(modifier = Modifier.shimmer()) {
-                                repeat(3) { index ->
-                                    SongItemPlaceholder(
-                                        thumbnailSizeDp = thumbnailSizeDp,
-                                        modifier = Modifier
-                                            .alpha(1f - index * 0.125f)
-                                            .fillMaxWidth()
-                                    )
+                        item {
+                            if (binder.isLoadingRadio || suggestions == null)
+                                Column(modifier = Modifier.shimmer()) {
+                                    repeat(3) { index ->
+                                        SongItemPlaceholder(
+                                            thumbnailSizeDp = thumbnailSizeDp,
+                                            modifier = Modifier
+                                                .alpha(1f - index * 0.125f)
+                                                .fillMaxWidth()
+                                        )
+                                    }
                                 }
-                            }
+                        }
                     }
                 }
 

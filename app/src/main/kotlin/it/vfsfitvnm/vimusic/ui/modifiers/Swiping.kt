@@ -69,6 +69,7 @@ fun rememberSwipeState(key: Any?) = remember(key) { SwipeState() }
 
 fun Modifier.onSwipe(
     state: SwipeState? = null,
+    key: Any = Unit,
     animateOffset: Boolean = false,
     orientation: Orientation = Orientation.Horizontal,
     delay: Duration = Duration.ZERO,
@@ -79,6 +80,7 @@ fun Modifier.onSwipe(
     onSwipeOut: () -> Unit
 ) = onSwipe(
     state = state,
+    key = key,
     animateOffset = animateOffset,
     onSwipeLeft = onSwipeOut,
     onSwipeRight = onSwipeOut,
@@ -93,6 +95,7 @@ fun Modifier.onSwipe(
 @Suppress("CyclomaticComplexMethod")
 fun Modifier.onSwipe(
     state: SwipeState? = null,
+    key: Any = Unit,
     animateOffset: Boolean = false,
     onSwipeLeft: () -> Unit = { },
     onSwipeRight: () -> Unit = { },
@@ -105,7 +108,7 @@ fun Modifier.onSwipe(
 ) = this.composed {
     val swipeState = state ?: rememberSwipeState(Unit)
 
-    pointerInput(Unit) {
+    pointerInput(key) {
         coroutineScope {
             // fling loop, doesn't really offset anything but simulates the animation beforehand
             while (isActive) {
@@ -190,6 +193,7 @@ fun Modifier.onSwipe(
 
 fun Modifier.swipeToClose(
     state: SwipeState? = null,
+    key: Any = Unit,
     delay: Duration = Duration.ZERO,
     decay: Density.() -> DecayAnimationSpec<Float> = { splineBasedDecay(this) },
     onClose: () -> Unit
@@ -209,6 +213,7 @@ fun Modifier.swipeToClose(
         .alpha((currentWidthDp + offset) / currentWidthDp)
         .onSwipe(
             state = swipeState,
+            key = key,
             animateOffset = true,
             disposable = true,
             onSwipeLeft = onClose,

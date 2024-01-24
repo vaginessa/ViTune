@@ -3,17 +3,21 @@ package it.vfsfitvnm.compose.reordering
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.offset
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.layout.LocalPinnableContainer
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 
 fun Modifier.draggedItem(
     reorderingState: ReorderingState,
-    index: Int
+    index: Int,
+    draggedElevation: Dp = 4.dp
 ): Modifier = when (reorderingState.draggingIndex) {
     -1 -> this
     index -> offset {
@@ -36,10 +40,19 @@ fun Modifier.draggedItem(
         }
     }
 }.composed {
+    val container = LocalPinnableContainer.current
     val elevation by animateDpAsState(
-        targetValue = if (reorderingState.draggingIndex == index) 8.dp else 0.dp,
+        targetValue = if (reorderingState.draggingIndex == index) draggedElevation else 0.dp,
         label = ""
     )
+
+    DisposableEffect(reorderingState.draggingIndex) {
+        val handle = if (reorderingState.draggingIndex == index) container?.pin() else null
+
+        onDispose {
+            handle?.release()
+        }
+    }
 
     this.shadow(elevation = elevation)
 }
