@@ -99,7 +99,7 @@ fun Controls(
     val playButtonRadius by shouldBePlayingTransition.animateDp(
         transitionSpec = { tween(durationMillis = 100, easing = LinearEasing) },
         label = "playPauseRoundness",
-        targetValueByState = { if (it) 32.dp else 16.dp }
+        targetValueByState = { if (it) 16.dp else 32.dp }
     )
 
     when (layout) {
