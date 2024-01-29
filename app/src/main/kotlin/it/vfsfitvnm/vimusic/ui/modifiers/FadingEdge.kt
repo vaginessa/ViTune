@@ -1,4 +1,4 @@
-package it.vfsfitvnm.vimusic.utils
+package it.vfsfitvnm.vimusic.ui.modifiers
 
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent

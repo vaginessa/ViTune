@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -104,7 +105,8 @@ private fun onDismiss(binder: PlayerService.Binder) {
 @Composable
 fun Player(
     layoutState: BottomSheetState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    shape: RoundedCornerShape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
 ) {
     val menuState = LocalMenuState.current
 
@@ -154,11 +156,23 @@ fun Player(
         state = layoutState,
         modifier = modifier,
         onDismiss = { onDismiss(binder) },
+        indication = null,
         collapsedContent = {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.Top,
                 modifier = Modifier
+                    .let {
+                        if (PlayerPreferences.horizontalSwipeToClose) it.onSwipe(
+                            animateOffset = true,
+                            onSwipeOut = { animationJob ->
+                                animationJob.join()
+                                layoutState.dismiss()
+                                onDismiss(binder)
+                            }
+                        ) else it
+                    }
+                    .clip(shape)
                     .background(colorPalette.background1)
                     .fillMaxSize()
                     .padding(horizontalBottomPaddingValues)
@@ -173,16 +187,6 @@ fun Player(
                             strokeWidth = 2.dp.toPx()
                         )
                     }
-                    .let {
-                        if (PlayerPreferences.horizontalSwipeToClose) it.onSwipe(
-                            animateOffset = true,
-                            onSwipeOut = {
-                                layoutState.dismiss()
-                                onDismiss(binder)
-                            }
-                        ) else it
-                    }
-
             ) {
                 Spacer(modifier = Modifier.width(2.dp))
 
@@ -289,6 +293,7 @@ fun Player(
         )
 
         val containerModifier = Modifier
+            .clip(shape)
             .background(colorPalette.background1)
             .padding(
                 windowInsets

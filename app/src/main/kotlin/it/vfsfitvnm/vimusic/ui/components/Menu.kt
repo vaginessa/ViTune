@@ -10,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -19,6 +20,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.dp
 
 val LocalMenuState = staticCompositionLocalOf { MenuState() }
 
@@ -68,7 +70,7 @@ fun BottomSheetMenu(
         visible = state.isDisplayed,
         enter = slideInVertically { it },
         exit = slideOutVertically { it },
-        modifier = modifier
+        modifier = modifier.padding(top = 48.dp)
     ) {
         state.content()
     }

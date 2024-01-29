@@ -132,7 +132,9 @@ fun Thumbnail(
             )
         },
         modifier = modifier.onSwipe(
-            onSwipeLeft = binder.player::forceSeekToNext,
+            onSwipeLeft = {
+                binder.player.forceSeekToNext()
+            },
             onSwipeRight = {
                 binder.player.seekToDefaultPosition()
                 binder.player.forceSeekToPrevious()

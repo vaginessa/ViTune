@@ -82,7 +82,7 @@ import it.vfsfitvnm.vimusic.utils.color
 import it.vfsfitvnm.vimusic.utils.medium
 import it.vfsfitvnm.vimusic.utils.semiBold
 import it.vfsfitvnm.vimusic.utils.toast
-import it.vfsfitvnm.vimusic.utils.verticalFadingEdge
+import it.vfsfitvnm.vimusic.ui.modifiers.verticalFadingEdge
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers

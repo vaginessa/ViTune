@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import it.vfsfitvnm.vimusic.utils.px
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -77,7 +78,7 @@ fun Modifier.onSwipe(
     animationSpec: AnimationSpec<Float> = spring(),
     bounds: ClosedRange<Dp>? = null,
     disposable: Boolean = false,
-    onSwipeOut: () -> Unit
+    onSwipeOut: suspend (animationJob: Job) -> Unit
 ) = onSwipe(
     state = state,
     key = key,
@@ -97,8 +98,8 @@ fun Modifier.onSwipe(
     state: SwipeState? = null,
     key: Any = Unit,
     animateOffset: Boolean = false,
-    onSwipeLeft: () -> Unit = { },
-    onSwipeRight: () -> Unit = { },
+    onSwipeLeft: suspend (animationJob: Job) -> Unit = { },
+    onSwipeRight: suspend (animationJob: Job) -> Unit = { },
     orientation: Orientation = Orientation.Horizontal,
     delay: Duration = Duration.ZERO,
     decay: Density.() -> DecayAnimationSpec<Float> = { splineBasedDecay(this) },
@@ -106,7 +107,7 @@ fun Modifier.onSwipe(
     bounds: ClosedRange<Dp>? = null,
     disposable: Boolean = false
 ) = this.composed {
-    val swipeState = state ?: rememberSwipeState(Unit)
+    val swipeState = state ?: rememberSwipeState(key)
 
     pointerInput(key) {
         coroutineScope {
@@ -151,26 +152,26 @@ fun Modifier.onSwipe(
                 launch animationEnd@{
                     when {
                         targetOffset >= size / 2 -> {
-                            launch {
+                            val animationJob = launch {
                                 swipeState.offset.animateTo(
                                     targetValue = size.toFloat(),
                                     animationSpec = animationSpec
                                 )
                             }
                             delay(delay)
-                            onSwipeRight()
+                            onSwipeRight(animationJob)
                             if (disposable) return@animationEnd swipeState.recycle()
                         }
 
                         targetOffset <= -size / 2 -> {
-                            launch {
+                            val animationJob = launch {
                                 swipeState.offset.animateTo(
                                     targetValue = -size.toFloat(),
                                     animationSpec = animationSpec
                                 )
                             }
                             delay(delay)
-                            onSwipeLeft()
+                            onSwipeLeft(animationJob)
                             if (disposable) return@animationEnd swipeState.recycle()
                         }
                     }
@@ -182,10 +183,13 @@ fun Modifier.onSwipe(
             }
         }
     }.let { modifier ->
-        val offset = swipeState.calculateOffset(bounds = bounds)
         when {
-            animateOffset && orientation == Orientation.Horizontal -> modifier.offset(x = offset)
-            animateOffset && orientation == Orientation.Vertical -> modifier.offset(y = offset)
+            animateOffset && orientation == Orientation.Horizontal ->
+                modifier.offset(x = swipeState.calculateOffset(bounds = bounds))
+
+            animateOffset && orientation == Orientation.Vertical ->
+                modifier.offset(y = swipeState.calculateOffset(bounds = bounds))
+
             else -> modifier
         }
     }
@@ -196,21 +200,19 @@ fun Modifier.swipeToClose(
     key: Any = Unit,
     delay: Duration = Duration.ZERO,
     decay: Density.() -> DecayAnimationSpec<Float> = { splineBasedDecay(this) },
-    onClose: () -> Unit
+    onClose: suspend (animationJob: Job) -> Unit
 ) = this.composed {
-    val swipeState = state ?: rememberSwipeState(Unit)
+    val swipeState = state ?: rememberSwipeState(key)
 
     val density = LocalDensity.current
 
     var currentWidth by remember { mutableIntStateOf(0) }
     val currentWidthDp by remember { derivedStateOf { currentWidth.px.dp(density) } }
-
     val bounds by remember { derivedStateOf { -currentWidthDp..0.dp } }
-    val offset = swipeState.calculateOffset(bounds = bounds)
 
     this
         .onSizeChanged { currentWidth = it.width }
-        .alpha((currentWidthDp + offset) / currentWidthDp)
+        .alpha((currentWidthDp + swipeState.calculateOffset(bounds = bounds)) / currentWidthDp)
         .onSwipe(
             state = swipeState,
             key = key,

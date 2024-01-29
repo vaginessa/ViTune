@@ -7,9 +7,12 @@ import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.SpringSpec
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Indication
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.DraggableState
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
@@ -46,6 +49,7 @@ fun BottomSheet(
     collapsedContent: @Composable BoxScope.() -> Unit,
     modifier: Modifier = Modifier,
     onDismiss: (() -> Unit)? = null,
+    indication: Indication? = LocalIndication.current,
     content: @Composable BoxScope.() -> Unit
 ) = Box(
     modifier = modifier
@@ -88,7 +92,11 @@ fun BottomSheet(
             .graphicsLayer {
                 alpha = 1f - (state.progress * 16).coerceAtMost(1f)
             }
-            .clickable(onClick = state::expandSoft)
+            .clickable(
+                onClick = state::expandSoft,
+                indication = indication,
+                interactionSource = remember { MutableInteractionSource() }
+            )
             .fillMaxWidth()
             .height(state.collapsedBound),
         content = collapsedContent

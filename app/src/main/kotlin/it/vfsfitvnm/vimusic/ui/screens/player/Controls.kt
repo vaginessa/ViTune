@@ -69,7 +69,7 @@ import it.vfsfitvnm.vimusic.ui.styling.favoritesIcon
 import it.vfsfitvnm.vimusic.utils.bold
 import it.vfsfitvnm.vimusic.utils.forceSeekToNext
 import it.vfsfitvnm.vimusic.utils.forceSeekToPrevious
-import it.vfsfitvnm.vimusic.utils.horizontalFadingEdge
+import it.vfsfitvnm.vimusic.ui.modifiers.horizontalFadingEdge
 import it.vfsfitvnm.vimusic.utils.px
 import it.vfsfitvnm.vimusic.utils.secondary
 import it.vfsfitvnm.vimusic.utils.semiBold

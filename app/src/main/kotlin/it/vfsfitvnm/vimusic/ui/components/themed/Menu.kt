@@ -32,7 +32,6 @@ inline fun Menu(
     content: @Composable ColumnScope.() -> Unit
 ) = Column(
     modifier = modifier
-        .padding(top = 48.dp)
         .verticalScroll(rememberScrollState())
         .fillMaxWidth()
         .background(LocalAppearance.current.colorPalette.background1)
