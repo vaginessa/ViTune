@@ -15,7 +15,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.LocalIndication
@@ -40,7 +39,6 @@ import androidx.compose.material.ripple.LocalRippleTheme
 import androidx.compose.material.ripple.RippleAlpha
 import androidx.compose.material.ripple.RippleTheme
 import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -79,10 +77,11 @@ import it.vfsfitvnm.vimusic.enums.ColorPaletteMode
 import it.vfsfitvnm.vimusic.enums.ColorPaletteName
 import it.vfsfitvnm.vimusic.preferences.AppearancePreferences
 import it.vfsfitvnm.vimusic.service.PlayerService
-import it.vfsfitvnm.vimusic.service.downloadProgress
+import it.vfsfitvnm.vimusic.service.downloadState
 import it.vfsfitvnm.vimusic.ui.components.BottomSheetMenu
 import it.vfsfitvnm.vimusic.ui.components.LocalMenuState
 import it.vfsfitvnm.vimusic.ui.components.rememberBottomSheetState
+import it.vfsfitvnm.vimusic.ui.components.themed.LinearProgressIndicator
 import it.vfsfitvnm.vimusic.ui.screens.albumRoute
 import it.vfsfitvnm.vimusic.ui.screens.artistRoute
 import it.vfsfitvnm.vimusic.ui.screens.home.HomeScreen
@@ -176,7 +175,7 @@ class MainActivity : ComponentActivity() {
 
                 fun setDynamicPalette(colorPaletteMode: ColorPaletteMode) {
                     val isDark = colorPaletteMode == ColorPaletteMode.Dark ||
-                        colorPaletteMode == ColorPaletteMode.System && isSystemInDarkTheme
+                            colorPaletteMode == ColorPaletteMode.System && isSystemInDarkTheme
 
                     binder?.setBitmapListener { bitmap: Bitmap? ->
                         if (bitmap == null) {
@@ -350,11 +349,7 @@ class MainActivity : ComponentActivity() {
                     LocalLayoutDirection provides LayoutDirection.Ltr,
                     LocalPersistMap provides Dependencies.application.persistMap
                 ) {
-                    val progress by downloadProgress.collectAsState()
-                    val animatedProgress by animateFloatAsState(
-                        targetValue = progress?.takeIf { !it.isNaN() } ?: 1f,
-                        label = ""
-                    )
+                    val isDownloading by downloadState.collectAsState()
 
                     Box {
                         HomeScreen(
@@ -365,13 +360,10 @@ class MainActivity : ComponentActivity() {
                     }
 
                     AnimatedVisibility(
-                        visible = progress != null,
+                        visible = isDownloading,
                         modifier = Modifier.padding(playerAwareWindowInsets.asPaddingValues())
                     ) {
                         LinearProgressIndicator(
-                            progress = { animatedProgress },
-                            color = appearance.colorPalette.accent,
-                            trackColor = appearance.colorPalette.background1,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .align(Alignment.TopCenter)

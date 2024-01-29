@@ -7,7 +7,6 @@ import android.net.Uri
 import android.os.IBinder
 import android.widget.Toast
 import androidx.annotation.OptIn
-import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.cache.Cache
@@ -57,8 +56,8 @@ private val coroutineScope = CoroutineScope(
 )
 
 // While the class is not a singleton (lifecycle), there should only be one download state at a time
-private val mutableDownloadProgress = MutableStateFlow<Float?>(null)
-val downloadProgress = mutableDownloadProgress.asStateFlow()
+private val mutableDownloadState = MutableStateFlow(false)
+val downloadState = mutableDownloadState.asStateFlow()
 
 @OptIn(UnstableApi::class)
 class PrecacheService : DownloadService(
@@ -121,14 +120,7 @@ class PrecacheService : DownloadService(
         progressUpdaterJob?.cancel()
         progressUpdaterJob = coroutineScope.launch {
             downloadQueue.receiveAsFlow().debounce(100.milliseconds).collect { downloadManager ->
-                val downloads = downloadManager
-                    .downloadIndex
-                    .getDownloads()
-                    .toList { it.bytesDownloaded to it.contentLength }
-                val progress = downloads.sumOf { (bytesDownloaded) -> bytesDownloaded }.toFloat() /
-                        downloads.map { (_, contentLength) -> contentLength }
-                            .filter { it != C.LENGTH_UNSET.toLong() }.sum()
-                mutableDownloadProgress.update { if (progress >= 1f) null else progress }
+                mutableDownloadState.update { !downloadManager.isIdle }
             }
         }
 
@@ -149,7 +141,7 @@ class PrecacheService : DownloadService(
             requirements = Requirements(Requirements.NETWORK)
             addListener(object : DownloadManager.Listener {
                 override fun onIdle(downloadManager: DownloadManager) =
-                    mutableDownloadProgress.update { null }
+                    mutableDownloadState.update { false }
 
                 override fun onDownloadChanged(
                     downloadManager: DownloadManager,
