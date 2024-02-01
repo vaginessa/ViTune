@@ -13,13 +13,16 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
@@ -29,11 +32,13 @@ import it.vfsfitvnm.vimusic.utils.secondary
 @Composable
 inline fun Menu(
     modifier: Modifier = Modifier,
+    shape: Shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
     content: @Composable ColumnScope.() -> Unit
 ) = Column(
     modifier = modifier
-        .verticalScroll(rememberScrollState())
         .fillMaxWidth()
+        .clip(shape)
+        .verticalScroll(rememberScrollState())
         .background(LocalAppearance.current.colorPalette.background1)
         .padding(top = 2.dp)
         .padding(vertical = 8.dp)
