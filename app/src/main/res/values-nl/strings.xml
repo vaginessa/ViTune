@@ -213,7 +213,7 @@
     <string name="previous_button_while_collapsed">Vorige knop op ingeklapte speler</string>
     <string name="previous_button_while_collapsed_description">Laat de knop om naar het vorige nummer te gaan zien op de ingeklapte speler</string>
     <string name="swipe_horizontally_to_close">Swipe horizontaal om te sluiten</string>
-    <string name="swipe_horizontally_to_close_description">Sluit de speler zodra je horizontaal swipet. Handig voor gebuiker met de één-hand modus van Android.</string>
+    <string name="swipe_horizontally_to_close_description">Sluit de speler zodra je horizontaal swipet. Handig voor gebruikers met de één-hand modus van Android.</string>
     <string name="show_like_button">Toon like knop</string>
     <string name="show_like_button_description">Laat de like knop direct in de speler zien</string>
     <string name="swipe_to_remove_item">Swipe om item te verwijderen</string>
