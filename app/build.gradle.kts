@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.roborazzi)
 }
 
 android {
@@ -17,7 +18,11 @@ android {
         versionName = project.version.toString()
 
         multiDexEnabled = true
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+
+    testOptions.unitTests.isIncludeAndroidResources = true
 
     splits {
         abi {
@@ -50,7 +55,6 @@ android {
             isShrinkResources = true
             manifestPlaceholders["appName"] = "ViMusic"
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            buildConfigField("String", "RELEASE_HACK", "\"AndroidWhyTfDidYouMakeMeDoThis\"")
         }
 
         create("nightly") {
@@ -135,4 +139,11 @@ dependencies {
 
     detektPlugins(libs.detekt.compose)
     detektPlugins(libs.detekt.formatting)
+
+    testImplementation(libs.robolectric)
+    testImplementation(libs.roborazzi)
+    testImplementation(libs.roborazzi.compose)
+    testImplementation(libs.junit)
+    testImplementation(libs.ui.test.junit4)
+    debugImplementation(libs.ui.test.manifest)
 }

@@ -108,6 +108,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
+    internal var shouldRebind = true
+
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             if (service is PlayerService.Binder) this@MainActivity.binder = service
@@ -115,9 +117,11 @@ class MainActivity : ComponentActivity() {
 
         override fun onServiceDisconnected(name: ComponentName?) {
             binder = null
-            // Try to rebind, otherwise fail
-            unbindService(this)
-            bindService(intent<PlayerService>(), this, Context.BIND_AUTO_CREATE)
+            if (shouldRebind) {
+                // Try to rebind, otherwise fail
+                unbindService(this)
+                bindService(intent<PlayerService>(), this, Context.BIND_AUTO_CREATE)
+            }
         }
     }
 

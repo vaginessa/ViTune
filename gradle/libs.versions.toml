@@ -13,6 +13,8 @@ ktor = "2.3.7"
 detekt = "1.23.4"
 workmanager = "2.9.0"
 
+roborazzi = "1.8.0-alpha-4"
+
 [plugins]
 android_application = { id = "com.android.application", version.ref = "agp" }
 android_library = { id = "com.android.library", version.ref = "agp" }
@@ -21,6 +23,7 @@ kotlin_jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin_android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin_serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+roborazzi = { id = "io.github.takahirom.roborazzi", version.ref = "roborazzi" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 
 [libraries]
@@ -67,3 +70,10 @@ desugaring = { module = "com.android.tools:desugar_jdk_libs", version = "2.0.4" 
 
 detekt_compose = { module = "io.nlopez.compose.rules:detekt", version = "0.3.11" }
 detekt_formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt" }
+
+robolectric = { group = "org.robolectric", name = "robolectric", version = "4.11.1" }
+roborazzi = { group = "io.github.takahirom.roborazzi", name = "roborazzi", version.ref = "roborazzi" }
+roborazzi-compose = { group = "io.github.takahirom.roborazzi", name = "roborazzi-compose", version.ref = "roborazzi" }
+junit = { group = "androidx.test.ext", name = "junit-ktx", version = "1.1.5" }
+ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4", version.ref = "compose_compiler" }
+ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest", version.ref = "compose_compiler" }
