@@ -2,7 +2,6 @@ package it.vfsfitvnm.vimusic.ui.screens.home
 
 import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -75,7 +74,6 @@ import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.ui.styling.onOverlay
 import it.vfsfitvnm.vimusic.ui.styling.overlay
-import it.vfsfitvnm.vimusic.ui.styling.px
 import it.vfsfitvnm.vimusic.utils.asMediaItem
 import it.vfsfitvnm.vimusic.utils.center
 import it.vfsfitvnm.vimusic.utils.color
@@ -116,10 +114,7 @@ fun HomeSongs(
     )
 }
 
-@kotlin.OptIn(
-    ExperimentalFoundationApi::class,
-    ExperimentalAnimationApi::class
-)
+@kotlin.OptIn(ExperimentalFoundationApi::class)
 @OptIn(UnstableApi::class)
 @Route
 @Composable
@@ -140,9 +135,6 @@ fun HomeSongs(
     val menuState = LocalMenuState.current
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
-
-    val thumbnailSizeDp = Dimensions.thumbnails.song
-    val thumbnailSizePx = thumbnailSizeDp.px
 
     var filter: String? by rememberSaveable { mutableStateOf(null) }
     var items by persistList<Song>("home/songs")
@@ -305,8 +297,7 @@ fun HomeSongs(
                             } else it
                         },
                     song = song,
-                    thumbnailSizePx = thumbnailSizePx,
-                    thumbnailSizeDp = thumbnailSizeDp,
+                    thumbnailSize = Dimensions.thumbnails.song,
                     onThumbnailContent = if (sortBy == SongSortBy.PlayTime) {
                         {
                             BasicText(

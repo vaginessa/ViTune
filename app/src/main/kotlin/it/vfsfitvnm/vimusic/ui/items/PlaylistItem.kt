@@ -37,6 +37,7 @@ import it.vfsfitvnm.vimusic.ui.styling.overlay
 import it.vfsfitvnm.vimusic.ui.styling.shimmer
 import it.vfsfitvnm.vimusic.utils.color
 import it.vfsfitvnm.vimusic.utils.medium
+import it.vfsfitvnm.vimusic.utils.px
 import it.vfsfitvnm.vimusic.utils.secondary
 import it.vfsfitvnm.vimusic.utils.semiBold
 import it.vfsfitvnm.vimusic.utils.thumbnail
@@ -50,7 +51,7 @@ fun PlaylistItem(
     colorTint: Color,
     name: String?,
     songCount: Int?,
-    thumbnailSizeDp: Dp,
+    thumbnailSize: Dp,
     modifier: Modifier = Modifier,
     alternative: Boolean = false
 ) = PlaylistItem(
@@ -67,7 +68,7 @@ fun PlaylistItem(
     songCount = songCount,
     name = name,
     channelName = null,
-    thumbnailSizeDp = thumbnailSizeDp,
+    thumbnailSize = thumbnailSize,
     modifier = modifier,
     alternative = alternative
 )
@@ -75,17 +76,18 @@ fun PlaylistItem(
 @Composable
 fun PlaylistItem(
     playlist: PlaylistPreview,
-    thumbnailSizePx: Int,
-    thumbnailSizeDp: Dp,
+    thumbnailSize: Dp,
     modifier: Modifier = Modifier,
     alternative: Boolean = false
 ) {
+    val thumbnailSizePx = thumbnailSize.px
     val thumbnails by remember {
-        Database.playlistThumbnailUrls(playlist.playlist.id).distinctUntilChanged().map {
-            it.map { url ->
-                url.thumbnail(thumbnailSizePx / 2)
+        Database
+            .playlistThumbnailUrls(playlist.playlist.id)
+            .distinctUntilChanged()
+            .map { urls ->
+                urls.map { it.thumbnail(thumbnailSizePx / 2) }
             }
-        }
     }.collectAsState(initial = emptyList(), context = Dispatchers.IO)
 
     PlaylistItem(
@@ -108,7 +110,7 @@ fun PlaylistItem(
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .align(alignment)
-                            .size(thumbnailSizeDp / 2)
+                            .size(thumbnailSize / 2)
                     )
                 }
             }
@@ -116,7 +118,7 @@ fun PlaylistItem(
         songCount = playlist.songCount,
         name = playlist.playlist.name,
         channelName = null,
-        thumbnailSizeDp = thumbnailSizeDp,
+        thumbnailSize = thumbnailSize,
         modifier = modifier,
         alternative = alternative
     )
@@ -125,8 +127,7 @@ fun PlaylistItem(
 @Composable
 fun PlaylistItem(
     playlist: Innertube.PlaylistItem,
-    thumbnailSizePx: Int,
-    thumbnailSizeDp: Dp,
+    thumbnailSize: Dp,
     modifier: Modifier = Modifier,
     alternative: Boolean = false
 ) = PlaylistItem(
@@ -134,8 +135,7 @@ fun PlaylistItem(
     songCount = playlist.songCount,
     name = playlist.info?.name,
     channelName = playlist.channel?.name,
-    thumbnailSizePx = thumbnailSizePx,
-    thumbnailSizeDp = thumbnailSizeDp,
+    thumbnailSize = thumbnailSize,
     modifier = modifier,
     alternative = alternative
 )
@@ -146,14 +146,13 @@ fun PlaylistItem(
     songCount: Int?,
     name: String?,
     channelName: String?,
-    thumbnailSizePx: Int,
-    thumbnailSizeDp: Dp,
+    thumbnailSize: Dp,
     modifier: Modifier = Modifier,
     alternative: Boolean = false
 ) = PlaylistItem(
     thumbnailContent = {
         AsyncImage(
-            model = thumbnailUrl?.thumbnail(thumbnailSizePx),
+            model = thumbnailUrl?.thumbnail(thumbnailSize.px),
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = it
@@ -162,7 +161,7 @@ fun PlaylistItem(
     songCount = songCount,
     name = name,
     channelName = channelName,
-    thumbnailSizeDp = thumbnailSizeDp,
+    thumbnailSize = thumbnailSize,
     modifier = modifier,
     alternative = alternative
 )
@@ -173,12 +172,12 @@ fun PlaylistItem(
     songCount: Int?,
     name: String?,
     channelName: String?,
-    thumbnailSizeDp: Dp,
+    thumbnailSize: Dp,
     modifier: Modifier = Modifier,
     alternative: Boolean = false
 ) = ItemContainer(
     alternative = alternative,
-    thumbnailSizeDp = thumbnailSizeDp,
+    thumbnailSize = thumbnailSize,
     modifier = modifier
 ) { centeredModifier ->
     val colorPalette = LocalAppearance.current.colorPalette
@@ -189,7 +188,7 @@ fun PlaylistItem(
         modifier = centeredModifier
             .clip(thumbnailShape)
             .background(color = colorPalette.background1)
-            .requiredSize(thumbnailSizeDp)
+            .requiredSize(thumbnailSize)
     ) {
         thumbnailContent(Modifier.fillMaxSize())
 
@@ -232,12 +231,12 @@ fun PlaylistItem(
 
 @Composable
 fun PlaylistItemPlaceholder(
-    thumbnailSizeDp: Dp,
+    thumbnailSize: Dp,
     modifier: Modifier = Modifier,
     alternative: Boolean = false
 ) = ItemContainer(
     alternative = alternative,
-    thumbnailSizeDp = thumbnailSizeDp,
+    thumbnailSize = thumbnailSize,
     modifier = modifier
 ) {
     val colorPalette = LocalAppearance.current.colorPalette
@@ -246,7 +245,7 @@ fun PlaylistItemPlaceholder(
     Spacer(
         modifier = Modifier
             .background(color = colorPalette.shimmer, shape = thumbnailShape)
-            .size(thumbnailSizeDp)
+            .size(thumbnailSize)
     )
 
     ItemInfoContainer(

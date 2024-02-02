@@ -2,20 +2,9 @@ package it.vfsfitvnm.vimusic.ui.styling
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 object Dimensions {
-    val itemsVerticalPadding = 8.dp
-
-    val navigationRailWidth = 64.dp
-    val navigationRailWidthLandscape = 128.dp
-    val navigationRailIconOffset = 6.dp
-    val headerHeight = 140.dp
-
-    val thumbnails = Thumbnails
-
     object Thumbnails {
         val album = 108.dp
         val artist = 92.dp
@@ -32,9 +21,24 @@ object Dimensions {
         }
     }
 
-    val collapsedPlayer = 64.dp
-}
+    val thumbnails = Thumbnails
 
-inline val Dp.px: Int
-    @Composable
-    inline get() = with(LocalDensity.current) { roundToPx() }
+    object Items {
+        val moodHeight = 64.dp
+        val headerHeight = 140.dp
+        val collapsedPlayerHeight = 64.dp
+
+        val verticalPadding = 8.dp
+        val horizontalPadding = 16.dp
+    }
+
+    val items = Items
+
+    object NavigationRail {
+        val width = 64.dp
+        val widthLandscape = 128.dp
+        val iconOffset = 6.dp
+    }
+
+    val navigationRail = NavigationRail
+}

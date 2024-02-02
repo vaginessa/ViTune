@@ -1,6 +1,5 @@
 package it.vfsfitvnm.vimusic.ui.screens.home
 
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -43,6 +42,7 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.times
 import it.vfsfitvnm.compose.persist.persist
 import it.vfsfitvnm.innertube.Innertube
 import it.vfsfitvnm.innertube.requests.discoverPage
@@ -57,15 +57,15 @@ import it.vfsfitvnm.vimusic.ui.items.AlbumItemPlaceholder
 import it.vfsfitvnm.vimusic.ui.screens.Route
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
-import it.vfsfitvnm.vimusic.ui.styling.px
 import it.vfsfitvnm.vimusic.ui.styling.shimmer
 import it.vfsfitvnm.vimusic.utils.center
+import it.vfsfitvnm.vimusic.utils.color
 import it.vfsfitvnm.vimusic.utils.isLandscape
 import it.vfsfitvnm.vimusic.utils.rememberSnapLayoutInfoProvider
 import it.vfsfitvnm.vimusic.utils.secondary
 import it.vfsfitvnm.vimusic.utils.semiBold
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Route
 @Composable
 fun HomeDiscovery(
@@ -85,9 +85,6 @@ fun HomeDiscovery(
         .padding(horizontal = 16.dp)
         .padding(top = 24.dp, bottom = 8.dp)
         .padding(endPaddingValues)
-
-    val thumbnailDp = Dimensions.thumbnails.album
-    val thumbnailPx = thumbnailDp.px
 
     var discoverPage by persist<Result<Innertube.DiscoverPage>>("home/discovery")
 
@@ -167,8 +164,7 @@ fun HomeDiscovery(
                         items(items = page.newReleaseAlbums, key = { it.key }) {
                             AlbumItem(
                                 album = it,
-                                thumbnailSizePx = thumbnailPx,
-                                thumbnailSizeDp = thumbnailDp,
+                                thumbnailSize = Dimensions.thumbnails.album,
                                 alternative = true,
                                 modifier = Modifier.clickable(onClick = { onNewReleaseAlbumClick(it.key) })
                             )
@@ -192,7 +188,7 @@ fun HomeDiscovery(
                     contentPadding = endPaddingValues,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height((4 * (64 + 4)).dp)
+                        .height(4 * (Dimensions.items.moodHeight + 4.dp))
                 ) {
                     items(16) {
                         MoodItemPlaceholder(
@@ -205,7 +201,7 @@ fun HomeDiscovery(
                 Row {
                     repeat(2) {
                         AlbumItemPlaceholder(
-                            thumbnailSizeDp = thumbnailDp,
+                            thumbnailSize = Dimensions.thumbnails.album,
                             alternative = true
                         )
                     }
@@ -230,17 +226,12 @@ fun MoodItem(
     val typography = LocalAppearance.current.typography
     val thumbnailShape = LocalAppearance.current.thumbnailShape
 
-    val moodColor by remember { derivedStateOf { Color(mood.stripeColor) } }
-    val textColor by remember {
-        derivedStateOf {
-            if (moodColor.luminance() >= 0.5f) Color.Black else Color.White
-        }
-    }
+    val color by remember { derivedStateOf { Color(mood.stripeColor) } }
 
     ElevatedCard(
-        modifier = modifier.height(64.dp),
+        modifier = modifier.height(Dimensions.items.moodHeight),
         shape = thumbnailShape,
-        colors = CardDefaults.elevatedCardColors(containerColor = moodColor)
+        colors = CardDefaults.elevatedCardColors(containerColor = color)
     ) {
         Box(
             modifier = Modifier
@@ -250,7 +241,9 @@ fun MoodItem(
         ) {
             BasicText(
                 text = mood.title,
-                style = typography.xs.semiBold.copy(color = textColor),
+                style = typography.xs.semiBold.color(
+                    if (color.luminance() >= 0.5f) Color.Black else Color.White
+                ),
                 modifier = Modifier.padding(start = 24.dp)
             )
         }
@@ -261,13 +254,14 @@ fun MoodItem(
 fun MoodItemPlaceholder(
     width: Dp,
     modifier: Modifier = Modifier
-) {
-    val colorPalette = LocalAppearance.current.colorPalette
-    val thumbnailShape = LocalAppearance.current.thumbnailShape
-
-    Spacer(
-        modifier = modifier
-            .background(color = colorPalette.shimmer, shape = thumbnailShape)
-            .size(width, 64.dp)
-    )
-}
+) = Spacer(
+    modifier = modifier
+        .background(
+            color = LocalAppearance.current.colorPalette.shimmer,
+            shape = LocalAppearance.current.thumbnailShape
+        )
+        .size(
+            width = width,
+            height = Dimensions.items.moodHeight
+        )
+)

@@ -1,6 +1,5 @@
 package it.vfsfitvnm.vimusic.ui.screens.artist
 
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -36,14 +35,12 @@ import it.vfsfitvnm.vimusic.ui.items.SongItem
 import it.vfsfitvnm.vimusic.ui.items.SongItemPlaceholder
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
-import it.vfsfitvnm.vimusic.ui.styling.px
 import it.vfsfitvnm.vimusic.utils.asMediaItem
 import it.vfsfitvnm.vimusic.utils.enqueue
 import it.vfsfitvnm.vimusic.utils.forcePlayAtIndex
 import it.vfsfitvnm.vimusic.utils.forcePlayFromBeginning
 
-@ExperimentalFoundationApi
-@ExperimentalAnimationApi
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ArtistLocalSongs(
     browseId: String,
@@ -60,9 +57,6 @@ fun ArtistLocalSongs(
     LaunchedEffect(Unit) {
         Database.artistSongs(browseId).collect { songs = it }
     }
-
-    val songThumbnailSizeDp = Dimensions.thumbnails.song
-    val songThumbnailSizePx = songThumbnailSizeDp.px
 
     val lazyListState = rememberLazyListState()
 
@@ -122,14 +116,13 @@ fun ArtistLocalSongs(
                                 }
                             ),
                             song = song,
-                            thumbnailSizePx = songThumbnailSizePx,
-                            thumbnailSizeDp = songThumbnailSizeDp
+                            thumbnailSize = Dimensions.thumbnails.song
                         )
                     }
                 } ?: item(key = "loading") {
                     ShimmerHost {
                         repeat(4) {
-                            SongItemPlaceholder(thumbnailSizeDp = Dimensions.thumbnails.song)
+                            SongItemPlaceholder(thumbnailSize = Dimensions.thumbnails.song)
                         }
                     }
                 }

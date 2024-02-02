@@ -8,11 +8,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -81,12 +79,12 @@ import it.vfsfitvnm.vimusic.ui.modifiers.onSwipe
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.ui.styling.collapsedPlayerProgressBar
-import it.vfsfitvnm.vimusic.ui.styling.px
 import it.vfsfitvnm.vimusic.utils.DisposableListener
 import it.vfsfitvnm.vimusic.utils.forceSeekToNext
 import it.vfsfitvnm.vimusic.utils.forceSeekToPrevious
 import it.vfsfitvnm.vimusic.utils.isLandscape
 import it.vfsfitvnm.vimusic.utils.positionAndDurationState
+import it.vfsfitvnm.vimusic.utils.px
 import it.vfsfitvnm.vimusic.utils.seamlessPlay
 import it.vfsfitvnm.vimusic.utils.secondary
 import it.vfsfitvnm.vimusic.utils.semiBold
@@ -101,7 +99,6 @@ private fun onDismiss(binder: PlayerService.Binder) {
     binder.player.clearMediaItems()
 }
 
-@kotlin.OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
 @Composable
 fun Player(
     layoutState: BottomSheetState,
@@ -192,7 +189,7 @@ fun Player(
 
                 Box(
                     contentAlignment = Alignment.Center,
-                    modifier = Modifier.height(Dimensions.collapsedPlayer)
+                    modifier = Modifier.height(Dimensions.items.collapsedPlayerHeight)
                 ) {
                     AsyncImage(
                         model = mediaItem.mediaMetadata.artworkUri.thumbnail(Dimensions.thumbnails.song.px),
@@ -208,7 +205,7 @@ fun Player(
                 Column(
                     verticalArrangement = Arrangement.Center,
                     modifier = Modifier
-                        .height(Dimensions.collapsedPlayer)
+                        .height(Dimensions.items.collapsedPlayerHeight)
                         .weight(1f)
                 ) {
                     AnimatedContent(
@@ -244,7 +241,7 @@ fun Player(
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.height(Dimensions.collapsedPlayer)
+                    modifier = Modifier.height(Dimensions.items.collapsedPlayerHeight)
                 ) {
                     AnimatedVisibility(visible = PlayerPreferences.isShowingPrevButtonCollapsed) {
                         IconButton(
@@ -477,7 +474,6 @@ fun Player(
     }
 }
 
-@kotlin.OptIn(ExperimentalAnimationApi::class)
 @Composable
 @OptIn(UnstableApi::class)
 private fun PlayerMenu(

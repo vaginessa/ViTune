@@ -3,7 +3,6 @@ package it.vfsfitvnm.vimusic.ui.components.themed
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibilityScope
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
@@ -17,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 
-@ExperimentalAnimationApi
 @Composable
 fun Scaffold(
     topIconButtonId: Int,

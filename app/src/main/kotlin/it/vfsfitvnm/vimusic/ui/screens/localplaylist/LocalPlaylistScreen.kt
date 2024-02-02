@@ -1,7 +1,5 @@
 package it.vfsfitvnm.vimusic.ui.screens.localplaylist
 
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.res.stringResource
@@ -12,7 +10,6 @@ import it.vfsfitvnm.vimusic.ui.components.themed.Scaffold
 import it.vfsfitvnm.vimusic.ui.screens.GlobalRoutes
 import it.vfsfitvnm.vimusic.ui.screens.Route
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
 @Route
 @Composable
 fun LocalPlaylistScreen(playlistId: Long) {

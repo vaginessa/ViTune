@@ -1,6 +1,5 @@
 package it.vfsfitvnm.vimusic.ui.screens.searchresult
 
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -42,15 +41,17 @@ import it.vfsfitvnm.vimusic.ui.screens.albumRoute
 import it.vfsfitvnm.vimusic.ui.screens.artistRoute
 import it.vfsfitvnm.vimusic.ui.screens.playlistRoute
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
-import it.vfsfitvnm.vimusic.ui.styling.px
 import it.vfsfitvnm.vimusic.utils.asMediaItem
 import it.vfsfitvnm.vimusic.utils.forcePlay
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Route
 @Composable
 fun SearchResultScreen(query: String, onSearchAgain: () -> Unit) {
     val persistMap = LocalPersistMap.current
+    val binder = LocalPlayerServiceBinder.current
+    val menuState = LocalMenuState.current
+
     val saveableStateHolder = rememberSaveableStateHolder()
 
     PersistMapCleanup(prefix = "searchResults/$query/")
@@ -71,8 +72,6 @@ fun SearchResultScreen(query: String, onSearchAgain: () -> Unit) {
                 )
             }
 
-            val emptyItemsText = stringResource(R.string.no_search_results)
-
             Scaffold(
                 topIconButtonId = R.drawable.chevron_back,
                 onTopIconButtonClick = pop,
@@ -88,221 +87,188 @@ fun SearchResultScreen(query: String, onSearchAgain: () -> Unit) {
             ) { tabIndex ->
                 saveableStateHolder.SaveableStateProvider(tabIndex) {
                     when (tabIndex) {
-                        0 -> {
-                            val binder = LocalPlayerServiceBinder.current
-                            val menuState = LocalMenuState.current
-                            val thumbnailSizeDp = Dimensions.thumbnails.song
-                            val thumbnailSizePx = thumbnailSizeDp.px
-
-                            ItemsPage(
-                                tag = "searchResults/$query/songs",
-                                itemsPageProvider = { continuation ->
-                                    if (continuation == null) Innertube.searchPage(
-                                        body = SearchBody(
-                                            query = query,
-                                            params = Innertube.SearchFilter.Song.value
-                                        ),
-                                        fromMusicShelfRendererContent = Innertube.SongItem.Companion::from
-                                    ) else Innertube.searchPage(
-                                        body = ContinuationBody(continuation = continuation),
-                                        fromMusicShelfRendererContent = Innertube.SongItem.Companion::from
-                                    )
-                                },
-                                emptyItemsText = emptyItemsText,
-                                headerContent = headerContent,
-                                itemContent = { song ->
-                                    SongItem(
-                                        song = song,
-                                        thumbnailSizePx = thumbnailSizePx,
-                                        thumbnailSizeDp = thumbnailSizeDp,
-                                        modifier = Modifier.combinedClickable(
-                                            onLongClick = {
-                                                menuState.display {
-                                                    NonQueuedMediaItemMenu(
-                                                        onDismiss = menuState::hide,
-                                                        mediaItem = song.asMediaItem
-                                                    )
-                                                }
-                                            },
-                                            onClick = {
-                                                binder?.stopRadio()
-                                                binder?.player?.forcePlay(song.asMediaItem)
-                                                binder?.setupRadio(song.info?.endpoint)
+                        0 -> ItemsPage(
+                            tag = "searchResults/$query/songs",
+                            itemsPageProvider = { continuation ->
+                                if (continuation == null) Innertube.searchPage(
+                                    body = SearchBody(
+                                        query = query,
+                                        params = Innertube.SearchFilter.Song.value
+                                    ),
+                                    fromMusicShelfRendererContent = Innertube.SongItem.Companion::from
+                                ) else Innertube.searchPage(
+                                    body = ContinuationBody(continuation = continuation),
+                                    fromMusicShelfRendererContent = Innertube.SongItem.Companion::from
+                                )
+                            },
+                            emptyItemsText = stringResource(R.string.no_search_results),
+                            headerContent = headerContent,
+                            itemContent = { song ->
+                                SongItem(
+                                    song = song,
+                                    thumbnailSize = Dimensions.thumbnails.song,
+                                    modifier = Modifier.combinedClickable(
+                                        onLongClick = {
+                                            menuState.display {
+                                                NonQueuedMediaItemMenu(
+                                                    onDismiss = menuState::hide,
+                                                    mediaItem = song.asMediaItem
+                                                )
                                             }
-                                        )
+                                        },
+                                        onClick = {
+                                            binder?.stopRadio()
+                                            binder?.player?.forcePlay(song.asMediaItem)
+                                            binder?.setupRadio(song.info?.endpoint)
+                                        }
                                     )
-                                },
-                                itemPlaceholderContent = {
-                                    SongItemPlaceholder(thumbnailSizeDp = thumbnailSizeDp)
-                                }
-                            )
-                        }
+                                )
+                            },
+                            itemPlaceholderContent = {
+                                SongItemPlaceholder(thumbnailSize = Dimensions.thumbnails.song)
+                            }
+                        )
 
-                        1 -> {
-                            val thumbnailSizeDp = Dimensions.thumbnails.album
-                            val thumbnailSizePx = thumbnailSizeDp.px
-
-                            ItemsPage(
-                                tag = "searchResults/$query/albums",
-                                itemsPageProvider = { continuation ->
-                                    if (continuation == null) {
-                                        Innertube.searchPage(
-                                            body = SearchBody(
-                                                query = query,
-                                                params = Innertube.SearchFilter.Album.value
-                                            ),
-                                            fromMusicShelfRendererContent = Innertube.AlbumItem::from
-                                        )
-                                    } else {
-                                        Innertube.searchPage(
-                                            body = ContinuationBody(continuation = continuation),
-                                            fromMusicShelfRendererContent = Innertube.AlbumItem::from
-                                        )
-                                    }
-                                },
-                                emptyItemsText = emptyItemsText,
-                                headerContent = headerContent,
-                                itemContent = { album ->
-                                    AlbumItem(
-                                        album = album,
-                                        thumbnailSizePx = thumbnailSizePx,
-                                        thumbnailSizeDp = thumbnailSizeDp,
-                                        modifier = Modifier.clickable(onClick = { albumRoute(album.key) })
-                                    )
-                                },
-                                itemPlaceholderContent = {
-                                    AlbumItemPlaceholder(thumbnailSizeDp = thumbnailSizeDp)
-                                }
-                            )
-                        }
-
-                        2 -> {
-                            val thumbnailSizeDp = 64.dp
-                            val thumbnailSizePx = thumbnailSizeDp.px
-
-                            ItemsPage(
-                                tag = "searchResults/$query/artists",
-                                itemsPageProvider = { continuation ->
-                                    if (continuation == null) {
-                                        Innertube.searchPage(
-                                            body = SearchBody(
-                                                query = query,
-                                                params = Innertube.SearchFilter.Artist.value
-                                            ),
-                                            fromMusicShelfRendererContent = Innertube.ArtistItem::from
-                                        )
-                                    } else {
-                                        Innertube.searchPage(
-                                            body = ContinuationBody(continuation = continuation),
-                                            fromMusicShelfRendererContent = Innertube.ArtistItem::from
-                                        )
-                                    }
-                                },
-                                emptyItemsText = emptyItemsText,
-                                headerContent = headerContent,
-                                itemContent = { artist ->
-                                    ArtistItem(
-                                        artist = artist,
-                                        thumbnailSizePx = thumbnailSizePx,
-                                        thumbnailSizeDp = thumbnailSizeDp,
-                                        modifier = Modifier
-                                            .clickable(onClick = { artistRoute(artist.key) })
-                                    )
-                                },
-                                itemPlaceholderContent = {
-                                    ArtistItemPlaceholder(thumbnailSizeDp = thumbnailSizeDp)
-                                }
-                            )
-                        }
-
-                        3 -> {
-                            val binder = LocalPlayerServiceBinder.current
-                            val menuState = LocalMenuState.current
-                            val thumbnailHeightDp = 72.dp
-                            val thumbnailWidthDp = 128.dp
-
-                            ItemsPage(
-                                tag = "searchResults/$query/videos",
-                                itemsPageProvider = { continuation ->
-                                    if (continuation == null) Innertube.searchPage(
+                        1 -> ItemsPage(
+                            tag = "searchResults/$query/albums",
+                            itemsPageProvider = { continuation ->
+                                if (continuation == null) {
+                                    Innertube.searchPage(
                                         body = SearchBody(
                                             query = query,
-                                            params = Innertube.SearchFilter.Video.value
+                                            params = Innertube.SearchFilter.Album.value
                                         ),
-                                        fromMusicShelfRendererContent = Innertube.VideoItem::from
-                                    ) else Innertube.searchPage(
-                                        body = ContinuationBody(continuation = continuation),
-                                        fromMusicShelfRendererContent = Innertube.VideoItem::from
+                                        fromMusicShelfRendererContent = Innertube.AlbumItem::from
                                     )
-                                },
-                                emptyItemsText = emptyItemsText,
-                                headerContent = headerContent,
-                                itemContent = { video ->
-                                    VideoItem(
-                                        video = video,
-                                        thumbnailWidthDp = thumbnailWidthDp,
-                                        thumbnailHeightDp = thumbnailHeightDp,
-                                        modifier = Modifier.combinedClickable(
-                                            onLongClick = {
-                                                menuState.display {
-                                                    NonQueuedMediaItemMenu(
-                                                        mediaItem = video.asMediaItem,
-                                                        onDismiss = menuState::hide
-                                                    )
-                                                }
-                                            },
-                                            onClick = {
-                                                binder?.stopRadio()
-                                                binder?.player?.forcePlay(video.asMediaItem)
-                                                binder?.setupRadio(video.info?.endpoint)
+                                } else {
+                                    Innertube.searchPage(
+                                        body = ContinuationBody(continuation = continuation),
+                                        fromMusicShelfRendererContent = Innertube.AlbumItem::from
+                                    )
+                                }
+                            },
+                            emptyItemsText = stringResource(R.string.no_search_results),
+                            headerContent = headerContent,
+                            itemContent = { album ->
+                                AlbumItem(
+                                    album = album,
+                                    thumbnailSize = Dimensions.thumbnails.album,
+                                    modifier = Modifier.clickable(onClick = { albumRoute(album.key) })
+                                )
+                            },
+                            itemPlaceholderContent = {
+                                AlbumItemPlaceholder(thumbnailSize = Dimensions.thumbnails.album)
+                            }
+                        )
+
+                        2 -> ItemsPage(
+                            tag = "searchResults/$query/artists",
+                            itemsPageProvider = { continuation ->
+                                if (continuation == null) {
+                                    Innertube.searchPage(
+                                        body = SearchBody(
+                                            query = query,
+                                            params = Innertube.SearchFilter.Artist.value
+                                        ),
+                                        fromMusicShelfRendererContent = Innertube.ArtistItem::from
+                                    )
+                                } else {
+                                    Innertube.searchPage(
+                                        body = ContinuationBody(continuation = continuation),
+                                        fromMusicShelfRendererContent = Innertube.ArtistItem::from
+                                    )
+                                }
+                            },
+                            emptyItemsText = stringResource(R.string.no_search_results),
+                            headerContent = headerContent,
+                            itemContent = { artist ->
+                                ArtistItem(
+                                    artist = artist,
+                                    thumbnailSize = 64.dp,
+                                    modifier = Modifier
+                                        .clickable(onClick = { artistRoute(artist.key) })
+                                )
+                            },
+                            itemPlaceholderContent = {
+                                ArtistItemPlaceholder(thumbnailSize = 64.dp)
+                            }
+                        )
+
+                        3 -> ItemsPage(
+                            tag = "searchResults/$query/videos",
+                            itemsPageProvider = { continuation ->
+                                if (continuation == null) Innertube.searchPage(
+                                    body = SearchBody(
+                                        query = query,
+                                        params = Innertube.SearchFilter.Video.value
+                                    ),
+                                    fromMusicShelfRendererContent = Innertube.VideoItem::from
+                                ) else Innertube.searchPage(
+                                    body = ContinuationBody(continuation = continuation),
+                                    fromMusicShelfRendererContent = Innertube.VideoItem::from
+                                )
+                            },
+                            emptyItemsText = stringResource(R.string.no_search_results),
+                            headerContent = headerContent,
+                            itemContent = { video ->
+                                VideoItem(
+                                    video = video,
+                                    thumbnailWidth = 128.dp,
+                                    thumbnailHeight = 72.dp,
+                                    modifier = Modifier.combinedClickable(
+                                        onLongClick = {
+                                            menuState.display {
+                                                NonQueuedMediaItemMenu(
+                                                    mediaItem = video.asMediaItem,
+                                                    onDismiss = menuState::hide
+                                                )
                                             }
-                                        )
+                                        },
+                                        onClick = {
+                                            binder?.stopRadio()
+                                            binder?.player?.forcePlay(video.asMediaItem)
+                                            binder?.setupRadio(video.info?.endpoint)
+                                        }
                                     )
-                                },
-                                itemPlaceholderContent = {
-                                    VideoItemPlaceholder(
-                                        thumbnailHeightDp = thumbnailHeightDp,
-                                        thumbnailWidthDp = thumbnailWidthDp
-                                    )
-                                }
-                            )
-                        }
+                                )
+                            },
+                            itemPlaceholderContent = {
+                                VideoItemPlaceholder(
+                                    thumbnailWidth = 128.dp,
+                                    thumbnailHeight = 72.dp
+                                )
+                            }
+                        )
 
-                        4 -> {
-                            val thumbnailSizeDp = Dimensions.thumbnails.playlist
-                            val thumbnailSizePx = thumbnailSizeDp.px
-
-                            ItemsPage(
-                                tag = "searchResults/$query/playlists",
-                                itemsPageProvider = { continuation ->
-                                    if (continuation == null) Innertube.searchPage(
-                                        body = SearchBody(
-                                            query = query,
-                                            params = Innertube.SearchFilter.CommunityPlaylist.value
-                                        ),
-                                        fromMusicShelfRendererContent = Innertube.PlaylistItem::from
-                                    ) else Innertube.searchPage(
-                                        body = ContinuationBody(continuation = continuation),
-                                        fromMusicShelfRendererContent = Innertube.PlaylistItem::from
-                                    )
-                                },
-                                emptyItemsText = emptyItemsText,
-                                headerContent = headerContent,
-                                itemContent = { playlist ->
-                                    PlaylistItem(
-                                        playlist = playlist,
-                                        thumbnailSizePx = thumbnailSizePx,
-                                        thumbnailSizeDp = thumbnailSizeDp,
-                                        modifier = Modifier.clickable(onClick = {
-                                            playlistRoute(playlist.key)
-                                        })
-                                    )
-                                },
-                                itemPlaceholderContent = {
-                                    PlaylistItemPlaceholder(thumbnailSizeDp = thumbnailSizeDp)
-                                }
-                            )
-                        }
+                        4 -> ItemsPage(
+                            tag = "searchResults/$query/playlists",
+                            itemsPageProvider = { continuation ->
+                                if (continuation == null) Innertube.searchPage(
+                                    body = SearchBody(
+                                        query = query,
+                                        params = Innertube.SearchFilter.CommunityPlaylist.value
+                                    ),
+                                    fromMusicShelfRendererContent = Innertube.PlaylistItem::from
+                                ) else Innertube.searchPage(
+                                    body = ContinuationBody(continuation = continuation),
+                                    fromMusicShelfRendererContent = Innertube.PlaylistItem::from
+                                )
+                            },
+                            emptyItemsText = stringResource(R.string.no_search_results),
+                            headerContent = headerContent,
+                            itemContent = { playlist ->
+                                PlaylistItem(
+                                    playlist = playlist,
+                                    thumbnailSize = Dimensions.thumbnails.playlist,
+                                    modifier = Modifier.clickable(onClick = {
+                                        playlistRoute(playlist.key)
+                                    })
+                                )
+                            },
+                            itemPlaceholderContent = {
+                                PlaylistItemPlaceholder(thumbnailSize = Dimensions.thumbnails.playlist)
+                            }
+                        )
                     }
                 }
             }

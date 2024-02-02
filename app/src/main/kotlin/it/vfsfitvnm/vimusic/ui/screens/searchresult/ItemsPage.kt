@@ -1,6 +1,5 @@
 package it.vfsfitvnm.vimusic.ui.screens.searchresult
 
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
@@ -18,7 +17,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -35,11 +33,36 @@ import it.vfsfitvnm.vimusic.utils.secondary
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-@ExperimentalAnimationApi
 @Composable
 inline fun <T : Innertube.Item> ItemsPage(
     tag: String,
     crossinline headerContent: @Composable (textButton: (@Composable () -> Unit)?) -> Unit,
+    crossinline itemContent: @Composable LazyItemScope.(T) -> Unit,
+    noinline itemPlaceholderContent: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    initialPlaceholderCount: Int = 8,
+    continuationPlaceholderCount: Int = 3,
+    emptyItemsText: String = stringResource(R.string.no_items_found),
+    noinline itemsPageProvider: (suspend (String?) -> Result<Innertube.ItemsPage<T>?>?)? = null
+) = ItemsPage(
+    tag = tag,
+    headerContent = { before, _ -> headerContent(before) },
+    itemContent = itemContent,
+    itemPlaceholderContent = itemPlaceholderContent,
+    modifier = modifier,
+    initialPlaceholderCount = initialPlaceholderCount,
+    continuationPlaceholderCount = continuationPlaceholderCount,
+    emptyItemsText = emptyItemsText,
+    itemsPageProvider = itemsPageProvider
+)
+
+@Composable
+inline fun <T : Innertube.Item> ItemsPage(
+    tag: String,
+    crossinline headerContent: @Composable (
+        beforeContent: (@Composable () -> Unit)?,
+        afterContent: (@Composable () -> Unit)?
+    ) -> Unit,
     crossinline itemContent: @Composable LazyItemScope.(T) -> Unit,
     noinline itemPlaceholderContent: @Composable () -> Unit,
     modifier: Modifier = Modifier,
@@ -59,36 +82,32 @@ inline fun <T : Innertube.Item> ItemsPage(
     LaunchedEffect(lazyListState, updatedItemsPageProvider) {
         val currentItemsPageProvider = updatedItemsPageProvider ?: return@LaunchedEffect
 
-        snapshotFlow { lazyListState.layoutInfo.visibleItemsInfo.any { it.key == "loading" } }
-            .collect { shouldLoadMore ->
-                if (!shouldLoadMore) return@collect
-
-                withContext(Dispatchers.IO) {
-                    currentItemsPageProvider(itemsPage?.continuation)
-                }?.onSuccess {
-                    if (it == null) {
-                        if (itemsPage == null) {
-                            itemsPage = Innertube.ItemsPage(null, null)
-                        }
-                    } else {
-                        itemsPage += it
-                    }
-                }?.exceptionOrNull()?.printStackTrace()
-            }
+        if (lazyListState.layoutInfo.visibleItemsInfo.any { it.key == "loading" }) {
+            withContext(Dispatchers.IO) {
+                currentItemsPageProvider(itemsPage?.continuation)
+            }?.onSuccess {
+                if (it == null) {
+                    if (itemsPage == null) itemsPage = Innertube.ItemsPage(null, null)
+                } else itemsPage += it
+            }?.onFailure {
+                itemsPage = itemsPage?.copy(continuation = null)
+            }?.exceptionOrNull()?.printStackTrace()
+        }
     }
 
     Box(modifier = modifier) {
         LazyColumn(
             state = lazyListState,
             contentPadding = LocalPlayerAwareWindowInsets.current
-                .only(WindowInsetsSides.Vertical + WindowInsetsSides.End).asPaddingValues(),
+                .only(WindowInsetsSides.Vertical + WindowInsetsSides.End)
+                .asPaddingValues(),
             modifier = Modifier.fillMaxSize()
         ) {
             item(
                 key = "header",
                 contentType = "header"
             ) {
-                headerContent(null)
+                headerContent(null, null)
             }
 
             items(
@@ -97,30 +116,24 @@ inline fun <T : Innertube.Item> ItemsPage(
                 itemContent = itemContent
             )
 
-            if (itemsPage != null && itemsPage?.items.isNullOrEmpty()) {
-                item(key = "empty") {
-                    BasicText(
-                        text = emptyItemsText,
-                        style = typography.xs.secondary.center,
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp, vertical = 32.dp)
-                            .fillMaxWidth()
-                    )
-                }
+            if (itemsPage != null && itemsPage?.items.isNullOrEmpty()) item(key = "empty") {
+                BasicText(
+                    text = emptyItemsText,
+                    style = typography.xs.secondary.center,
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp, vertical = 32.dp)
+                        .fillMaxWidth()
+                )
             }
 
-            if (!(itemsPage != null && itemsPage?.continuation == null)) {
-                item(key = "loading") {
-                    val isFirstLoad = itemsPage?.items.isNullOrEmpty()
+            if (!(itemsPage != null && itemsPage?.continuation == null)) item(key = "loading") {
+                val isFirstLoad = itemsPage?.items.isNullOrEmpty()
 
-                    ShimmerHost(
-                        modifier = Modifier.let {
-                            if (isFirstLoad) it.fillParentMaxSize() else it
-                        }
-                    ) {
-                        repeat(if (isFirstLoad) initialPlaceholderCount else continuationPlaceholderCount) {
-                            itemPlaceholderContent()
-                        }
+                ShimmerHost(
+                    modifier = if (isFirstLoad) Modifier.fillParentMaxSize() else Modifier
+                ) {
+                    repeat(if (isFirstLoad) initialPlaceholderCount else continuationPlaceholderCount) {
+                        itemPlaceholderContent()
                     }
                 }
             }

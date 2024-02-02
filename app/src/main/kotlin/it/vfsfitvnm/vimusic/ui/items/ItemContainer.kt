@@ -17,30 +17,31 @@ import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 @Composable
 inline fun ItemContainer(
     alternative: Boolean,
-    thumbnailSizeDp: Dp,
+    thumbnailSize: Dp,
     modifier: Modifier = Modifier,
     horizontalAlignment: Alignment.Horizontal = Alignment.Start,
     verticalAlignment: Alignment.Vertical = Alignment.CenterVertically,
     content: @Composable (centeredModifier: Modifier) -> Unit
-) = if (alternative) {
-    Column(
-        horizontalAlignment = horizontalAlignment,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = modifier
-            .padding(vertical = Dimensions.itemsVerticalPadding, horizontal = 16.dp)
-            .width(thumbnailSizeDp)
-    ) {
-        content(Modifier.align(Alignment.CenterHorizontally))
-    }
-} else Row(
+) = if (alternative) Column(
+    horizontalAlignment = horizontalAlignment,
+    verticalArrangement = Arrangement.spacedBy(12.dp),
+    modifier = modifier
+        .padding(
+            vertical = Dimensions.items.verticalPadding,
+            horizontal = Dimensions.items.horizontalPadding
+        )
+        .width(thumbnailSize)
+) { content(Modifier.align(Alignment.CenterHorizontally)) }
+else Row(
     verticalAlignment = verticalAlignment,
     horizontalArrangement = Arrangement.spacedBy(12.dp),
     modifier = modifier
-        .padding(vertical = Dimensions.itemsVerticalPadding, horizontal = 16.dp)
+        .padding(
+            vertical = Dimensions.items.verticalPadding,
+            horizontal = Dimensions.items.horizontalPadding
+        )
         .fillMaxWidth()
-) {
-    content(Modifier.align(Alignment.CenterVertically))
-}
+) { content(Modifier.align(Alignment.CenterVertically)) }
 
 @Composable
 inline fun ItemInfoContainer(

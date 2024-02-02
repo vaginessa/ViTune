@@ -49,7 +49,7 @@ fun Header(
     contentAlignment = Alignment.CenterEnd,
     modifier = modifier
         .padding(horizontal = 16.dp)
-        .height(Dimensions.headerHeight)
+        .height(Dimensions.items.headerHeight)
         .fillMaxWidth()
 ) {
     titleContent()
@@ -69,7 +69,7 @@ fun HeaderPlaceholder(modifier: Modifier = Modifier) = Box(
     contentAlignment = Alignment.CenterEnd,
     modifier = modifier
         .padding(horizontal = 16.dp)
-        .height(Dimensions.headerHeight)
+        .height(Dimensions.items.headerHeight)
         .fillMaxWidth()
 ) {
     val (colorPalette, typography) = LocalAppearance.current

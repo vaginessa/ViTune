@@ -31,7 +31,6 @@ import it.vfsfitvnm.vimusic.utils.scrollingInfo
 import it.vfsfitvnm.vimusic.utils.smoothScrollToTop
 import kotlinx.coroutines.launch
 
-@ExperimentalAnimationApi
 @Composable
 fun BoxScope.FloatingActionsContainerWithScrollToTop(
     lazyGridState: LazyGridState,
@@ -55,7 +54,6 @@ fun BoxScope.FloatingActionsContainerWithScrollToTop(
     )
 }
 
-@ExperimentalAnimationApi
 @Composable
 fun BoxScope.FloatingActionsContainerWithScrollToTop(
     lazyListState: LazyListState,
@@ -79,7 +77,6 @@ fun BoxScope.FloatingActionsContainerWithScrollToTop(
     )
 }
 
-@ExperimentalAnimationApi
 @Composable
 fun BoxScope.FloatingActionsContainerWithScrollToTop(
     scrollState: ScrollState,
@@ -102,7 +99,7 @@ fun BoxScope.FloatingActionsContainerWithScrollToTop(
     )
 }
 
-@ExperimentalAnimationApi
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun BoxScope.FloatingActions(
     transitionState: MutableTransitionState<ScrollingInfo?>,
@@ -155,8 +152,14 @@ fun BoxScope.FloatingActions(
             onClick?.let {
                 transition.AnimatedVisibility(
                     visible = { it?.isScrollingDown == false },
-                    enter = slideInVertically(tween(500, 0)) { it },
-                    exit = slideOutVertically(tween(500, 100)) { it }
+                    enter = slideInVertically(
+                        animationSpec = tween(durationMillis = 500, delayMillis = 0),
+                        initialOffsetY = { it }
+                    ),
+                    exit = slideOutVertically(
+                        animationSpec = tween(durationMillis = 500, delayMillis = 100),
+                        targetOffsetY = { it }
+                    )
                 ) {
                     PrimaryButton(
                         iconId = iconId,

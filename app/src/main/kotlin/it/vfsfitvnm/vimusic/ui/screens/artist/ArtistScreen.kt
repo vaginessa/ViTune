@@ -1,7 +1,6 @@
 package it.vfsfitvnm.vimusic.ui.screens.artist
 
 import android.content.Intent
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -12,7 +11,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -31,6 +29,7 @@ import it.vfsfitvnm.vimusic.LocalPlayerServiceBinder
 import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.models.Artist
 import it.vfsfitvnm.vimusic.preferences.UIStatePreferences
+import it.vfsfitvnm.vimusic.preferences.UIStatePreferences.artistScreenTabIndexProperty
 import it.vfsfitvnm.vimusic.query
 import it.vfsfitvnm.vimusic.ui.components.LocalMenuState
 import it.vfsfitvnm.vimusic.ui.components.themed.Header
@@ -49,7 +48,6 @@ import it.vfsfitvnm.vimusic.ui.screens.albumRoute
 import it.vfsfitvnm.vimusic.ui.screens.searchresult.ItemsPage
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
-import it.vfsfitvnm.vimusic.ui.styling.px
 import it.vfsfitvnm.vimusic.utils.asMediaItem
 import it.vfsfitvnm.vimusic.utils.forcePlay
 import kotlinx.coroutines.Dispatchers
@@ -58,10 +56,13 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Route
 @Composable
 fun ArtistScreen(browseId: String) {
+    val binder = LocalPlayerServiceBinder.current
+    val menuState = LocalMenuState.current
+
     val saveableStateHolder = rememberSaveableStateHolder()
 
     PersistMapCleanup(prefix = "artist/$browseId/")
@@ -74,7 +75,7 @@ fun ArtistScreen(browseId: String) {
         Database
             .artist(browseId)
             .combine(
-                flow = snapshotFlow { UIStatePreferences.artistScreenTabIndex }.map { it != 4 },
+                flow = artistScreenTabIndexProperty.stateFlow.map { it != 4 },
                 transform = ::Pair
             )
             .distinctUntilChanged()
@@ -183,170 +184,150 @@ fun ArtistScreen(browseId: String) {
                             onViewAllSinglesClick = { UIStatePreferences.artistScreenTabIndex = 3 }
                         )
 
-                        1 -> {
-                            val binder = LocalPlayerServiceBinder.current
-                            val menuState = LocalMenuState.current
-                            val thumbnailSizeDp = Dimensions.thumbnails.song
-                            val thumbnailSizePx = thumbnailSizeDp.px
-
-                            ItemsPage(
-                                tag = "artist/$browseId/songs",
-                                headerContent = headerContent,
-                                itemsPageProvider = artistPage?.let {
-                                    @Suppress("SpacingAroundCurly")
-                                    { continuation ->
-                                        continuation?.let {
+                        1 -> ItemsPage(
+                            tag = "artist/$browseId/songs",
+                            headerContent = headerContent,
+                            itemsPageProvider = artistPage?.let {
+                                @Suppress("SpacingAroundCurly")
+                                { continuation ->
+                                    continuation?.let {
+                                        Innertube.itemsPage(
+                                            body = ContinuationBody(continuation = continuation),
+                                            fromMusicResponsiveListItemRenderer = Innertube.SongItem::from
+                                        )
+                                    } ?: artistPage
+                                        ?.songsEndpoint
+                                        ?.takeIf { it.browseId != null }
+                                        ?.let { endpoint ->
                                             Innertube.itemsPage(
-                                                body = ContinuationBody(continuation = continuation),
+                                                body = BrowseBody(
+                                                    browseId = endpoint.browseId!!,
+                                                    params = endpoint.params
+                                                ),
                                                 fromMusicResponsiveListItemRenderer = Innertube.SongItem::from
                                             )
-                                        } ?: artistPage
-                                            ?.songsEndpoint
-                                            ?.takeIf { it.browseId != null }
-                                            ?.let { endpoint ->
-                                                Innertube.itemsPage(
-                                                    body = BrowseBody(
-                                                        browseId = endpoint.browseId!!,
-                                                        params = endpoint.params
-                                                    ),
-                                                    fromMusicResponsiveListItemRenderer = Innertube.SongItem::from
-                                                )
-                                            }
-                                        ?: Result.success(
-                                            Innertube.ItemsPage(
-                                                items = artistPage?.songs,
-                                                continuation = null
-                                            )
-                                        )
-                                    }
-                                },
-                                itemContent = { song ->
-                                    SongItem(
-                                        song = song,
-                                        thumbnailSizeDp = thumbnailSizeDp,
-                                        thumbnailSizePx = thumbnailSizePx,
-                                        modifier = Modifier.combinedClickable(
-                                            onLongClick = {
-                                                menuState.display {
-                                                    NonQueuedMediaItemMenu(
-                                                        onDismiss = menuState::hide,
-                                                        mediaItem = song.asMediaItem
-                                                    )
-                                                }
-                                            },
-                                            onClick = {
-                                                binder?.stopRadio()
-                                                binder?.player?.forcePlay(song.asMediaItem)
-                                                binder?.setupRadio(song.info?.endpoint)
-                                            }
+                                        }
+                                    ?: Result.success(
+                                        Innertube.ItemsPage(
+                                            items = artistPage?.songs,
+                                            continuation = null
                                         )
                                     )
-                                },
-                                itemPlaceholderContent = {
-                                    SongItemPlaceholder(thumbnailSizeDp = thumbnailSizeDp)
                                 }
-                            )
-                        }
+                            },
+                            itemContent = { song ->
+                                SongItem(
+                                    song = song,
+                                    thumbnailSize = Dimensions.thumbnails.song,
+                                    modifier = Modifier.combinedClickable(
+                                        onLongClick = {
+                                            menuState.display {
+                                                NonQueuedMediaItemMenu(
+                                                    onDismiss = menuState::hide,
+                                                    mediaItem = song.asMediaItem
+                                                )
+                                            }
+                                        },
+                                        onClick = {
+                                            binder?.stopRadio()
+                                            binder?.player?.forcePlay(song.asMediaItem)
+                                            binder?.setupRadio(song.info?.endpoint)
+                                        }
+                                    )
+                                )
+                            },
+                            itemPlaceholderContent = {
+                                SongItemPlaceholder(thumbnailSize = Dimensions.thumbnails.song)
+                            }
+                        )
 
-                        2 -> {
-                            val thumbnailSizeDp = Dimensions.thumbnails.album
-                            val thumbnailSizePx = thumbnailSizeDp.px
-
-                            ItemsPage(
-                                tag = "artist/$browseId/albums",
-                                headerContent = headerContent,
-                                emptyItemsText = stringResource(R.string.artist_has_no_albums),
-                                itemsPageProvider = artistPage?.let {
-                                    @Suppress("SpacingAroundCurly")
-                                    { continuation ->
-                                        continuation?.let {
+                        2 -> ItemsPage(
+                            tag = "artist/$browseId/albums",
+                            headerContent = headerContent,
+                            emptyItemsText = stringResource(R.string.artist_has_no_albums),
+                            itemsPageProvider = artistPage?.let {
+                                @Suppress("SpacingAroundCurly")
+                                { continuation ->
+                                    continuation?.let {
+                                        Innertube.itemsPage(
+                                            body = ContinuationBody(continuation = continuation),
+                                            fromMusicTwoRowItemRenderer = Innertube.AlbumItem::from
+                                        )
+                                    } ?: artistPage
+                                        ?.albumsEndpoint
+                                        ?.takeIf { it.browseId != null }
+                                        ?.let { endpoint ->
                                             Innertube.itemsPage(
-                                                body = ContinuationBody(continuation = continuation),
+                                                body = BrowseBody(
+                                                    browseId = endpoint.browseId!!,
+                                                    params = endpoint.params
+                                                ),
                                                 fromMusicTwoRowItemRenderer = Innertube.AlbumItem::from
                                             )
-                                        } ?: artistPage
-                                            ?.albumsEndpoint
-                                            ?.takeIf { it.browseId != null }
-                                            ?.let { endpoint ->
-                                                Innertube.itemsPage(
-                                                    body = BrowseBody(
-                                                        browseId = endpoint.browseId!!,
-                                                        params = endpoint.params
-                                                    ),
-                                                    fromMusicTwoRowItemRenderer = Innertube.AlbumItem::from
-                                                )
-                                            }
-                                        ?: Result.success(
-                                            Innertube.ItemsPage(
-                                                items = artistPage?.albums,
-                                                continuation = null
-                                            )
+                                        }
+                                    ?: Result.success(
+                                        Innertube.ItemsPage(
+                                            items = artistPage?.albums,
+                                            continuation = null
                                         )
-                                    }
-                                },
-                                itemContent = { album ->
-                                    AlbumItem(
-                                        album = album,
-                                        thumbnailSizePx = thumbnailSizePx,
-                                        thumbnailSizeDp = thumbnailSizeDp,
-                                        modifier = Modifier.clickable(onClick = { albumRoute(album.key) })
                                     )
-                                },
-                                itemPlaceholderContent = {
-                                    AlbumItemPlaceholder(thumbnailSizeDp = thumbnailSizeDp)
                                 }
-                            )
-                        }
+                            },
+                            itemContent = { album ->
+                                AlbumItem(
+                                    album = album,
+                                    thumbnailSize = Dimensions.thumbnails.album,
+                                    modifier = Modifier.clickable(onClick = { albumRoute(album.key) })
+                                )
+                            },
+                            itemPlaceholderContent = {
+                                AlbumItemPlaceholder(thumbnailSize = Dimensions.thumbnails.album)
+                            }
+                        )
 
-                        3 -> {
-                            val thumbnailSizeDp = Dimensions.thumbnails.album
-                            val thumbnailSizePx = thumbnailSizeDp.px
-
-                            ItemsPage(
-                                tag = "artist/$browseId/singles",
-                                headerContent = headerContent,
-                                emptyItemsText = stringResource(R.string.artist_has_no_singles),
-                                itemsPageProvider = artistPage?.let {
-                                    @Suppress("SpacingAroundCurly")
-                                    { continuation ->
-                                        continuation?.let {
+                        3 -> ItemsPage(
+                            tag = "artist/$browseId/singles",
+                            headerContent = headerContent,
+                            emptyItemsText = stringResource(R.string.artist_has_no_singles),
+                            itemsPageProvider = artistPage?.let {
+                                @Suppress("SpacingAroundCurly")
+                                { continuation ->
+                                    continuation?.let {
+                                        Innertube.itemsPage(
+                                            body = ContinuationBody(continuation = continuation),
+                                            fromMusicTwoRowItemRenderer = Innertube.AlbumItem::from
+                                        )
+                                    } ?: artistPage
+                                        ?.singlesEndpoint
+                                        ?.takeIf { it.browseId != null }
+                                        ?.let { endpoint ->
                                             Innertube.itemsPage(
-                                                body = ContinuationBody(continuation = continuation),
+                                                body = BrowseBody(
+                                                    browseId = endpoint.browseId!!,
+                                                    params = endpoint.params
+                                                ),
                                                 fromMusicTwoRowItemRenderer = Innertube.AlbumItem::from
                                             )
-                                        } ?: artistPage
-                                            ?.singlesEndpoint
-                                            ?.takeIf { it.browseId != null }
-                                            ?.let { endpoint ->
-                                                Innertube.itemsPage(
-                                                    body = BrowseBody(
-                                                        browseId = endpoint.browseId!!,
-                                                        params = endpoint.params
-                                                    ),
-                                                    fromMusicTwoRowItemRenderer = Innertube.AlbumItem::from
-                                                )
-                                            }
-                                        ?: Result.success(
-                                            Innertube.ItemsPage(
-                                                items = artistPage?.singles,
-                                                continuation = null
-                                            )
+                                        }
+                                    ?: Result.success(
+                                        Innertube.ItemsPage(
+                                            items = artistPage?.singles,
+                                            continuation = null
                                         )
-                                    }
-                                },
-                                itemContent = { album ->
-                                    AlbumItem(
-                                        album = album,
-                                        thumbnailSizePx = thumbnailSizePx,
-                                        thumbnailSizeDp = thumbnailSizeDp,
-                                        modifier = Modifier.clickable(onClick = { albumRoute(album.key) })
                                     )
-                                },
-                                itemPlaceholderContent = {
-                                    AlbumItemPlaceholder(thumbnailSizeDp = thumbnailSizeDp)
                                 }
-                            )
-                        }
+                            },
+                            itemContent = { album ->
+                                AlbumItem(
+                                    album = album,
+                                    thumbnailSize = Dimensions.thumbnails.album,
+                                    modifier = Modifier.clickable(onClick = { albumRoute(album.key) })
+                                )
+                            },
+                            itemPlaceholderContent = {
+                                AlbumItemPlaceholder(thumbnailSize = Dimensions.thumbnails.album)
+                            }
+                        )
 
                         4 -> ArtistLocalSongs(
                             browseId = browseId,

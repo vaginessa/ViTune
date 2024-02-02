@@ -20,6 +20,7 @@ import it.vfsfitvnm.vimusic.models.Artist
 import it.vfsfitvnm.vimusic.ui.components.themed.TextPlaceholder
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.ui.styling.shimmer
+import it.vfsfitvnm.vimusic.utils.px
 import it.vfsfitvnm.vimusic.utils.secondary
 import it.vfsfitvnm.vimusic.utils.semiBold
 import it.vfsfitvnm.vimusic.utils.thumbnail
@@ -27,16 +28,14 @@ import it.vfsfitvnm.vimusic.utils.thumbnail
 @Composable
 fun ArtistItem(
     artist: Artist,
-    thumbnailSizePx: Int,
-    thumbnailSizeDp: Dp,
+    thumbnailSize: Dp,
     modifier: Modifier = Modifier,
     alternative: Boolean = false
 ) = ArtistItem(
     thumbnailUrl = artist.thumbnailUrl,
     name = artist.name,
     subscribersCount = null,
-    thumbnailSizePx = thumbnailSizePx,
-    thumbnailSizeDp = thumbnailSizeDp,
+    thumbnailSize = thumbnailSize,
     modifier = modifier,
     alternative = alternative
 )
@@ -44,16 +43,14 @@ fun ArtistItem(
 @Composable
 fun ArtistItem(
     artist: Innertube.ArtistItem,
-    thumbnailSizePx: Int,
-    thumbnailSizeDp: Dp,
+    thumbnailSize: Dp,
     modifier: Modifier = Modifier,
     alternative: Boolean = false
 ) = ArtistItem(
     thumbnailUrl = artist.thumbnail?.url,
     name = artist.info?.name,
     subscribersCount = artist.subscribersCountText,
-    thumbnailSizePx = thumbnailSizePx,
-    thumbnailSizeDp = thumbnailSizeDp,
+    thumbnailSize = thumbnailSize,
     modifier = modifier,
     alternative = alternative
 )
@@ -63,8 +60,7 @@ fun ArtistItem(
     thumbnailUrl: String?,
     name: String?,
     subscribersCount: String?,
-    thumbnailSizePx: Int,
-    thumbnailSizeDp: Dp,
+    thumbnailSize: Dp,
     modifier: Modifier = Modifier,
     alternative: Boolean = false
 ) {
@@ -72,16 +68,16 @@ fun ArtistItem(
 
     ItemContainer(
         alternative = alternative,
-        thumbnailSizeDp = thumbnailSizeDp,
+        thumbnailSize = thumbnailSize,
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
     ) {
         AsyncImage(
-            model = thumbnailUrl?.thumbnail(thumbnailSizePx),
+            model = thumbnailUrl?.thumbnail(thumbnailSize.px),
             contentDescription = null,
             modifier = Modifier
                 .clip(CircleShape)
-                .requiredSize(thumbnailSizeDp)
+                .requiredSize(thumbnailSize)
         )
 
         ItemInfoContainer(
@@ -109,7 +105,7 @@ fun ArtistItem(
 
 @Composable
 fun ArtistItemPlaceholder(
-    thumbnailSizeDp: Dp,
+    thumbnailSize: Dp,
     modifier: Modifier = Modifier,
     alternative: Boolean = false
 ) {
@@ -117,14 +113,14 @@ fun ArtistItemPlaceholder(
 
     ItemContainer(
         alternative = alternative,
-        thumbnailSizeDp = thumbnailSizeDp,
+        thumbnailSize = thumbnailSize,
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
     ) {
         Spacer(
             modifier = Modifier
                 .background(color = colorPalette.shimmer, shape = CircleShape)
-                .size(thumbnailSizeDp)
+                .size(thumbnailSize)
         )
 
         ItemInfoContainer(

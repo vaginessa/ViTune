@@ -34,8 +34,6 @@ fun PlaybackError(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) = Box {
-    val (_, typography) = LocalAppearance.current
-
     val message by rememberUpdatedState(newValue = messageProvider())
 
     AnimatedVisibility(
@@ -47,9 +45,7 @@ fun PlaybackError(
             modifier = modifier
                 .pointerInput(Unit) {
                     detectTapGestures(
-                        onTap = {
-                            onDismiss()
-                        }
+                        onTap = { onDismiss() }
                     )
                 }
                 .fillMaxSize()
@@ -65,7 +61,7 @@ fun PlaybackError(
     ) {
         BasicText(
             text = message,
-            style = typography.xs.center.medium.color(PureBlackColorPalette.text),
+            style = LocalAppearance.current.typography.xs.center.medium.color(PureBlackColorPalette.text),
             modifier = Modifier
                 .background(Color.Black.copy(0.4f))
                 .padding(all = 8.dp)

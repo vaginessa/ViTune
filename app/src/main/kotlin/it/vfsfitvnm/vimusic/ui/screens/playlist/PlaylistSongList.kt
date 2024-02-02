@@ -1,7 +1,6 @@
 package it.vfsfitvnm.vimusic.ui.screens.playlist
 
 import android.content.Intent
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -53,7 +52,6 @@ import it.vfsfitvnm.vimusic.ui.items.SongItem
 import it.vfsfitvnm.vimusic.ui.items.SongItemPlaceholder
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
-import it.vfsfitvnm.vimusic.ui.styling.px
 import it.vfsfitvnm.vimusic.utils.PlaylistDownloadIcon
 import it.vfsfitvnm.vimusic.utils.asMediaItem
 import it.vfsfitvnm.vimusic.utils.completed
@@ -65,8 +63,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-@ExperimentalFoundationApi
-@ExperimentalAnimationApi
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PlaylistSongList(
     browseId: String,
@@ -89,9 +86,6 @@ fun PlaylistSongList(
                 ?.completed(maxDepth = maxDepth ?: Int.MAX_VALUE)?.getOrNull()
         }
     }
-
-    val songThumbnailSizeDp = Dimensions.thumbnails.song
-    val songThumbnailSizePx = songThumbnailSizeDp.px
 
     var isImportingPlaylist by rememberSaveable { mutableStateOf(false) }
 
@@ -200,8 +194,7 @@ fun PlaylistSongList(
                 itemsIndexed(items = playlistPage?.songsPage?.items ?: emptyList()) { index, song ->
                     SongItem(
                         song = song,
-                        thumbnailSizePx = songThumbnailSizePx,
-                        thumbnailSizeDp = songThumbnailSizeDp,
+                        thumbnailSize = Dimensions.thumbnails.song,
                         modifier = Modifier
                             .combinedClickable(
                                 onLongClick = {
@@ -226,7 +219,7 @@ fun PlaylistSongList(
                 if (playlistPage == null) item(key = "loading") {
                     ShimmerHost(modifier = Modifier.fillParentMaxSize()) {
                         repeat(4) {
-                            SongItemPlaceholder(thumbnailSizeDp = songThumbnailSizeDp)
+                            SongItemPlaceholder(thumbnailSize = Dimensions.thumbnails.song)
                         }
                     }
                 }

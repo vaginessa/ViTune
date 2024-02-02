@@ -1,6 +1,5 @@
 package it.vfsfitvnm.vimusic.ui.screens.search
 
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
@@ -38,14 +37,12 @@ import it.vfsfitvnm.vimusic.ui.components.themed.SecondaryTextButton
 import it.vfsfitvnm.vimusic.ui.items.SongItem
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
-import it.vfsfitvnm.vimusic.ui.styling.px
 import it.vfsfitvnm.vimusic.utils.align
 import it.vfsfitvnm.vimusic.utils.asMediaItem
 import it.vfsfitvnm.vimusic.utils.forcePlay
 import it.vfsfitvnm.vimusic.utils.medium
 
-@ExperimentalFoundationApi
-@ExperimentalAnimationApi
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LocalSongSearch(
     textFieldValue: TextFieldValue,
@@ -63,9 +60,6 @@ fun LocalSongSearch(
         if (textFieldValue.text.length > 1)
             Database.search("%${textFieldValue.text}%").collect { items = it }
     }
-
-    val thumbnailSizeDp = Dimensions.thumbnails.song
-    val thumbnailSizePx = thumbnailSizeDp.px
 
     val lazyListState = rememberLazyListState()
 
@@ -128,8 +122,7 @@ fun LocalSongSearch(
                         )
                         .animateItemPlacement(),
                     song = song,
-                    thumbnailSizePx = thumbnailSizePx,
-                    thumbnailSizeDp = thumbnailSizeDp
+                    thumbnailSize = Dimensions.thumbnails.song
                 )
             }
         }

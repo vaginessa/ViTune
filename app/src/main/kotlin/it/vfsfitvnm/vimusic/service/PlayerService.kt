@@ -545,6 +545,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         }
     }
 
+    @Suppress("ReturnCount")
     private fun maybeNormalizeVolume() {
         if (!PlayerPreferences.volumeNormalization) {
             loudnessEnhancer?.enabled = false
@@ -1123,11 +1124,11 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                         chunkLength ?: DEFAULT_CHUNK_LENGTH
                     ) -> dataSpec
 
-                    videoId == ringBuffer.getOrNull(0)?.first ->
-                        dataSpec.withUri(ringBuffer.getOrNull(0)!!.second)
+                    videoId == ringBuffer[0]?.first ->
+                        dataSpec.withUri(ringBuffer[0]!!.second)
 
-                    videoId == ringBuffer.getOrNull(1)?.first ->
-                        dataSpec.withUri(ringBuffer.getOrNull(1)!!.second)
+                    videoId == ringBuffer[1]?.first ->
+                        dataSpec.withUri(ringBuffer[1]!!.second)
 
                     else -> {
                         val body = runBlocking(Dispatchers.IO) {
@@ -1181,7 +1182,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                             )
                         }
 
-                        ringBuffer.append(videoId to url.toUri())
+                        ringBuffer += videoId to url.toUri()
                         dataSpec.buildUpon()
                             .setKey(videoId)
                             .setUri(url.toUri())

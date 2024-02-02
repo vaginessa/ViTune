@@ -3,6 +3,7 @@ package it.vfsfitvnm.vimusic.utils
 import androidx.annotation.OptIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -16,6 +17,7 @@ import it.vfsfitvnm.vimusic.LocalPlayerServiceBinder
 import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.models.Format
 import it.vfsfitvnm.vimusic.service.PrecacheService
+import it.vfsfitvnm.vimusic.service.downloadState
 import it.vfsfitvnm.vimusic.ui.components.themed.HeaderIconButton
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import kotlinx.collections.immutable.ImmutableList
@@ -29,7 +31,16 @@ fun PlaylistDownloadIcon(
     val context = LocalContext.current
     val (colorPalette) = LocalAppearance.current
 
-    if (!songs.all { isCached(mediaId = it.mediaId) }) HeaderIconButton(
+    val isDownloading by downloadState.collectAsState()
+
+    if (
+        !songs.all {
+            isCached(
+                mediaId = it.mediaId,
+                key = isDownloading
+            )
+        }
+    ) HeaderIconButton(
         icon = R.drawable.download,
         color = colorPalette.text,
         onClick = {
@@ -43,15 +54,20 @@ fun PlaylistDownloadIcon(
 
 @OptIn(UnstableApi::class)
 @Composable
-fun isCached(mediaId: String): Boolean {
+fun isCached(
+    mediaId: String,
+    key: Any? = Unit
+): Boolean {
     val cache = LocalPlayerServiceBinder.current?.cache ?: return false
     var format: Format? by remember { mutableStateOf(null) }
 
-    LaunchedEffect(mediaId) {
+    LaunchedEffect(mediaId, key) {
         Database.format(mediaId).distinctUntilChanged().collect { format = it }
     }
 
-    return format?.contentLength?.let { len ->
-        cache.isCached(mediaId, 0, len)
-    } ?: false
+    return remember(key) {
+        format?.contentLength?.let { len ->
+            cache.isCached(mediaId, 0, len)
+        } ?: false
+    }
 }

@@ -1,7 +1,5 @@
 package it.vfsfitvnm.vimusic.ui.screens.builtinplaylist
 
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -16,7 +14,6 @@ import it.vfsfitvnm.vimusic.ui.components.themed.Scaffold
 import it.vfsfitvnm.vimusic.ui.screens.GlobalRoutes
 import it.vfsfitvnm.vimusic.ui.screens.Route
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
 @Route
 @Composable
 fun BuiltInPlaylistScreen(builtInPlaylist: BuiltInPlaylist) {

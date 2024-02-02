@@ -1,6 +1,5 @@
 package it.vfsfitvnm.vimusic.ui.screens.artist
 
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -45,7 +44,6 @@ import it.vfsfitvnm.vimusic.ui.items.SongItem
 import it.vfsfitvnm.vimusic.ui.items.SongItemPlaceholder
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
-import it.vfsfitvnm.vimusic.ui.styling.px
 import it.vfsfitvnm.vimusic.utils.align
 import it.vfsfitvnm.vimusic.utils.asMediaItem
 import it.vfsfitvnm.vimusic.utils.color
@@ -53,8 +51,7 @@ import it.vfsfitvnm.vimusic.utils.forcePlay
 import it.vfsfitvnm.vimusic.utils.secondary
 import it.vfsfitvnm.vimusic.utils.semiBold
 
-@ExperimentalFoundationApi
-@ExperimentalAnimationApi
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ArtistOverview(
     youtubeArtistPage: Innertube.ArtistPage?,
@@ -70,11 +67,6 @@ fun ArtistOverview(
     val binder = LocalPlayerServiceBinder.current
     val menuState = LocalMenuState.current
     val windowInsets = LocalPlayerAwareWindowInsets.current
-
-    val songThumbnailSizeDp = Dimensions.thumbnails.song
-    val songThumbnailSizePx = songThumbnailSizeDp.px
-    val albumThumbnailSizeDp = Dimensions.thumbnails.album
-    val albumThumbnailSizePx = albumThumbnailSizeDp.px
 
     val endPaddingValues = windowInsets.only(WindowInsetsSides.End).asPaddingValues()
 
@@ -144,8 +136,7 @@ fun ArtistOverview(
                         songs.forEach { song ->
                             SongItem(
                                 song = song,
-                                thumbnailSizeDp = songThumbnailSizeDp,
-                                thumbnailSizePx = songThumbnailSizePx,
+                                thumbnailSize = Dimensions.thumbnails.song,
                                 modifier = Modifier
                                     .combinedClickable(
                                         onLongClick = {
@@ -203,8 +194,7 @@ fun ArtistOverview(
                             ) { album ->
                                 AlbumItem(
                                     album = album,
-                                    thumbnailSizePx = albumThumbnailSizePx,
-                                    thumbnailSizeDp = albumThumbnailSizeDp,
+                                    thumbnailSize = Dimensions.thumbnails.album,
                                     alternative = true,
                                     modifier = Modifier.clickable(onClick = {
                                         onAlbumClick(album.key)
@@ -247,8 +237,7 @@ fun ArtistOverview(
                             ) { album ->
                                 AlbumItem(
                                     album = album,
-                                    thumbnailSizePx = albumThumbnailSizePx,
-                                    thumbnailSizeDp = albumThumbnailSizeDp,
+                                    thumbnailSize = Dimensions.thumbnails.album,
                                     alternative = true,
                                     modifier = Modifier.clickable(onClick = { onAlbumClick(album.key) })
                                 )
@@ -306,7 +295,7 @@ fun ArtistOverview(
                     TextPlaceholder(modifier = sectionTextModifier)
 
                     repeat(5) {
-                        SongItemPlaceholder(thumbnailSizeDp = songThumbnailSizeDp)
+                        SongItemPlaceholder(thumbnailSize = Dimensions.thumbnails.song)
                     }
 
                     repeat(2) {
@@ -315,7 +304,7 @@ fun ArtistOverview(
                         Row {
                             repeat(2) {
                                 AlbumItemPlaceholder(
-                                    thumbnailSizeDp = albumThumbnailSizeDp,
+                                    thumbnailSize = Dimensions.thumbnails.album,
                                     alternative = true
                                 )
                             }

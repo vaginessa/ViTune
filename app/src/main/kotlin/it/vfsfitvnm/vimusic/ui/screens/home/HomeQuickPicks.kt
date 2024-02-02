@@ -1,6 +1,5 @@
 package it.vfsfitvnm.vimusic.ui.screens.home
 
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -67,7 +66,6 @@ import it.vfsfitvnm.vimusic.ui.items.SongItemPlaceholder
 import it.vfsfitvnm.vimusic.ui.screens.Route
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
-import it.vfsfitvnm.vimusic.ui.styling.px
 import it.vfsfitvnm.vimusic.utils.asMediaItem
 import it.vfsfitvnm.vimusic.utils.center
 import it.vfsfitvnm.vimusic.utils.forcePlay
@@ -77,7 +75,7 @@ import it.vfsfitvnm.vimusic.utils.secondary
 import it.vfsfitvnm.vimusic.utils.semiBold
 import kotlinx.coroutines.flow.distinctUntilChanged
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Route
 @Composable
 fun QuickPicks(
@@ -99,12 +97,11 @@ fun QuickPicks(
         suspend fun handleSong(song: Song?) {
             if (relatedPageResult == null || trending?.id != song?.id) relatedPageResult =
                 Innertube.relatedPage(
-                    NextBody(
-                        videoId = (song?.id ?: "J7p4bzqLvCw")
-                    )
+                    body = NextBody(videoId = (song?.id ?: "J7p4bzqLvCw"))
                 )
             trending = song
         }
+
         when (DataPreferences.quickPicksSource) {
             DataPreferences.QuickPicksSource.Trending ->
                 Database
@@ -119,15 +116,6 @@ fun QuickPicks(
                     .collect { handleSong(it.firstOrNull()?.song) }
         }
     }
-
-    val songThumbnailSizeDp = Dimensions.thumbnails.song
-    val songThumbnailSizePx = songThumbnailSizeDp.px
-    val albumThumbnailSizeDp = Dimensions.thumbnails.album
-    val albumThumbnailSizePx = albumThumbnailSizeDp.px
-    val artistThumbnailSizeDp = Dimensions.thumbnails.artist
-    val artistThumbnailSizePx = artistThumbnailSizeDp.px
-    val playlistThumbnailSizeDp = Dimensions.thumbnails.playlist
-    val playlistThumbnailSizePx = playlistThumbnailSizeDp.px
 
     val scrollState = rememberScrollState()
     val quickPicksLazyGridState = rememberLazyGridState()
@@ -176,7 +164,7 @@ fun QuickPicks(
                     contentPadding = endPaddingValues,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height((songThumbnailSizeDp + Dimensions.itemsVerticalPadding * 2) * 4)
+                        .height((Dimensions.thumbnails.song + Dimensions.items.verticalPadding * 2) * 4)
                 ) {
                     trending?.let { song ->
                         item {
@@ -208,8 +196,7 @@ fun QuickPicks(
                                     .animateItemPlacement()
                                     .width(itemInHorizontalGridWidth),
                                 song = song,
-                                thumbnailSizePx = songThumbnailSizePx,
-                                thumbnailSizeDp = songThumbnailSizeDp
+                                thumbnailSize = Dimensions.thumbnails.song
                             ) {
                                 Image(
                                     painter = painterResource(R.drawable.star),
@@ -228,8 +215,7 @@ fun QuickPicks(
                     ) { song ->
                         SongItem(
                             song = song,
-                            thumbnailSizePx = songThumbnailSizePx,
-                            thumbnailSizeDp = songThumbnailSizeDp,
+                            thumbnailSize = Dimensions.thumbnails.song,
                             modifier = Modifier
                                 .combinedClickable(
                                     onLongClick = {
@@ -269,8 +255,7 @@ fun QuickPicks(
                         ) { album ->
                             AlbumItem(
                                 album = album,
-                                thumbnailSizePx = albumThumbnailSizePx,
-                                thumbnailSizeDp = albumThumbnailSizeDp,
+                                thumbnailSize = Dimensions.thumbnails.album,
                                 alternative = true,
                                 modifier = Modifier.clickable(onClick = { onAlbumClick(album.key) })
                             )
@@ -292,8 +277,7 @@ fun QuickPicks(
                         ) { artist ->
                             ArtistItem(
                                 artist = artist,
-                                thumbnailSizePx = artistThumbnailSizePx,
-                                thumbnailSizeDp = artistThumbnailSizeDp,
+                                thumbnailSize = Dimensions.thumbnails.artist,
                                 alternative = true,
                                 modifier = Modifier.clickable(onClick = { onArtistClick(artist.key) })
                             )
@@ -317,8 +301,7 @@ fun QuickPicks(
                         ) { playlist ->
                             PlaylistItem(
                                 playlist = playlist,
-                                thumbnailSizePx = playlistThumbnailSizePx,
-                                thumbnailSizeDp = playlistThumbnailSizeDp,
+                                thumbnailSize = Dimensions.thumbnails.playlist,
                                 alternative = true,
                                 modifier = Modifier.clickable(onClick = { onPlaylistClick(playlist.key) })
                             )
@@ -337,7 +320,7 @@ fun QuickPicks(
                 )
             } ?: ShimmerHost {
                 repeat(4) {
-                    SongItemPlaceholder(thumbnailSizeDp = songThumbnailSizeDp)
+                    SongItemPlaceholder(thumbnailSize = Dimensions.thumbnails.song)
                 }
 
                 TextPlaceholder(modifier = sectionTextModifier)
@@ -345,7 +328,7 @@ fun QuickPicks(
                 Row {
                     repeat(2) {
                         AlbumItemPlaceholder(
-                            thumbnailSizeDp = albumThumbnailSizeDp,
+                            thumbnailSize = Dimensions.thumbnails.album,
                             alternative = true
                         )
                     }
@@ -356,7 +339,7 @@ fun QuickPicks(
                 Row {
                     repeat(2) {
                         ArtistItemPlaceholder(
-                            thumbnailSizeDp = albumThumbnailSizeDp,
+                            thumbnailSize = Dimensions.thumbnails.album,
                             alternative = true
                         )
                     }
@@ -367,7 +350,7 @@ fun QuickPicks(
                 Row {
                     repeat(2) {
                         PlaylistItemPlaceholder(
-                            thumbnailSizeDp = albumThumbnailSizeDp,
+                            thumbnailSize = Dimensions.thumbnails.album,
                             alternative = true
                         )
                     }

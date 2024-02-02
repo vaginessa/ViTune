@@ -18,6 +18,7 @@ import it.vfsfitvnm.vimusic.models.Album
 import it.vfsfitvnm.vimusic.ui.components.themed.TextPlaceholder
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.ui.styling.shimmer
+import it.vfsfitvnm.vimusic.utils.px
 import it.vfsfitvnm.vimusic.utils.secondary
 import it.vfsfitvnm.vimusic.utils.semiBold
 import it.vfsfitvnm.vimusic.utils.thumbnail
@@ -25,8 +26,7 @@ import it.vfsfitvnm.vimusic.utils.thumbnail
 @Composable
 fun AlbumItem(
     album: Album,
-    thumbnailSizePx: Int,
-    thumbnailSizeDp: Dp,
+    thumbnailSize: Dp,
     modifier: Modifier = Modifier,
     alternative: Boolean = false
 ) = AlbumItem(
@@ -34,8 +34,7 @@ fun AlbumItem(
     title = album.title,
     authors = album.authorsText,
     year = album.year,
-    thumbnailSizePx = thumbnailSizePx,
-    thumbnailSizeDp = thumbnailSizeDp,
+    thumbnailSize = thumbnailSize,
     alternative = alternative,
     modifier = modifier
 )
@@ -43,8 +42,7 @@ fun AlbumItem(
 @Composable
 fun AlbumItem(
     album: Innertube.AlbumItem,
-    thumbnailSizePx: Int,
-    thumbnailSizeDp: Dp,
+    thumbnailSize: Dp,
     modifier: Modifier = Modifier,
     alternative: Boolean = false
 ) = AlbumItem(
@@ -52,8 +50,7 @@ fun AlbumItem(
     title = album.info?.name,
     authors = album.authors?.joinToString("") { it.name.orEmpty() },
     year = album.year,
-    thumbnailSizePx = thumbnailSizePx,
-    thumbnailSizeDp = thumbnailSizeDp,
+    thumbnailSize = thumbnailSize,
     alternative = alternative,
     modifier = modifier
 )
@@ -64,25 +61,24 @@ fun AlbumItem(
     title: String?,
     authors: String?,
     year: String?,
-    thumbnailSizePx: Int,
-    thumbnailSizeDp: Dp,
+    thumbnailSize: Dp,
     modifier: Modifier = Modifier,
     alternative: Boolean = false
 ) = ItemContainer(
     alternative = alternative,
-    thumbnailSizeDp = thumbnailSizeDp,
+    thumbnailSize = thumbnailSize,
     modifier = modifier
 ) {
     val typography = LocalAppearance.current.typography
     val thumbnailShape = LocalAppearance.current.thumbnailShape
 
     AsyncImage(
-        model = thumbnailUrl?.thumbnail(thumbnailSizePx),
+        model = thumbnailUrl?.thumbnail(thumbnailSize.px),
         contentDescription = null,
         contentScale = ContentScale.Crop,
         modifier = Modifier
             .clip(thumbnailShape)
-            .size(thumbnailSizeDp)
+            .size(thumbnailSize)
     )
 
     ItemInfoContainer {
@@ -114,12 +110,12 @@ fun AlbumItem(
 
 @Composable
 fun AlbumItemPlaceholder(
-    thumbnailSizeDp: Dp,
+    thumbnailSize: Dp,
     modifier: Modifier = Modifier,
     alternative: Boolean = false
 ) = ItemContainer(
     alternative = alternative,
-    thumbnailSizeDp = thumbnailSizeDp,
+    thumbnailSize = thumbnailSize,
     modifier = modifier
 ) {
     val colorPalette = LocalAppearance.current.colorPalette
@@ -128,7 +124,7 @@ fun AlbumItemPlaceholder(
     Spacer(
         modifier = Modifier
             .background(color = colorPalette.shimmer, shape = thumbnailShape)
-            .size(thumbnailSizeDp)
+            .size(thumbnailSize)
     )
 
     ItemInfoContainer {

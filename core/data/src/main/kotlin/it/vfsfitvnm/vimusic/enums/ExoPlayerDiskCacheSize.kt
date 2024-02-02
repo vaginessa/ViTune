@@ -1,5 +1,7 @@
 package it.vfsfitvnm.vimusic.enums
 
+import it.vfsfitvnm.vimusic.utils.mb
+
 @Suppress("EnumEntryName", "unused")
 enum class ExoPlayerDiskCacheSize(val bytes: Long) {
     `32MB`(bytes = 32.mb),

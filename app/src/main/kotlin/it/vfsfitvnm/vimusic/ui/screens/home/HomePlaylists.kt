@@ -1,6 +1,5 @@
 package it.vfsfitvnm.vimusic.ui.screens.home
 
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -58,11 +57,10 @@ import it.vfsfitvnm.vimusic.ui.screens.settings.SettingsEntryGroupText
 import it.vfsfitvnm.vimusic.ui.screens.settings.SettingsGroupSpacer
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
-import it.vfsfitvnm.vimusic.ui.styling.px
 import kotlinx.coroutines.async
 import it.vfsfitvnm.piped.models.PlaylistPreview as PipedPlaylistPreview
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Route
 @Composable
 fun HomePlaylists(
@@ -107,20 +105,18 @@ fun HomePlaylists(
         label = ""
     )
 
-    val thumbnailSizeDp = Dimensions.thumbnails.playlist
-    val thumbnailSizePx = thumbnailSizeDp.px
-
     val lazyGridState = rememberLazyGridState()
 
     Box {
         LazyVerticalGrid(
             state = lazyGridState,
-            columns = GridCells.Adaptive(Dimensions.thumbnails.song * 2 + Dimensions.itemsVerticalPadding * 2),
+            columns = GridCells.Adaptive(Dimensions.thumbnails.song * 2 + Dimensions.items.verticalPadding * 2),
             contentPadding = LocalPlayerAwareWindowInsets.current
-                .only(WindowInsetsSides.Vertical + WindowInsetsSides.End).asPaddingValues(),
-            verticalArrangement = Arrangement.spacedBy(Dimensions.itemsVerticalPadding * 2),
+                .only(WindowInsetsSides.Vertical + WindowInsetsSides.End)
+                .asPaddingValues(),
+            verticalArrangement = Arrangement.spacedBy(Dimensions.items.verticalPadding * 2),
             horizontalArrangement = Arrangement.spacedBy(
-                space = Dimensions.itemsVerticalPadding * 2,
+                space = Dimensions.items.verticalPadding * 2,
                 alignment = Alignment.CenterHorizontally
             ),
             modifier = Modifier
@@ -174,7 +170,7 @@ fun HomePlaylists(
                     colorTint = colorPalette.red,
                     name = stringResource(R.string.favorites),
                     songCount = null,
-                    thumbnailSizeDp = thumbnailSizeDp,
+                    thumbnailSize = Dimensions.thumbnails.playlist,
                     alternative = true,
                     modifier = Modifier
                         .clickable(onClick = { onBuiltInPlaylist(BuiltInPlaylist.Favorites) })
@@ -188,7 +184,7 @@ fun HomePlaylists(
                     colorTint = colorPalette.blue,
                     name = stringResource(R.string.offline),
                     songCount = null,
-                    thumbnailSizeDp = thumbnailSizeDp,
+                    thumbnailSize = Dimensions.thumbnails.playlist,
                     alternative = true,
                     modifier = Modifier
                         .clickable(onClick = { onBuiltInPlaylist(BuiltInPlaylist.Offline) })
@@ -205,7 +201,7 @@ fun HomePlaylists(
                         DataPreferences.topListLength
                     ),
                     songCount = null,
-                    thumbnailSizeDp = thumbnailSizeDp,
+                    thumbnailSize = Dimensions.thumbnails.playlist,
                     alternative = true,
                     modifier = Modifier
                         .clickable(onClick = { onBuiltInPlaylist(BuiltInPlaylist.Top) })
@@ -219,8 +215,7 @@ fun HomePlaylists(
             ) { playlistPreview ->
                 PlaylistItem(
                     playlist = playlistPreview,
-                    thumbnailSizeDp = thumbnailSizeDp,
-                    thumbnailSizePx = thumbnailSizePx,
+                    thumbnailSize = Dimensions.thumbnails.playlist,
                     alternative = true,
                     modifier = Modifier
                         .clickable(onClick = { onPlaylistClick(playlistPreview.playlist) })
@@ -251,8 +246,7 @@ fun HomePlaylists(
                                 songCount = playlist.videoCount,
                                 channelName = null,
                                 thumbnailUrl = playlist.thumbnailUrl.toString(),
-                                thumbnailSizeDp = thumbnailSizeDp,
-                                thumbnailSizePx = thumbnailSizePx,
+                                thumbnailSize = Dimensions.thumbnails.playlist,
                                 alternative = true,
                                 modifier = Modifier
                                     .clickable(onClick = {

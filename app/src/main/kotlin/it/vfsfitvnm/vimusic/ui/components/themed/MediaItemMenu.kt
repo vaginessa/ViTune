@@ -5,7 +5,6 @@ import androidx.activity.compose.BackHandler
 import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.togetherWith
@@ -70,7 +69,6 @@ import it.vfsfitvnm.vimusic.ui.screens.artistRoute
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.ui.styling.favoritesIcon
-import it.vfsfitvnm.vimusic.ui.styling.px
 import it.vfsfitvnm.vimusic.utils.addNext
 import it.vfsfitvnm.vimusic.utils.asMediaItem
 import it.vfsfitvnm.vimusic.utils.enqueue
@@ -79,6 +77,7 @@ import it.vfsfitvnm.vimusic.utils.formatAsDuration
 import it.vfsfitvnm.vimusic.utils.isCached
 import it.vfsfitvnm.vimusic.utils.launchYouTubeMusic
 import it.vfsfitvnm.vimusic.utils.medium
+import it.vfsfitvnm.vimusic.utils.px
 import it.vfsfitvnm.vimusic.utils.semiBold
 import it.vfsfitvnm.vimusic.utils.thumbnail
 import it.vfsfitvnm.vimusic.utils.toast
@@ -87,7 +86,6 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-@ExperimentalAnimationApi
 @OptIn(UnstableApi::class)
 @Composable
 fun InHistoryMediaItemMenu(
@@ -120,7 +118,6 @@ fun InHistoryMediaItemMenu(
     )
 }
 
-@ExperimentalAnimationApi
 @Composable
 fun InPlaylistMediaItemMenu(
     onDismiss: () -> Unit,
@@ -140,7 +137,6 @@ fun InPlaylistMediaItemMenu(
     modifier = modifier
 )
 
-@ExperimentalAnimationApi
 @Composable
 fun NonQueuedMediaItemMenu(
     onDismiss: () -> Unit,
@@ -174,7 +170,6 @@ fun NonQueuedMediaItemMenu(
     )
 }
 
-@ExperimentalAnimationApi
 @Composable
 fun QueuedMediaItemMenu(
     onDismiss: () -> Unit,
@@ -192,7 +187,6 @@ fun QueuedMediaItemMenu(
     )
 }
 
-@ExperimentalAnimationApi
 @Composable
 fun BaseMediaItemMenu(
     onDismiss: () -> Unit,
@@ -256,7 +250,6 @@ fun BaseMediaItemMenu(
     )
 }
 
-@ExperimentalAnimationApi
 @Composable
 fun MediaItemMenu(
     mediaItem: MediaItem,
@@ -398,9 +391,6 @@ fun MediaItemMenu(
                 height = with(density) { it.size.height.toDp() }
             }
         ) {
-            val thumbnailSizeDp = Dimensions.thumbnails.song
-            val thumbnailSizePx = thumbnailSizeDp.px
-
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(end = 12.dp)
@@ -408,11 +398,11 @@ fun MediaItemMenu(
                 SongItem(
                     modifier = Modifier.weight(1f),
                     thumbnailUrl = mediaItem.mediaMetadata.artworkUri
-                        .thumbnail(thumbnailSizePx)?.toString(),
+                        .thumbnail(Dimensions.thumbnails.song.px)?.toString(),
                     title = mediaItem.mediaMetadata.title?.toString().orEmpty(),
                     authors = mediaItem.mediaMetadata.artist?.toString().orEmpty(),
                     duration = null,
-                    thumbnailSizeDp = thumbnailSizeDp
+                    thumbnailSize = Dimensions.thumbnails.song
                 )
 
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {

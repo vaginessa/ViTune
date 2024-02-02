@@ -48,11 +48,11 @@ import it.vfsfitvnm.vimusic.service.isLocal
 import it.vfsfitvnm.vimusic.ui.modifiers.onSwipe
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
-import it.vfsfitvnm.vimusic.ui.styling.px
 import it.vfsfitvnm.vimusic.utils.DisposableListener
 import it.vfsfitvnm.vimusic.utils.currentWindow
 import it.vfsfitvnm.vimusic.utils.forceSeekToNext
 import it.vfsfitvnm.vimusic.utils.forceSeekToPrevious
+import it.vfsfitvnm.vimusic.utils.px
 import it.vfsfitvnm.vimusic.utils.thumbnail
 import java.net.UnknownHostException
 import java.nio.channels.UnresolvedAddressException
@@ -69,6 +69,7 @@ fun Thumbnail(
     val player = binder?.player ?: return
 
     val (colorPalette) = LocalAppearance.current
+    val thumbnailShape = LocalAppearance.current.thumbnailShape
 
     val (thumbnailSizeDp, thumbnailSizePx) = Dimensions.thumbnails.player.song.let {
         it to (it - 64.dp).px
@@ -155,10 +156,10 @@ fun Thumbnail(
                 .size(thumbnailSizeDp)
                 .shadow(
                     elevation = shadowElevation,
-                    shape = LocalAppearance.current.thumbnailShape,
+                    shape = thumbnailShape,
                     clip = false
                 )
-                .clip(LocalAppearance.current.thumbnailShape)
+                .clip(thumbnailShape)
         ) {
             if (currentWindow.mediaItem.mediaMetadata.artworkUri != null) AsyncImage(
                 model = currentWindow.mediaItem.mediaMetadata.artworkUri.thumbnail(thumbnailSizePx),

@@ -64,7 +64,7 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
     ) {
         bindService(intent<PlayerService>(), this, Context.BIND_AUTO_CREATE)
         BrowserRoot(
-            MediaId.ROOT,
+            MediaId.ROOT.id,
             bundleOf("android.media.browse.CONTENT_STYLE_BROWSABLE_HINT" to 1)
         )
     } else null
@@ -74,7 +74,7 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
         result: Result<MutableList<BrowserMediaItem>>
     ) = runBlocking(Dispatchers.IO) {
         result.sendResult(
-            when (parentId) {
+            when (MediaId(parentId)) {
                 MediaId.ROOT -> mutableListOf(
                     songsBrowserMediaItem,
                     playlistsBrowserMediaItem,
@@ -126,7 +126,7 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
     private val shuffleBrowserMediaItem
         inline get() = BrowserMediaItem(
             BrowserMediaDescription.Builder()
-                .setMediaId(MediaId.SHUFFLE)
+                .setMediaId(MediaId.SHUFFLE.id)
                 .setTitle(getString(R.string.shuffle))
                 .setIconUri(uriFor(R.drawable.shuffle))
                 .build(),
@@ -136,7 +136,7 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
     private val songsBrowserMediaItem
         inline get() = BrowserMediaItem(
             BrowserMediaDescription.Builder()
-                .setMediaId(MediaId.SONGS)
+                .setMediaId(MediaId.SONGS.id)
                 .setTitle(getString(R.string.songs))
                 .setIconUri(uriFor(R.drawable.musical_notes))
                 .build(),
@@ -146,7 +146,7 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
     private val playlistsBrowserMediaItem
         inline get() = BrowserMediaItem(
             BrowserMediaDescription.Builder()
-                .setMediaId(MediaId.PLAYLISTS)
+                .setMediaId(MediaId.PLAYLISTS.id)
                 .setTitle(getString(R.string.playlists))
                 .setIconUri(uriFor(R.drawable.playlist))
                 .build(),
@@ -156,7 +156,7 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
     private val albumsBrowserMediaItem
         inline get() = BrowserMediaItem(
             BrowserMediaDescription.Builder()
-                .setMediaId(MediaId.ALBUMS)
+                .setMediaId(MediaId.ALBUMS.id)
                 .setTitle(getString(R.string.albums))
                 .setIconUri(uriFor(R.drawable.disc))
                 .build(),
@@ -166,7 +166,7 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
     private val favoritesBrowserMediaItem
         inline get() = BrowserMediaItem(
             BrowserMediaDescription.Builder()
-                .setMediaId(MediaId.FAVORITES)
+                .setMediaId(MediaId.FAVORITES.id)
                 .setTitle(getString(R.string.favorites))
                 .setIconUri(uriFor(R.drawable.heart))
                 .build(),
@@ -176,7 +176,7 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
     private val offlineBrowserMediaItem
         inline get() = BrowserMediaItem(
             BrowserMediaDescription.Builder()
-                .setMediaId(MediaId.OFFLINE)
+                .setMediaId(MediaId.OFFLINE.id)
                 .setTitle(getString(R.string.offline))
                 .setIconUri(uriFor(R.drawable.airplane))
                 .build(),
@@ -186,7 +186,7 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
     private val Song.asBrowserMediaItem
         inline get() = BrowserMediaItem(
             BrowserMediaDescription.Builder()
-                .setMediaId(MediaId.forSong(id))
+                .setMediaId((MediaId.SONGS / id).id)
                 .setTitle(title)
                 .setSubtitle(artistsText)
                 .setIconUri(thumbnailUrl?.toUri())
@@ -197,7 +197,7 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
     private val PlaylistPreview.asBrowserMediaItem
         inline get() = BrowserMediaItem(
             BrowserMediaDescription.Builder()
-                .setMediaId(MediaId.forPlaylist(playlist.id))
+                .setMediaId((MediaId.PLAYLISTS / playlist.id.toString()).id)
                 .setTitle(playlist.name)
                 .setSubtitle(resources.getQuantityString(R.plurals.song_count_plural, songCount, songCount))
                 .setIconUri(uriFor(R.drawable.playlist))
@@ -208,7 +208,7 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
     private val Album.asBrowserMediaItem
         inline get() = BrowserMediaItem(
             BrowserMediaDescription.Builder()
-                .setMediaId(MediaId.forAlbum(id))
+                .setMediaId((MediaId.ALBUMS / id).id)
                 .setTitle(title)
                 .setSubtitle(authorsText)
                 .setIconUri(thumbnailUrl?.toUri())
@@ -216,16 +216,15 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
             BrowserMediaItem.FLAG_PLAYABLE
         )
 
-    private inner class SessionCallback(private val binder: PlayerService.Binder) :
-        MediaSession.Callback() {
-        private val player = binder.player
-
-        override fun onPlay() = player.play()
-        override fun onPause() = player.pause()
-        override fun onSkipToPrevious() = player.forceSeekToPrevious()
-        override fun onSkipToNext() = player.forceSeekToNext()
-        override fun onSeekTo(pos: Long) = player.seekTo(pos)
-        override fun onSkipToQueueItem(id: Long) = player.seekToDefaultPosition(id.toInt())
+    private inner class SessionCallback(
+        private val binder: PlayerService.Binder
+    ) : MediaSession.Callback() {
+        override fun onPlay() = binder.player.play()
+        override fun onPause() = binder.player.pause()
+        override fun onSkipToPrevious() = binder.player.forceSeekToPrevious()
+        override fun onSkipToNext() = binder.player.forceSeekToNext()
+        override fun onSeekTo(pos: Long) = binder.player.seekTo(pos)
+        override fun onSkipToQueueItem(id: Long) = binder.player.seekToDefaultPosition(id.toInt())
 
         @OptIn(UnstableApi::class)
         override fun onPlayFromMediaId(mediaId: String?, extras: Bundle?) {
@@ -233,7 +232,7 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
             var index = 0
 
             coroutineScope.launch {
-                val mediaItems = when (data.getOrNull(0)) {
+                val mediaItems = when (data.getOrNull(0)?.let { MediaId(it) }) {
                     MediaId.SHUFFLE -> lastSongs
 
                     MediaId.SONGS -> data.getOrNull(1)?.let { songId ->
@@ -243,55 +242,59 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
 
                     MediaId.FAVORITES ->
                         Database
-                        .favorites()
-                        .first()
-                        .shuffled()
+                            .favorites()
+                            .first()
+                            .shuffled()
 
                     MediaId.OFFLINE ->
                         Database
-                        .songsWithContentLength()
-                        .first()
-                        .filter { binder.isCached(it) }
-                        .map(SongWithContentLength::song)
-                        .shuffled()
+                            .songsWithContentLength()
+                            .first()
+                            .filter { binder.isCached(it) }
+                            .map(SongWithContentLength::song)
+                            .shuffled()
 
                     MediaId.PLAYLISTS ->
                         data
-                        .getOrNull(1)
-                        ?.toLongOrNull()
-                        ?.let(Database::playlistWithSongs)
-                        ?.first()
-                        ?.songs
-                        ?.shuffled()
+                            .getOrNull(1)
+                            ?.toLongOrNull()
+                            ?.let(Database::playlistWithSongs)
+                            ?.first()
+                            ?.songs
+                            ?.shuffled()
 
                     MediaId.ALBUMS ->
                         data
-                        .getOrNull(1)
-                        ?.let(Database::albumSongs)
-                        ?.first()
+                            .getOrNull(1)
+                            ?.let(Database::albumSongs)
+                            ?.first()
 
                     else -> emptyList()
                 }?.map(Song::asMediaItem) ?: return@launch
 
                 withContext(Dispatchers.Main) {
-                    player.forcePlayAtIndex(mediaItems, index.coerceIn(0, mediaItems.size))
+                    binder.player.forcePlayAtIndex(
+                        items = mediaItems,
+                        index = index.coerceIn(0, mediaItems.size)
+                    )
                 }
             }
         }
     }
 
-    private object MediaId {
-        const val ROOT = "root"
-        const val SONGS = "songs"
-        const val PLAYLISTS = "playlists"
-        const val ALBUMS = "albums"
+    @JvmInline
+    private value class MediaId(val id: String) : CharSequence by id {
+        companion object {
+            val ROOT = MediaId("root")
+            val SONGS = MediaId("songs")
+            val PLAYLISTS = MediaId("playlists")
+            val ALBUMS = MediaId("albums")
 
-        const val FAVORITES = "favorites"
-        const val OFFLINE = "offline"
-        const val SHUFFLE = "shuffle"
+            val FAVORITES = MediaId("favorites")
+            val OFFLINE = MediaId("offline")
+            val SHUFFLE = MediaId("shuffle")
+        }
 
-        fun forSong(id: String) = "songs/$id"
-        fun forPlaylist(id: Long) = "playlists/$id"
-        fun forAlbum(id: String) = "albums/$id"
+        operator fun div(other: String) = MediaId("$id/$other")
     }
 }

@@ -1,11 +1,9 @@
 package it.vfsfitvnm.vimusic.ui.screens.search
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
@@ -27,7 +25,6 @@ import it.vfsfitvnm.vimusic.ui.screens.Route
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.utils.secondary
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
 @Route
 @Composable
 fun SearchScreen(

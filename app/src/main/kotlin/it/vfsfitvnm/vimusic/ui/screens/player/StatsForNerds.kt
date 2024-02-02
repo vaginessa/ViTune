@@ -80,22 +80,23 @@ fun StatsForNerds(
                     ?.let { mediaItem ->
                         withContext(Dispatchers.IO) {
                             delay(2000)
-                            Innertube.player(PlayerBody(videoId = mediaId))?.onSuccess { response ->
-                                response.streamingData?.highestQualityFormat?.let { format ->
-                                    Database.insert(mediaItem)
-                                    Database.insert(
-                                        Format(
-                                            songId = mediaId,
-                                            itag = format.itag,
-                                            mimeType = format.mimeType,
-                                            bitrate = format.bitrate,
-                                            loudnessDb = response.playerConfig?.audioConfig?.normalizedLoudnessDb,
-                                            contentLength = format.contentLength,
-                                            lastModified = format.lastModified
+                            Innertube.player(PlayerBody(videoId = mediaId))
+                                ?.onSuccess { response ->
+                                    response.streamingData?.highestQualityFormat?.let { format ->
+                                        Database.insert(mediaItem)
+                                        Database.insert(
+                                            Format(
+                                                songId = mediaId,
+                                                itag = format.itag,
+                                                mimeType = format.mimeType,
+                                                bitrate = format.bitrate,
+                                                loudnessDb = response.playerConfig?.audioConfig?.normalizedLoudnessDb,
+                                                contentLength = format.contentLength,
+                                                lastModified = format.lastModified
+                                            )
                                         )
-                                    )
+                                    }
                                 }
-                            }
                         }
                     } else format = currentFormat
             }
@@ -136,81 +137,54 @@ fun StatsForNerds(
                     .align(Alignment.Center)
                     .padding(all = 16.dp)
             ) {
+                @Composable
+                fun Text(text: String) = BasicText(
+                    text = text,
+                    maxLines = 1,
+                    style = typography.xs.medium.color(colorPalette.onOverlay)
+                )
+
                 Column(horizontalAlignment = Alignment.End) {
-                    BasicText(
-                        text = stringResource(R.string.id),
-                        style = typography.xs.medium.color(colorPalette.onOverlay)
-                    )
-                    BasicText(
-                        text = stringResource(R.string.itag),
-                        style = typography.xs.medium.color(colorPalette.onOverlay)
-                    )
-                    BasicText(
-                        text = stringResource(R.string.bitrate),
-                        style = typography.xs.medium.color(colorPalette.onOverlay)
-                    )
-                    BasicText(
-                        text = stringResource(R.string.size),
-                        style = typography.xs.medium.color(colorPalette.onOverlay)
-                    )
-                    BasicText(
-                        text = stringResource(R.string.cached),
-                        style = typography.xs.medium.color(colorPalette.onOverlay)
-                    )
-                    BasicText(
-                        text = stringResource(R.string.loudness),
-                        style = typography.xs.medium.color(colorPalette.onOverlay)
-                    )
+                    Text(text = stringResource(R.string.id))
+                    Text(text = stringResource(R.string.itag))
+                    Text(text = stringResource(R.string.bitrate))
+                    Text(text = stringResource(R.string.size))
+                    Text(text = stringResource(R.string.cached))
+                    Text(text = stringResource(R.string.loudness))
                 }
 
                 Column {
-                    BasicText(
-                        text = mediaId,
-                        maxLines = 1,
-                        style = typography.xs.medium.color(colorPalette.onOverlay)
-                    )
-                    BasicText(
-                        text = format?.itag?.toString() ?: stringResource(R.string.unknown),
-                        maxLines = 1,
-                        style = typography.xs.medium.color(colorPalette.onOverlay)
-                    )
-                    BasicText(
+                    Text(text = mediaId)
+                    Text(text = format?.itag?.toString() ?: stringResource(R.string.unknown))
+                    Text(
                         text = format?.bitrate?.let {
                             stringResource(
                                 R.string.format_kbps,
                                 it / 1000
                             )
-                        } ?: stringResource(R.string.unknown),
-                        maxLines = 1,
-                        style = typography.xs.medium.color(colorPalette.onOverlay)
+                        } ?: stringResource(R.string.unknown)
                     )
-                    BasicText(
+                    Text(
                         text = format?.contentLength
                             ?.let { Formatter.formatShortFileSize(context, it) }
-                            ?: stringResource(R.string.unknown),
-                        maxLines = 1,
-                        style = typography.xs.medium.color(colorPalette.onOverlay)
+                            ?: stringResource(R.string.unknown)
                     )
-                    BasicText(
+                    Text(
                         text = buildString {
                             append(Formatter.formatShortFileSize(context, cachedBytes))
 
                             format?.contentLength?.let {
                                 append(" (${(cachedBytes.toFloat() / it * 100).roundToInt()}%)")
                             }
-                        },
-                        maxLines = 1,
-                        style = typography.xs.medium.color(colorPalette.onOverlay)
+                        }
                     )
-                    BasicText(
+                    Text(
                         text = format?.loudnessDb?.let {
                             stringResource(
                                 R.string.format_db,
                                 "%.2f".format(it)
                             )
-                        } ?: stringResource(R.string.unknown),
-                        maxLines = 1,
-                        style = typography.xs.medium.color(colorPalette.onOverlay)
+                        } ?: stringResource(R.string.unknown)
                     )
                 }
             }

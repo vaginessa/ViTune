@@ -44,7 +44,6 @@ import it.vfsfitvnm.vimusic.ui.screens.artistRoute
 import it.vfsfitvnm.vimusic.ui.screens.playlistRoute
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
-import it.vfsfitvnm.vimusic.ui.styling.px
 import it.vfsfitvnm.vimusic.utils.center
 import it.vfsfitvnm.vimusic.utils.secondary
 import it.vfsfitvnm.vimusic.utils.semiBold
@@ -66,9 +65,6 @@ fun MoodList(
         if (moodPage?.isSuccess != true)
         moodPage = Innertube.browse(BrowseBody(browseId = browseId, params = mood.params))
     }
-
-    val thumbnailSizeDp = Dimensions.thumbnails.album
-    val thumbnailSizePx = thumbnailSizeDp.px
 
     val lazyListState = rememberLazyListState()
 
@@ -113,8 +109,7 @@ fun MoodList(
                                 when (childItem) {
                                     is Innertube.AlbumItem -> AlbumItem(
                                         album = childItem,
-                                        thumbnailSizePx = thumbnailSizePx,
-                                        thumbnailSizeDp = thumbnailSizeDp,
+                                        thumbnailSize = Dimensions.thumbnails.album,
                                         alternative = true,
                                         modifier = Modifier.clickable {
                                             childItem.info?.endpoint?.browseId?.let {
@@ -125,8 +120,7 @@ fun MoodList(
 
                                     is Innertube.ArtistItem -> ArtistItem(
                                         artist = childItem,
-                                        thumbnailSizePx = thumbnailSizePx,
-                                        thumbnailSizeDp = thumbnailSizeDp,
+                                        thumbnailSize = Dimensions.thumbnails.album,
                                         alternative = true,
                                         modifier = Modifier.clickable {
                                             childItem.info?.endpoint?.browseId?.let {
@@ -137,8 +131,7 @@ fun MoodList(
 
                                     is Innertube.PlaylistItem -> PlaylistItem(
                                         playlist = childItem,
-                                        thumbnailSizePx = thumbnailSizePx,
-                                        thumbnailSizeDp = thumbnailSizeDp,
+                                        thumbnailSize = Dimensions.thumbnails.album,
                                         alternative = true,
                                         modifier = Modifier.clickable {
                                             childItem.info?.endpoint?.let { endpoint ->
@@ -173,7 +166,7 @@ fun MoodList(
                 Row {
                     repeat(6) {
                         AlbumItemPlaceholder(
-                            thumbnailSizeDp = thumbnailSizeDp,
+                            thumbnailSize = Dimensions.thumbnails.album,
                             alternative = true
                         )
                     }

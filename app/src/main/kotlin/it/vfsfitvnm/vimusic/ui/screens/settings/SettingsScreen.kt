@@ -2,7 +2,6 @@
 
 package it.vfsfitvnm.vimusic.ui.screens.settings
 
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -55,7 +54,6 @@ import it.vfsfitvnm.vimusic.utils.semiBold
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
-@OptIn(ExperimentalAnimationApi::class)
 @Route
 @Composable
 fun SettingsScreen() {

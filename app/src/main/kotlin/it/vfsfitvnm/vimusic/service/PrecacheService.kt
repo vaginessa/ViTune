@@ -13,7 +13,6 @@ import androidx.media3.datasource.cache.Cache
 import androidx.media3.datasource.cache.CacheSpan
 import androidx.media3.datasource.cache.ContentMetadataMutations
 import androidx.media3.exoplayer.offline.Download
-import androidx.media3.exoplayer.offline.DownloadCursor
 import androidx.media3.exoplayer.offline.DownloadManager
 import androidx.media3.exoplayer.offline.DownloadNotificationHelper
 import androidx.media3.exoplayer.offline.DownloadRequest
@@ -41,7 +40,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import okhttp3.internal.closeQuietly
 import java.io.File
 import java.util.concurrent.Executors
 import kotlin.coroutines.resume
@@ -267,12 +265,4 @@ class BlockingDeferredCache(private val cache: Deferred<Cache>) : Cache {
         resolvedCache.applyContentMetadataMutations(key, mutations)
 
     override fun getContentMetadata(key: String) = resolvedCache.getContentMetadata(key)
-}
-
-@OptIn(UnstableApi::class)
-fun <T> DownloadCursor.toList(map: (Download) -> T) = buildList {
-    while (moveToNext()) {
-        add(map(download))
-    }
-    closeQuietly()
 }

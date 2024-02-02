@@ -315,7 +315,7 @@ class MainActivity : ComponentActivity() {
 
                 val playerBottomSheetState = rememberBottomSheetState(
                     dismissedBound = 0.dp,
-                    collapsedBound = Dimensions.collapsedPlayer + bottomDp,
+                    collapsedBound = Dimensions.items.collapsedPlayerHeight + bottomDp,
                     expandedBound = maxHeight
                 )
 

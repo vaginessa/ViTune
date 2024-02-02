@@ -1,8 +1,6 @@
 package it.vfsfitvnm.vimusic.ui.screens.album
 
 import android.content.Intent
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.runtime.Composable
@@ -41,13 +39,11 @@ import it.vfsfitvnm.vimusic.ui.screens.Route
 import it.vfsfitvnm.vimusic.ui.screens.albumRoute
 import it.vfsfitvnm.vimusic.ui.screens.searchresult.ItemsPage
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
-import it.vfsfitvnm.vimusic.ui.styling.px
 import it.vfsfitvnm.vimusic.utils.asMediaItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.withContext
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
 @Route
 @Composable
 fun AlbumScreen(browseId: String) {
@@ -109,54 +105,58 @@ fun AlbumScreen(browseId: String) {
         GlobalRoutes()
 
         NavHost {
-            val headerContent: @Composable (textButton: (@Composable () -> Unit)?) -> Unit =
-                { textButton ->
-                    if (album?.timestamp == null) HeaderPlaceholder(modifier = Modifier.shimmer())
-                    else {
-                        val (colorPalette) = LocalAppearance.current
-                        val context = LocalContext.current
+            val headerContent: @Composable (
+                beforeContent: (@Composable () -> Unit)?,
+                afterContent: (@Composable () -> Unit)?
+            ) -> Unit = { beforeContent, afterContent ->
+                if (album?.timestamp == null) HeaderPlaceholder(modifier = Modifier.shimmer())
+                else {
+                    val (colorPalette) = LocalAppearance.current
+                    val context = LocalContext.current
 
-                        Header(title = album?.title ?: stringResource(R.string.unknown)) {
-                            textButton?.invoke()
+                    Header(title = album?.title ?: stringResource(R.string.unknown)) {
+                        beforeContent?.invoke()
 
-                            Spacer(modifier = Modifier.weight(1f))
+                        Spacer(modifier = Modifier.weight(1f))
 
-                            HeaderIconButton(
-                                icon = if (album?.bookmarkedAt == null) R.drawable.bookmark_outline
-                                else R.drawable.bookmark,
-                                color = colorPalette.accent,
-                                onClick = {
-                                    val bookmarkedAt =
-                                        if (album?.bookmarkedAt == null) System.currentTimeMillis() else null
+                        afterContent?.invoke()
 
-                                    query {
-                                        album
-                                            ?.copy(bookmarkedAt = bookmarkedAt)
-                                            ?.let(Database::update)
-                                    }
+                        HeaderIconButton(
+                            icon = if (album?.bookmarkedAt == null) R.drawable.bookmark_outline
+                            else R.drawable.bookmark,
+                            color = colorPalette.accent,
+                            onClick = {
+                                val bookmarkedAt =
+                                    if (album?.bookmarkedAt == null) System.currentTimeMillis() else null
+
+                                query {
+                                    album
+                                        ?.copy(bookmarkedAt = bookmarkedAt)
+                                        ?.let(Database::update)
                                 }
-                            )
+                            }
+                        )
 
-                            HeaderIconButton(
-                                icon = R.drawable.share_social,
-                                color = colorPalette.text,
-                                onClick = {
-                                    album?.shareUrl?.let { url ->
-                                        val sendIntent = Intent().apply {
-                                            action = Intent.ACTION_SEND
-                                            type = "text/plain"
-                                            putExtra(Intent.EXTRA_TEXT, url)
-                                        }
-
-                                        context.startActivity(
-                                            Intent.createChooser(sendIntent, null)
-                                        )
+                        HeaderIconButton(
+                            icon = R.drawable.share_social,
+                            color = colorPalette.text,
+                            onClick = {
+                                album?.shareUrl?.let { url ->
+                                    val sendIntent = Intent().apply {
+                                        action = Intent.ACTION_SEND
+                                        type = "text/plain"
+                                        putExtra(Intent.EXTRA_TEXT, url)
                                     }
+
+                                    context.startActivity(
+                                        Intent.createChooser(sendIntent, null)
+                                    )
                                 }
-                            )
-                        }
+                            }
+                        )
                     }
                 }
+            }
 
             val thumbnailContent =
                 adaptiveThumbnailContent(album?.timestamp == null, album?.thumbnailUrl)
@@ -180,8 +180,7 @@ fun AlbumScreen(browseId: String) {
                         )
 
                         1 -> {
-                            val thumbnailSizeDp = 108.dp
-                            val thumbnailSizePx = thumbnailSizeDp.px
+                            val thumbnailSize = 108.dp
 
                             ItemsPage(
                                 tag = "album/$browseId/alternatives",
@@ -202,13 +201,12 @@ fun AlbumScreen(browseId: String) {
                                 itemContent = { album ->
                                     AlbumItem(
                                         album = album,
-                                        thumbnailSizePx = thumbnailSizePx,
-                                        thumbnailSizeDp = thumbnailSizeDp,
+                                        thumbnailSize = thumbnailSize,
                                         modifier = Modifier.clickable { albumRoute(album.key) }
                                     )
                                 },
                                 itemPlaceholderContent = {
-                                    AlbumItemPlaceholder(thumbnailSizeDp = thumbnailSizeDp)
+                                    AlbumItemPlaceholder(thumbnailSize = thumbnailSize)
                                 }
                             )
                         }

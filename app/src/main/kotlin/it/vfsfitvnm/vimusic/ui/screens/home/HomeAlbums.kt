@@ -1,6 +1,5 @@
 package it.vfsfitvnm.vimusic.ui.screens.home
 
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -40,9 +39,8 @@ import it.vfsfitvnm.vimusic.ui.items.AlbumItem
 import it.vfsfitvnm.vimusic.ui.screens.Route
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
-import it.vfsfitvnm.vimusic.ui.styling.px
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Route
 @Composable
 fun HomeAlbums(
@@ -56,9 +54,6 @@ fun HomeAlbums(
     LaunchedEffect(albumSortBy, albumSortOrder) {
         Database.albums(albumSortBy, albumSortOrder).collect { items = it }
     }
-
-    val thumbnailSizeDp = Dimensions.thumbnails.song * 2
-    val thumbnailSizePx = thumbnailSizeDp.px
 
     val sortOrderIconRotation by animateFloatAsState(
         targetValue = if (albumSortOrder == SortOrder.Ascending) 0f else 180f,
@@ -118,8 +113,7 @@ fun HomeAlbums(
             ) { album ->
                 AlbumItem(
                     album = album,
-                    thumbnailSizePx = thumbnailSizePx,
-                    thumbnailSizeDp = thumbnailSizeDp,
+                    thumbnailSize = Dimensions.thumbnails.album,
                     modifier = Modifier
                         .clickable(onClick = { onAlbumClick(album) })
                         .animateItemPlacement()

@@ -1,6 +1,5 @@
 package it.vfsfitvnm.vimusic.ui.screens.mood
 
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.res.stringResource
@@ -12,7 +11,6 @@ import it.vfsfitvnm.vimusic.ui.components.themed.Scaffold
 import it.vfsfitvnm.vimusic.ui.screens.GlobalRoutes
 import it.vfsfitvnm.vimusic.ui.screens.Route
 
-@OptIn(ExperimentalAnimationApi::class)
 @Route
 @Composable
 fun MoodScreen(mood: Mood) {

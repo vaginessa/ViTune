@@ -1,6 +1,5 @@
 package it.vfsfitvnm.vimusic.ui.screens.localplaylist
 
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -56,7 +55,6 @@ import it.vfsfitvnm.vimusic.ui.components.themed.TextFieldDialog
 import it.vfsfitvnm.vimusic.ui.items.SongItem
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
-import it.vfsfitvnm.vimusic.ui.styling.px
 import it.vfsfitvnm.vimusic.utils.PlaylistDownloadIcon
 import it.vfsfitvnm.vimusic.utils.asMediaItem
 import it.vfsfitvnm.vimusic.utils.completed
@@ -71,8 +69,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.runBlocking
 
-@ExperimentalAnimationApi
-@ExperimentalFoundationApi
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LocalPlaylistSongs(
     playlistId: Long,
@@ -142,9 +139,6 @@ fun LocalPlaylistSongs(
             onDelete()
         }
     )
-
-    val thumbnailSizeDp = Dimensions.thumbnails.song
-    val thumbnailSizePx = thumbnailSizeDp.px
 
     Box(modifier = modifier) {
         LookaheadScope {
@@ -316,8 +310,7 @@ fun LocalPlaylistSongs(
                             )
                             .background(colorPalette.background0),
                         song = song,
-                        thumbnailSizePx = thumbnailSizePx,
-                        thumbnailSizeDp = thumbnailSizeDp
+                        thumbnailSize = Dimensions.thumbnails.song
                     ) {
                         ReorderHandle(
                             reorderingState = reorderingState,

@@ -14,8 +14,6 @@ object PlayerPreferences : GlobalPreferencesHolder() {
     var queueLoopEnabled by queueLoopEnabledProperty
     val skipSilenceProperty = boolean(false)
     var skipSilence by skipSilenceProperty
-    val minimumSilenceProperty = long(2_000_000L)
-    var minimumSilence by minimumSilenceProperty
     val volumeNormalizationProperty = boolean(false)
     var volumeNormalization by volumeNormalizationProperty
     val volumeNormalizationBaseGainProperty = float(5.00f)
@@ -26,28 +24,20 @@ object PlayerPreferences : GlobalPreferencesHolder() {
     var bassBoostLevel by bassBoostLevelProperty
     val resumePlaybackWhenDeviceConnectedProperty = boolean(false)
     var resumePlaybackWhenDeviceConnected by resumePlaybackWhenDeviceConnectedProperty
-    val persistentQueueProperty = boolean(false)
-    var persistentQueue by persistentQueueProperty
-    val isShowingLyricsProperty = boolean(false)
-    var isShowingLyrics by isShowingLyricsProperty
-    val isShowingSynchronizedLyricsProperty = boolean(false)
-    var isShowingSynchronizedLyrics by isShowingSynchronizedLyricsProperty
     val speedProperty = float(1f)
     var speed by speedProperty
-    val isShowingPrevButtonCollapsedProperty = boolean(false)
-    var isShowingPrevButtonCollapsed by isShowingPrevButtonCollapsedProperty
-    val stopWhenClosedProperty = boolean(false)
-    var stopWhenClosed by stopWhenClosedProperty
-    val horizontalSwipeToCloseProperty = boolean(false)
-    var horizontalSwipeToClose by horizontalSwipeToCloseProperty
-    val horizontalSwipeToRemoveItemProperty = boolean(false)
-    var horizontalSwipeToRemoveItem by horizontalSwipeToRemoveItemProperty
-    val playerLayoutProperty = enum(PlayerLayout.New)
-    var playerLayout by playerLayoutProperty
-    val seekBarStyleProperty = enum(SeekBarStyle.Wavy)
-    var seekBarStyle by seekBarStyleProperty
-    val showLikeProperty = boolean(false)
-    var showLike by showLikeProperty
+
+    var minimumSilence by long(2_000_000L)
+    var persistentQueue by boolean(false)
+    var isShowingLyrics by boolean(false)
+    var isShowingSynchronizedLyrics by boolean(false)
+    var isShowingPrevButtonCollapsed by boolean(false)
+    var stopWhenClosed by boolean(false)
+    var horizontalSwipeToClose by boolean(false)
+    var horizontalSwipeToRemoveItem by boolean(false)
+    var playerLayout by enum(PlayerLayout.New)
+    var seekBarStyle by enum(SeekBarStyle.Wavy)
+    var showLike by boolean(false)
 
     enum class PlayerLayout(val displayName: @Composable () -> String) {
         Classic(displayName = { stringResource(R.string.classic_player_layout_name) }),

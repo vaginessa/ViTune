@@ -16,9 +16,9 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.valentinilk.shimmer.shimmer
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
-import it.vfsfitvnm.vimusic.ui.styling.px
 import it.vfsfitvnm.vimusic.ui.styling.shimmer
 import it.vfsfitvnm.vimusic.utils.isLandscape
+import it.vfsfitvnm.vimusic.utils.px
 import it.vfsfitvnm.vimusic.utils.thumbnail
 
 @Composable
@@ -43,20 +43,19 @@ fun adaptiveThumbnailContent(
     val thumbnailShape = LocalAppearance.current.thumbnailShape
 
     BoxWithConstraints(contentAlignment = Alignment.Center) {
-        val thumbnailSizeDp = if (isLandscape) (maxHeight - 128.dp) else (maxWidth - 64.dp)
-        val thumbnailSizePx = thumbnailSizeDp.px
+        val thumbnailSize = if (isLandscape) (maxHeight - 128.dp) else (maxWidth - 64.dp)
 
         val modifier = Modifier
             .padding(all = 16.dp)
             .clip(shape ?: thumbnailShape)
-            .size(thumbnailSizeDp)
+            .size(thumbnailSize)
 
         if (isLoading) Spacer(
             modifier = modifier
                 .shimmer()
                 .background(colorPalette.shimmer)
         ) else AsyncImage(
-            model = url?.thumbnail(thumbnailSizePx),
+            model = url?.thumbnail(thumbnailSize.px),
             contentDescription = null,
             modifier = modifier.background(colorPalette.background1)
         )

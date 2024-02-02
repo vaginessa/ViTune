@@ -101,7 +101,6 @@ import it.vfsfitvnm.vimusic.ui.modifiers.swipeToClose
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.ui.styling.onOverlay
-import it.vfsfitvnm.vimusic.ui.styling.px
 import it.vfsfitvnm.vimusic.utils.DisposableListener
 import it.vfsfitvnm.vimusic.utils.addNext
 import it.vfsfitvnm.vimusic.utils.asMediaItem
@@ -118,8 +117,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.time.Duration.Companion.milliseconds
 
-@ExperimentalFoundationApi
-@ExperimentalAnimationApi
+@OptIn(ExperimentalAnimationApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun Queue(
     backgroundColorProvider: () -> Color,
@@ -175,9 +173,6 @@ fun Queue(
         binder?.player ?: return@BottomSheet
 
         val player = binder.player
-
-        val thumbnailSizeDp = Dimensions.thumbnails.song
-        val thumbnailSizePx = thumbnailSizeDp.px
 
         var mediaItemIndex by remember {
             mutableIntStateOf(if (player.mediaItemCount == 0) -1 else player.currentMediaItemIndex)
@@ -273,8 +268,7 @@ fun Queue(
 
                             SongItem(
                                 song = window.mediaItem,
-                                thumbnailSizePx = thumbnailSizePx,
-                                thumbnailSizeDp = thumbnailSizeDp,
+                                thumbnailSize = Dimensions.thumbnails.song,
                                 onThumbnailContent = {
                                     musicBarsTransition.AnimatedVisibility(
                                         visible = { it == window.firstPeriodIndex },
@@ -349,15 +343,14 @@ fun Queue(
 
                         item {
                             if (visibleSuggestions.isNotEmpty()) HorizontalDivider(
-                                modifier = Modifier.padding(start = 28.dp + thumbnailSizeDp)
+                                modifier = Modifier.padding(start = 28.dp + Dimensions.thumbnails.song)
                             )
                         }
 
                         items(visibleSuggestions) {
                             SongItem(
                                 song = it,
-                                thumbnailSizeDp = thumbnailSizeDp,
-                                thumbnailSizePx = thumbnailSizePx,
+                                thumbnailSize = Dimensions.thumbnails.song,
                                 modifier = Modifier.clickable {
                                     menuState.display {
                                         BaseMediaItemMenu(
@@ -400,7 +393,7 @@ fun Queue(
                                 Column(modifier = Modifier.shimmer()) {
                                     repeat(3) { index ->
                                         SongItemPlaceholder(
-                                            thumbnailSizeDp = thumbnailSizeDp,
+                                            thumbnailSize = Dimensions.thumbnails.song,
                                             modifier = Modifier
                                                 .alpha(1f - index * 0.125f)
                                                 .fillMaxWidth()

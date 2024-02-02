@@ -72,6 +72,7 @@ import it.vfsfitvnm.vimusic.ui.components.themed.MenuEntry
 import it.vfsfitvnm.vimusic.ui.components.themed.TextFieldDialog
 import it.vfsfitvnm.vimusic.ui.components.themed.TextPlaceholder
 import it.vfsfitvnm.vimusic.ui.components.themed.ValueSelectorDialogBody
+import it.vfsfitvnm.vimusic.ui.modifiers.verticalFadingEdge
 import it.vfsfitvnm.vimusic.ui.styling.DefaultDarkColorPalette
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.ui.styling.PureBlackColorPalette
@@ -82,7 +83,6 @@ import it.vfsfitvnm.vimusic.utils.color
 import it.vfsfitvnm.vimusic.utils.medium
 import it.vfsfitvnm.vimusic.utils.semiBold
 import it.vfsfitvnm.vimusic.utils.toast
-import it.vfsfitvnm.vimusic.ui.modifiers.verticalFadingEdge
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers

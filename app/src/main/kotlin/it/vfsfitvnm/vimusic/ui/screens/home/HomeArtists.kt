@@ -1,6 +1,5 @@
 package it.vfsfitvnm.vimusic.ui.screens.home
 
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -44,9 +43,8 @@ import it.vfsfitvnm.vimusic.ui.items.ArtistItem
 import it.vfsfitvnm.vimusic.ui.screens.Route
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
-import it.vfsfitvnm.vimusic.ui.styling.px
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Route
 @Composable
 fun HomeArtistList(
@@ -58,15 +56,17 @@ fun HomeArtistList(
     var items by persistList<Artist>("home/artists")
 
     LaunchedEffect(artistSortBy, artistSortOrder) {
-        Database.artists(artistSortBy, artistSortOrder).collect { items = it }
+        Database
+            .artists(artistSortBy, artistSortOrder)
+            .collect { items = it }
     }
-
-    val thumbnailSizeDp = Dimensions.thumbnails.song * 2
-    val thumbnailSizePx = thumbnailSizeDp.px
 
     val sortOrderIconRotation by animateFloatAsState(
         targetValue = if (artistSortOrder == SortOrder.Ascending) 0f else 180f,
-        animationSpec = tween(durationMillis = 400, easing = LinearEasing),
+        animationSpec = tween(
+            durationMillis = 400,
+            easing = LinearEasing
+        ),
         label = ""
     )
 
@@ -75,12 +75,13 @@ fun HomeArtistList(
     Box {
         LazyVerticalGrid(
             state = lazyGridState,
-            columns = GridCells.Adaptive(Dimensions.thumbnails.song * 2 + Dimensions.itemsVerticalPadding * 2),
+            columns = GridCells.Adaptive(Dimensions.thumbnails.song * 2 + Dimensions.items.verticalPadding * 2),
             contentPadding = LocalPlayerAwareWindowInsets.current
-                .only(WindowInsetsSides.Vertical + WindowInsetsSides.End).asPaddingValues(),
-            verticalArrangement = Arrangement.spacedBy(Dimensions.itemsVerticalPadding * 2),
+                .only(WindowInsetsSides.Vertical + WindowInsetsSides.End)
+                .asPaddingValues(),
+            verticalArrangement = Arrangement.spacedBy(Dimensions.items.verticalPadding * 2),
             horizontalArrangement = Arrangement.spacedBy(
-                space = Dimensions.itemsVerticalPadding * 2,
+                space = Dimensions.items.verticalPadding * 2,
                 alignment = Alignment.CenterHorizontally
             ),
             modifier = Modifier
@@ -95,7 +96,8 @@ fun HomeArtistList(
                 Header(title = stringResource(R.string.artists)) {
                     HeaderIconButton(
                         icon = R.drawable.text,
-                        color = if (artistSortBy == ArtistSortBy.Name) colorPalette.text else colorPalette.textDisabled,
+                        color = if (artistSortBy == ArtistSortBy.Name) colorPalette.text
+                        else colorPalette.textDisabled,
                         onClick = { artistSortBy = ArtistSortBy.Name }
                     )
 
@@ -120,8 +122,7 @@ fun HomeArtistList(
             items(items = items, key = Artist::id) { artist ->
                 ArtistItem(
                     artist = artist,
-                    thumbnailSizePx = thumbnailSizePx,
-                    thumbnailSizeDp = thumbnailSizeDp,
+                    thumbnailSize = Dimensions.thumbnails.song * 2,
                     alternative = true,
                     modifier = Modifier
                         .clickable(onClick = { onArtistClick(artist) })

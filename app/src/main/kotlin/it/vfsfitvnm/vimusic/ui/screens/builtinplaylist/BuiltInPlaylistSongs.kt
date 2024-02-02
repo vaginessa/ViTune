@@ -1,7 +1,5 @@
 package it.vfsfitvnm.vimusic.ui.screens.builtinplaylist
 
-import androidx.annotation.OptIn
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -26,7 +24,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.media3.common.util.UnstableApi
 import it.vfsfitvnm.compose.persist.persistList
 import it.vfsfitvnm.vimusic.Database
 import it.vfsfitvnm.vimusic.LocalPlayerAwareWindowInsets
@@ -45,7 +42,6 @@ import it.vfsfitvnm.vimusic.ui.components.themed.ValueSelectorDialog
 import it.vfsfitvnm.vimusic.ui.items.SongItem
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
-import it.vfsfitvnm.vimusic.ui.styling.px
 import it.vfsfitvnm.vimusic.utils.asMediaItem
 import it.vfsfitvnm.vimusic.utils.enqueue
 import it.vfsfitvnm.vimusic.utils.forcePlayAtIndex
@@ -59,10 +55,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.transformLatest
 import kotlin.math.min
 
-@kotlin.OptIn(ExperimentalCoroutinesApi::class)
-@ExperimentalFoundationApi
-@ExperimentalAnimationApi
-@OptIn(UnstableApi::class)
+@OptIn(ExperimentalCoroutinesApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun BuiltInPlaylistSongs(
     builtInPlaylist: BuiltInPlaylist,
@@ -83,7 +76,8 @@ fun BuiltInPlaylistSongs(
             }
 
             BuiltInPlaylist.Top -> snapshotFlow { topListPeriod to topListLength }
-                .distinctUntilChanged().transformLatest { (period, length) ->
+                .distinctUntilChanged()
+                .transformLatest { (period, length) ->
                     emitAll(
                         if (period.duration != null) Database.trending(
                             limit = length,
@@ -94,9 +88,6 @@ fun BuiltInPlaylistSongs(
                 }
         }.collect { songs = it }
     }
-
-    val thumbnailSizeDp = Dimensions.thumbnails.song
-    val thumbnailSize = thumbnailSizeDp.px
 
     val lazyListState = rememberLazyListState()
 
@@ -141,7 +132,10 @@ fun BuiltInPlaylistSongs(
 
                         if (dialogShowing) ValueSelectorDialog(
                             onDismiss = { dialogShowing = false },
-                            title = stringResource(R.string.format_view_top_of_header, topListLength),
+                            title = stringResource(
+                                R.string.format_view_top_of_header,
+                                topListLength
+                            ),
                             selectedValue = topListPeriod,
                             values = DataPreferences.TopListPeriod.entries.toImmutableList(),
                             onValueSelected = { topListPeriod = it },
@@ -191,8 +185,7 @@ fun BuiltInPlaylistSongs(
                             .animateItemPlacement(),
                         song = song,
                         index = if (builtInPlaylist == BuiltInPlaylist.Top) index else null,
-                        thumbnailSizePx = thumbnailSize,
-                        thumbnailSizeDp = thumbnailSizeDp
+                        thumbnailSize = Dimensions.thumbnails.song
                     )
                 }
             }

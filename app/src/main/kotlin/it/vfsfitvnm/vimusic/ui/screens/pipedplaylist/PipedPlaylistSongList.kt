@@ -1,6 +1,5 @@
 package it.vfsfitvnm.vimusic.ui.screens.pipedplaylist
 
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -41,7 +40,6 @@ import it.vfsfitvnm.vimusic.ui.items.SongItem
 import it.vfsfitvnm.vimusic.ui.items.SongItemPlaceholder
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
-import it.vfsfitvnm.vimusic.ui.styling.px
 import it.vfsfitvnm.vimusic.utils.asMediaItem
 import it.vfsfitvnm.vimusic.utils.enqueue
 import it.vfsfitvnm.vimusic.utils.forcePlayAtIndex
@@ -51,8 +49,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.UUID
 
-@ExperimentalFoundationApi
-@ExperimentalAnimationApi
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PipedPlaylistSongList(
     session: Session,
@@ -73,9 +70,6 @@ fun PipedPlaylistSongList(
             )?.getOrNull()
         }
     }
-
-    val songThumbnailSizeDp = Dimensions.thumbnails.song
-    val songThumbnailSizePx = songThumbnailSizeDp.px
 
     val lazyListState = rememberLazyListState()
 
@@ -122,8 +116,7 @@ fun PipedPlaylistSongList(
                     song.asMediaItem?.let { mediaItem ->
                         SongItem(
                             song = mediaItem,
-                            thumbnailSizeDp = songThumbnailSizeDp,
-                            thumbnailSizePx = songThumbnailSizePx,
+                            thumbnailSize = Dimensions.thumbnails.song,
                             modifier = Modifier.combinedClickable(
                                 onLongClick = {
                                     menuState.display {
@@ -148,7 +141,7 @@ fun PipedPlaylistSongList(
                 if (playlist == null) item(key = "loading") {
                     ShimmerHost(modifier = Modifier.fillParentMaxSize()) {
                         repeat(4) {
-                            SongItemPlaceholder(thumbnailSizeDp = songThumbnailSizeDp)
+                            SongItemPlaceholder(thumbnailSize = Dimensions.thumbnails.song)
                         }
                     }
                 }

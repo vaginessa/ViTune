@@ -1,7 +1,5 @@
 package it.vfsfitvnm.vimusic.ui.screens.pipedplaylist
 
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -18,7 +16,6 @@ import it.vfsfitvnm.vimusic.ui.screens.GlobalRoutes
 import it.vfsfitvnm.vimusic.ui.screens.Route
 import java.util.UUID
 
-@OptIn(ExperimentalAnimationApi::class, ExperimentalFoundationApi::class)
 @Route
 @Composable
 fun PipedPlaylistScreen(

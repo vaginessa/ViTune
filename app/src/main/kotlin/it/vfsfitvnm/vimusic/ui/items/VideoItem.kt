@@ -30,8 +30,8 @@ import it.vfsfitvnm.vimusic.utils.semiBold
 @Composable
 fun VideoItem(
     video: Innertube.VideoItem,
-    thumbnailHeightDp: Dp,
-    thumbnailWidthDp: Dp,
+    thumbnailWidth: Dp,
+    thumbnailHeight: Dp,
     modifier: Modifier = Modifier
 ) = VideoItem(
     thumbnailUrl = video.thumbnail?.url,
@@ -39,8 +39,8 @@ fun VideoItem(
     title = video.info?.name,
     uploader = video.authors?.joinToString("") { it.name.orEmpty() },
     views = video.viewsText,
-    thumbnailHeightDp = thumbnailHeightDp,
-    thumbnailWidthDp = thumbnailWidthDp,
+    thumbnailWidth = thumbnailWidth,
+    thumbnailHeight = thumbnailHeight,
     modifier = modifier
 )
 
@@ -51,12 +51,12 @@ fun VideoItem(
     title: String?,
     uploader: String?,
     views: String?,
-    thumbnailHeightDp: Dp,
-    thumbnailWidthDp: Dp,
+    thumbnailWidth: Dp,
+    thumbnailHeight: Dp,
     modifier: Modifier = Modifier
 ) = ItemContainer(
     alternative = false,
-    thumbnailSizeDp = 0.dp,
+    thumbnailSize = 0.dp,
     modifier = modifier
 ) {
     val colorPalette = LocalAppearance.current.colorPalette
@@ -70,7 +70,7 @@ fun VideoItem(
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .clip(thumbnailShape)
-                .size(width = thumbnailWidthDp, height = thumbnailHeightDp)
+                .size(width = thumbnailWidth, height = thumbnailHeight)
         )
 
         duration?.let {
@@ -117,12 +117,12 @@ fun VideoItem(
 
 @Composable
 fun VideoItemPlaceholder(
-    thumbnailHeightDp: Dp,
-    thumbnailWidthDp: Dp,
+    thumbnailWidth: Dp,
+    thumbnailHeight: Dp,
     modifier: Modifier = Modifier
 ) = ItemContainer(
     alternative = false,
-    thumbnailSizeDp = 0.dp,
+    thumbnailSize = 0.dp,
     modifier = modifier
 ) {
     val colorPalette = LocalAppearance.current.colorPalette
@@ -131,7 +131,7 @@ fun VideoItemPlaceholder(
     Spacer(
         modifier = Modifier
             .background(color = colorPalette.shimmer, shape = thumbnailShape)
-            .size(width = thumbnailWidthDp, height = thumbnailHeightDp)
+            .size(width = thumbnailWidth, height = thumbnailHeight)
     )
 
     ItemInfoContainer {
