@@ -13,11 +13,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -367,19 +369,23 @@ fun Lyrics(
                     }
 
                     if (synchronizedLyrics != null) {
-                        val lazyListState = rememberLazyListState(
-                            initialFirstVisibleItemIndex = synchronizedLyrics.index,
-                            initialFirstVisibleItemScrollOffset = with(density) { size.roundToPx() } / 6
-                        )
+                        val lazyListState = rememberLazyListState()
 
-                        LaunchedEffect(synchronizedLyrics) {
-                            val center = with(density) { size.roundToPx() } / 6
+                        LaunchedEffect(synchronizedLyrics, density) {
+                            val centerOffset = with(density) { (-size / 3).roundToPx() }
+
+                            lazyListState.animateScrollToItem(
+                                index = synchronizedLyrics.index + 1,
+                                scrollOffset = centerOffset
+                            )
 
                             while (isActive) {
                                 delay(50)
-                                if (synchronizedLyrics.update()) lazyListState.animateScrollToItem(
-                                    index = synchronizedLyrics.index,
-                                    scrollOffset = center
+                                if (!synchronizedLyrics.update()) continue
+
+                                lazyListState.animateScrollToItem(
+                                    index = synchronizedLyrics.index + 1,
+                                    scrollOffset = centerOffset
                                 )
                             }
                         }
@@ -387,11 +393,16 @@ fun Lyrics(
                         LazyColumn(
                             state = lazyListState,
                             userScrollEnabled = false,
-                            contentPadding = PaddingValues(vertical = size / 2),
                             horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
                             modifier = Modifier.verticalFadingEdge()
                         ) {
-                            itemsIndexed(items = synchronizedLyrics.sentences.values.toList()) { index, sentence ->
+                            item(key = "header", contentType = 0) {
+                                Spacer(modifier = Modifier.height(size / 2))
+                            }
+                            itemsIndexed(
+                                items = synchronizedLyrics.sentences.values.toImmutableList()
+                            ) { index, sentence ->
                                 BasicText(
                                     text = sentence,
                                     style = typography.xs.center.medium.color(
@@ -400,6 +411,9 @@ fun Lyrics(
                                     ),
                                     modifier = Modifier.padding(vertical = 4.dp, horizontal = 32.dp)
                                 )
+                            }
+                            item(key = "footer", contentType = 0) {
+                                Spacer(modifier = Modifier.height(size / 2))
                             }
                         }
                     }
