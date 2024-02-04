@@ -21,9 +21,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,9 +30,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.media3.common.MediaItem
-import androidx.media3.common.PlaybackException
-import androidx.media3.common.Player
 import coil.compose.AsyncImage
 import it.vfsfitvnm.vimusic.Database
 import it.vfsfitvnm.vimusic.LocalPlayerServiceBinder
@@ -48,8 +42,6 @@ import it.vfsfitvnm.vimusic.service.isLocal
 import it.vfsfitvnm.vimusic.ui.modifiers.onSwipe
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
-import it.vfsfitvnm.vimusic.utils.DisposableListener
-import it.vfsfitvnm.vimusic.utils.currentWindow
 import it.vfsfitvnm.vimusic.utils.forceSeekToNext
 import it.vfsfitvnm.vimusic.utils.forceSeekToPrevious
 import it.vfsfitvnm.vimusic.utils.px
@@ -70,30 +62,9 @@ fun Thumbnail(
 
     val (colorPalette) = LocalAppearance.current
     val thumbnailShape = LocalAppearance.current.thumbnailShape
+    val thumbnailSize = Dimensions.thumbnails.player.song
 
-    val (thumbnailSizeDp, thumbnailSizePx) = Dimensions.thumbnails.player.song.let {
-        it to (it - 64.dp).px
-    }
-
-    var nullableWindow by remember { mutableStateOf(player.currentWindow) }
-    var error by remember { mutableStateOf<PlaybackException?>(player.playerError) }
-
-    player.DisposableListener {
-        object : Player.Listener {
-            override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-                nullableWindow = player.currentWindow
-            }
-
-            override fun onPlaybackStateChanged(playbackState: Int) {
-                error = player.playerError
-            }
-
-            override fun onPlayerError(playbackException: PlaybackException) {
-                error = playbackException
-            }
-        }
-    }
-
+    val (nullableWindow, error) = currentWindow()
     val window = nullableWindow ?: return
 
     AnimatedContent(
@@ -153,7 +124,7 @@ fun Thumbnail(
         Box(
             modifier = Modifier
                 .aspectRatio(1f)
-                .size(thumbnailSizeDp)
+                .size(thumbnailSize)
                 .shadow(
                     elevation = shadowElevation,
                     shape = thumbnailShape,
@@ -162,7 +133,7 @@ fun Thumbnail(
                 .clip(thumbnailShape)
         ) {
             if (currentWindow.mediaItem.mediaMetadata.artworkUri != null) AsyncImage(
-                model = currentWindow.mediaItem.mediaMetadata.artworkUri.thumbnail(thumbnailSizePx),
+                model = currentWindow.mediaItem.mediaMetadata.artworkUri.thumbnail((thumbnailSize - 64.dp).px),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -189,7 +160,7 @@ fun Thumbnail(
                 isDisplayed = isShowingLyrics && error == null,
                 onDismiss = { onShowLyrics(false) },
                 ensureSongInserted = { Database.insert(currentWindow.mediaItem) },
-                size = thumbnailSizeDp,
+                height = thumbnailSize,
                 mediaMetadataProvider = currentWindow.mediaItem::mediaMetadata,
                 durationProvider = player::getDuration
             )

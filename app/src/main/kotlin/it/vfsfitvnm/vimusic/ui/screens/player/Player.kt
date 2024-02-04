@@ -75,7 +75,9 @@ import it.vfsfitvnm.vimusic.ui.components.themed.BaseMediaItemMenu
 import it.vfsfitvnm.vimusic.ui.components.themed.IconButton
 import it.vfsfitvnm.vimusic.ui.components.themed.SecondaryTextButton
 import it.vfsfitvnm.vimusic.ui.components.themed.SliderDialog
+import it.vfsfitvnm.vimusic.ui.modifiers.PinchDirection
 import it.vfsfitvnm.vimusic.ui.modifiers.onSwipe
+import it.vfsfitvnm.vimusic.ui.modifiers.pinchToToggle
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.ui.styling.collapsedPlayerProgressBar
@@ -283,6 +285,9 @@ fun Player(
         }
     ) {
         var isShowingStatsForNerds by rememberSaveable { mutableStateOf(false) }
+        var isShowingLyricsDialog by rememberSaveable { mutableStateOf(false) }
+
+        if (isShowingLyricsDialog) LyricsDialog(onDismiss = { isShowingLyricsDialog = false })
 
         val playerBottomSheetState = rememberBottomSheetState(
             dismissedBound = 64.dp + horizontalBottomPaddingValues.calculateBottomPadding(),
@@ -305,7 +310,16 @@ fun Player(
                 onShowLyrics = { PlayerPreferences.isShowingLyrics = it },
                 isShowingStatsForNerds = isShowingStatsForNerds,
                 onShowStatsForNerds = { isShowingStatsForNerds = it },
-                modifier = innerModifier.nestedScroll(layoutState.preUpPostDownNestedScrollConnection)
+                modifier = innerModifier
+                    .nestedScroll(layoutState.preUpPostDownNestedScrollConnection)
+                    .pinchToToggle(
+                        key = isShowingLyricsDialog,
+                        direction = PinchDirection.Out,
+                        threshold = 1.05f,
+                        onPinch = {
+                            if (PlayerPreferences.isShowingLyrics) isShowingLyricsDialog = true
+                        }
+                    )
             )
         }
 

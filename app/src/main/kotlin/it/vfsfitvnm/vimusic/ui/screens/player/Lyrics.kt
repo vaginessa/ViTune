@@ -99,11 +99,12 @@ fun Lyrics(
     mediaId: String,
     isDisplayed: Boolean,
     onDismiss: () -> Unit,
-    size: Dp,
+    height: Dp,
     mediaMetadataProvider: () -> MediaMetadata,
     durationProvider: () -> Long,
     ensureSongInserted: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onMenuLaunched: () -> Unit = { }
 ) = with(PlayerPreferences) {
     AnimatedVisibility(
         visible = isDisplayed,
@@ -372,7 +373,7 @@ fun Lyrics(
                         val lazyListState = rememberLazyListState()
 
                         LaunchedEffect(synchronizedLyrics, density) {
-                            val centerOffset = with(density) { (-size / 3).roundToPx() }
+                            val centerOffset = with(density) { (-height / 3).roundToPx() }
 
                             lazyListState.animateScrollToItem(
                                 index = synchronizedLyrics.index + 1,
@@ -398,7 +399,7 @@ fun Lyrics(
                             modifier = Modifier.verticalFadingEdge()
                         ) {
                             item(key = "header", contentType = 0) {
-                                Spacer(modifier = Modifier.height(size / 2))
+                                Spacer(modifier = Modifier.height(height))
                             }
                             itemsIndexed(
                                 items = synchronizedLyrics.sentences.values.toImmutableList()
@@ -413,7 +414,7 @@ fun Lyrics(
                                 )
                             }
                             item(key = "footer", contentType = 0) {
-                                Spacer(modifier = Modifier.height(size / 2))
+                                Spacer(modifier = Modifier.height(height))
                             }
                         }
                     }
@@ -424,7 +425,7 @@ fun Lyrics(
                         .verticalFadingEdge()
                         .verticalScroll(rememberScrollState())
                         .fillMaxWidth()
-                        .padding(vertical = size / 4, horizontal = 32.dp)
+                        .padding(vertical = height / 4, horizontal = 32.dp)
                 )
             }
 
@@ -450,6 +451,7 @@ fun Lyrics(
                         indication = rememberRipple(bounded = false),
                         interactionSource = remember { MutableInteractionSource() },
                         onClick = {
+                            onMenuLaunched()
                             menuState.display {
                                 Menu {
                                     MenuEntry(
