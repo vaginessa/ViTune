@@ -15,6 +15,8 @@ import androidx.compose.foundation.gestures.horizontalDrag
 import androidx.compose.foundation.gestures.verticalDrag
 import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -42,9 +44,13 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.time.Duration
 
-data class SwipeState internal constructor(
-    internal val offset: Animatable<Float, AnimationVector1D> = acquire()
+@Stable
+@JvmInline
+value class SwipeState internal constructor(
+    private val offsetLazy: Lazy<Animatable<Float, AnimationVector1D>> = lazy { acquire() }
 ) {
+    internal val offset get() = offsetLazy.value
+
     private companion object {
         private val animatables = mutableListOf<Animatable<Float, AnimationVector1D>>()
         private val coroutineScope = CoroutineScope(Dispatchers.IO)
@@ -60,13 +66,21 @@ data class SwipeState internal constructor(
 
     @Composable
     fun calculateOffset(bounds: ClosedRange<Dp>? = null) =
-        offset.value.px.dp.let { if (bounds != null) it.coerceIn(bounds) else it }
+        offset.value.px.dp.let { if (bounds == null) it else it.coerceIn(bounds) }
 
     internal fun recycle() = recycle(offset)
 }
 
 @Composable
-fun rememberSwipeState(key: Any?) = remember(key) { SwipeState() }
+fun rememberSwipeState(key: Any?): SwipeState {
+    val state = remember(key) { SwipeState() }
+    DisposableEffect(Unit) {
+        onDispose {
+            state.recycle()
+        }
+    }
+    return state
+}
 
 fun Modifier.onSwipe(
     state: SwipeState? = null,

@@ -82,6 +82,7 @@ import it.vfsfitvnm.vimusic.utils.secondary
 import it.vfsfitvnm.vimusic.utils.semiBold
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlin.time.Duration.Companion.milliseconds
 
 private val Song.formattedTotalPlayTime: String
     @Composable get() {
@@ -289,12 +290,16 @@ fun HomeSongs(
                         )
                         .animateItemPlacement()
                         .let {
-                            if (!song.isLocal && AppearancePreferences.swipeToHideSong) it.swipeToClose {
-                                binder?.cache?.removeResource(song.id)
-                                transaction {
-                                    Database.delete(song)
+                            if (!song.isLocal && AppearancePreferences.swipeToHideSong) it.swipeToClose(
+                                key = filteredItems,
+                                onClose = { animationJob ->
+                                    binder?.cache?.removeResource(song.id)
+                                    transaction {
+                                        Database.delete(song)
+                                    }
+                                    animationJob.join()
                                 }
-                            } else it
+                            ) else it
                         },
                     song = song,
                     thumbnailSize = Dimensions.thumbnails.song,
