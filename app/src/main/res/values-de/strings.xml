@@ -120,7 +120,7 @@
     <string name="error_piped_instances_unavailable">Liste der Piped-Instanzen ist derzeit nicht verfügbar.</string>
     <string name="error_bassboost_init">Es ist ein Fehler bei der Initialisierung von Bass Boost aufgetreten. Wahrscheinlich unterstützt Ihr Gerät diese Funktion nicht. Ändern Sie den Bassverstärkungspegel oder versuchen Sie es erneut.</string>
     <string name="error_pre_cache">An unknown error occurred during pre-caching. Please try again.</string>
-    
+
     <string name="media_permission_declined">Berechtigung abgelehnt, bitte erteilen Sie die Medienberechtigung in den Einstellungen Ihres Geräts.</string>
     <string name="open_settings">Einstellungen öffnen</string>
     <string name="no_items_found">Keine Elemente gefunden</string>
@@ -173,7 +173,7 @@
     <string name="search_placeholder">Suchen…</string>
     <string name="format_version_credits">v%1$s von vfsfitvnm</string>
     <string name="social">Soziales</string>
-     <string name="contact">Kontakt</string>
+    <string name="contact">Kontakt</string>
     <string name="github">GitHub</string>
     <string name="view_source">Den Quellcode anzeigen</string>
     <string name="report_bug">Ein Problem melden</string>
@@ -347,17 +347,17 @@
     <string name="new_version_available">Eine neue Version ist verfügbar</string>
     <string name="more_information">Weitere Informationen</string>
     <string name="up_to_date">Sie sind derzeit auf dem neuesten Stand: keine Updates verfügbar</string>
-    
+
     <plurals name="format_reset_blacklist_description">
         <item quantity="one">Entferne %1$s Lied von der schwarzen Liste</item>
         <item quantity="other">Alle %1$s Songs von der Schwarzen Liste entfernen</item>
     </plurals>
 
-       <plurals name="format_reset_quick_picks_amount">
+    <plurals name="format_reset_quick_picks_amount">
         <item quantity="one">Wiedergabeereignis %1$s löschen</item>
         <item quantity="other">%1$s Wiedergabeereignisse löschen</item>
     </plurals>
-    
+
     <plurals name="song_count_plural">
         <item quantity="one">%1$d Lied</item>
         <item quantity="other">%1$d Lieder</item>
