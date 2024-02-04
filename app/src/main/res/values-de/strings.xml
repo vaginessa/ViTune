@@ -340,6 +340,14 @@
     <string name="swipe_to_hide_song">Wischen, um Lied zu löschen</string>
     <string name="swipe_to_hide_song_description">Wenn Sie einen Titel nach links wischen, wird er aus der Datenbank und dem Zwischenspeicher entfernt.</string>
 
+    <string name="version">Version</string>
+    <string name="check_new_version">Nach Updates suchen</string>
+    <string name="current_version">Sie verwenden derzeit die Version v%1$s</string>
+    <string name="error_github">Beim Abrufen von Daten von GitHub ist ein unbekannter Fehler aufgetreten</string>
+    <string name="new_version_available">Eine neue Version ist verfügbar</string>
+    <string name="more_information">Weitere Informationen</string>
+    <string name="up_to_date">Sie sind derzeit auf dem neuesten Stand: keine Updates verfügbar</string>
+    
     <plurals name="format_reset_blacklist_description">
         <item quantity="one">Entferne %1$s Lied von der schwarzen Liste</item>
         <item quantity="other">Alle %1$s Songs von der Schwarzen Liste entfernen</item>
