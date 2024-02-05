@@ -45,11 +45,13 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.C
@@ -403,17 +405,20 @@ private fun ContentDrawScope.drawScrubber(
     val scrubberPosition = if (range.endInclusive < range.start) 0f
     else (position - range.start) / (range.endInclusive - range.start).toFloat() * size.width
 
+    val widthPx = 5.dp.toPx()
+    val heightPx = height.toPx()
+
     drawRoundRect(
         color = color,
         topLeft = Offset(
-            x = scrubberPosition - 5f,
-            y = (size.height - height.toPx()) / 2f
+            x = scrubberPosition - widthPx / 2,
+            y = (size.height - heightPx) / 2f
         ),
         size = Size(
-            width = 10f,
-            height = height.toPx()
+            width = widthPx,
+            height = heightPx
         ),
-        cornerRadius = CornerRadius(5f)
+        cornerRadius = CornerRadius(widthPx / 2)
     )
 }
 
@@ -454,9 +459,15 @@ private fun WavySeekBarContent(
                 .align(Alignment.CenterStart)
         ) {
             drawPath(
-                wavePath(size.copy(height = size.height * 2), progress),
-                color,
-                style = Stroke(width = 5f)
+                path = wavePath(
+                    size = size,
+                    progress = progress
+                ),
+                color = color,
+                style = Stroke(
+                    width = 3.dp.toPx(),
+                    cap = StrokeCap.Round
+                )
             )
         }
     }
@@ -500,14 +511,22 @@ private fun Duration(
     }
 }
 
-private fun wavePath(size: Size, progress: Float) = Path().apply {
-    fun f(x: Float) = (sin(x / 15f + progress * 2 * PI.toFloat()) + 1) * size.height / 2f
+private fun Density.wavePath(
+    size: Size,
+    progress: Float,
+    quality: Int = 1
+) = Path().apply {
+    val (width, height) = size
+    val progressTau = progress * 2 * PI.toFloat()
+    val scale = 7.dp.toPx()
+
+    fun f(x: Float) = (sin(x / scale + progressTau) + 0.5f) * height
 
     moveTo(0f, f(0f))
-    var currentX = 0f
 
-    while (currentX < size.width) {
-        lineTo(currentX, f(currentX))
-        currentX += 1
+    var x = 0f
+    while (x < width) {
+        lineTo(x, f(x))
+        x += quality
     }
 }
