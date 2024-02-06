@@ -73,7 +73,10 @@ import androidx.media3.extractor.DefaultExtractorsFactory
 import it.vfsfitvnm.innertube.Innertube
 import it.vfsfitvnm.innertube.models.NavigationEndpoint
 import it.vfsfitvnm.innertube.models.bodies.PlayerBody
+import it.vfsfitvnm.innertube.models.bodies.SearchBody
 import it.vfsfitvnm.innertube.requests.player
+import it.vfsfitvnm.innertube.requests.searchPage
+import it.vfsfitvnm.innertube.utils.from
 import it.vfsfitvnm.vimusic.Database
 import it.vfsfitvnm.vimusic.MainActivity
 import it.vfsfitvnm.vimusic.R
@@ -100,11 +103,13 @@ import it.vfsfitvnm.vimusic.utils.forceSeekToNext
 import it.vfsfitvnm.vimusic.utils.forceSeekToPrevious
 import it.vfsfitvnm.vimusic.utils.intent
 import it.vfsfitvnm.vimusic.utils.isAtLeastAndroid10
+import it.vfsfitvnm.vimusic.utils.isAtLeastAndroid12
 import it.vfsfitvnm.vimusic.utils.isAtLeastAndroid13
 import it.vfsfitvnm.vimusic.utils.isAtLeastAndroid6
 import it.vfsfitvnm.vimusic.utils.isAtLeastAndroid8
 import it.vfsfitvnm.vimusic.utils.mediaItems
 import it.vfsfitvnm.vimusic.utils.shouldBePlaying
+import it.vfsfitvnm.vimusic.utils.thumbnail
 import it.vfsfitvnm.vimusic.utils.timer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -151,7 +156,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
     private val stateBuilder
         get() = PlaybackState.Builder().setActions(
-            PlaybackState.ACTION_PLAY or
+            (PlaybackState.ACTION_PLAY or
                     PlaybackState.ACTION_PAUSE or
                     PlaybackState.ACTION_PLAY_PAUSE or
                     PlaybackState.ACTION_STOP or
@@ -159,7 +164,10 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                     PlaybackState.ACTION_SKIP_TO_NEXT or
                     PlaybackState.ACTION_SKIP_TO_QUEUE_ITEM or
                     PlaybackState.ACTION_SEEK_TO or
-                    PlaybackState.ACTION_REWIND
+                    PlaybackState.ACTION_REWIND or
+                    PlaybackState.ACTION_PLAY_FROM_SEARCH).let {
+                if (isAtLeastAndroid12) it or PlaybackState.ACTION_SET_PLAYBACK_SPEED else it
+            }
         ).addCustomAction(
             /* action = */ "LIKE",
             /* name   = */ "Like",
@@ -249,6 +257,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         mediaSession = MediaSession(baseContext, "PlayerService")
         mediaSession.setCallback(SessionCallback(player))
         mediaSession.setPlaybackState(stateBuilder.build())
+        mediaSession.setSessionActivity(activityPendingIntent<MainActivity>())
         mediaSession.isActive = true
 
         coroutineScope.launch {
@@ -606,6 +615,10 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             bitmapProvider.bitmap else null
 
         metadataBuilder.putBitmap(MediaMetadata.METADATA_KEY_ART, bitmap)
+        metadataBuilder.putString(
+            MediaMetadata.METADATA_KEY_ART_URI,
+            player.mediaMetadata.artworkUri?.toString()?.thumbnail(512)
+        )
 
         if (isAtLeastAndroid13 && player.currentMediaItemIndex == 0) metadataBuilder.putText(
             MediaMetadata.METADATA_KEY_TITLE,
@@ -690,9 +703,18 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
     override fun onEvents(player: Player, events: Player.Events) {
         if (player.duration != C.TIME_UNSET) mediaSession.setMetadata(
             metadataBuilder
-                .putText(MediaMetadata.METADATA_KEY_TITLE, player.mediaMetadata.title)
-                .putText(MediaMetadata.METADATA_KEY_ARTIST, player.mediaMetadata.artist)
-                .putText(MediaMetadata.METADATA_KEY_ALBUM, player.mediaMetadata.albumTitle)
+                .putText(
+                    MediaMetadata.METADATA_KEY_TITLE,
+                    player.mediaMetadata.title?.toString().orEmpty()
+                )
+                .putText(
+                    MediaMetadata.METADATA_KEY_ARTIST,
+                    player.mediaMetadata.artist?.toString().orEmpty()
+                )
+                .putText(
+                    MediaMetadata.METADATA_KEY_ALBUM,
+                    player.mediaMetadata.albumTitle?.toString().orEmpty()
+                )
                 .putLong(MediaMetadata.METADATA_KEY_DURATION, player.duration)
                 .build()
         )
@@ -987,6 +1009,18 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
         fun isCached(song: SongWithContentLength) =
             song.contentLength?.let { cache.isCached(song.song.id, 0L, it) } ?: false
+
+        fun playFromSearch(query: String) {
+            coroutineScope.launch {
+                Innertube.searchPage(
+                    body = SearchBody(
+                        query = query,
+                        params = Innertube.SearchFilter.Song.value
+                    ),
+                    fromMusicShelfRendererContent = Innertube.SongItem.Companion::from
+                )?.getOrNull()?.items?.firstOrNull()?.info?.endpoint?.let { playRadio(it) }
+            }
+        }
     }
 
     private fun likeAction() = mediaItemState.value?.let { mediaItem ->
@@ -1008,6 +1042,15 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         override fun onRewind() = player.seekToDefaultPosition()
         override fun onSkipToQueueItem(id: Long) =
             runCatching { player.seekToDefaultPosition(id.toInt()) }.let { }
+
+        override fun onSetPlaybackSpeed(speed: Float) {
+            PlayerPreferences.speed = speed.coerceIn(0.01f..2f)
+        }
+
+        override fun onPlayFromSearch(query: String?, extras: Bundle?) {
+            if (query.isNullOrBlank()) return
+            binder.playFromSearch(query)
+        }
 
         override fun onCustomAction(action: String, extras: Bundle?) {
             super.onCustomAction(action, extras)

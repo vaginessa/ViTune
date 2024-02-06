@@ -225,6 +225,10 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
         override fun onSkipToNext() = binder.player.forceSeekToNext()
         override fun onSeekTo(pos: Long) = binder.player.seekTo(pos)
         override fun onSkipToQueueItem(id: Long) = binder.player.seekToDefaultPosition(id.toInt())
+        override fun onPlayFromSearch(query: String?, extras: Bundle?) {
+            if (query.isNullOrBlank()) return
+            binder.playFromSearch(query)
+        }
 
         @OptIn(UnstableApi::class)
         override fun onPlayFromMediaId(mediaId: String?, extras: Bundle?) {
