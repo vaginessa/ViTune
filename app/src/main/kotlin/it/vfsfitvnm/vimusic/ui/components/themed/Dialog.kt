@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import it.vfsfitvnm.vimusic.R
@@ -198,6 +199,7 @@ fun DefaultDialog(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     horizontalAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
+    horizontalPadding: Dp = 24.dp,
     content: @Composable ColumnScope.() -> Unit
 ) = Dialog(onDismissRequest = onDismiss) {
     Column(
@@ -208,7 +210,10 @@ fun DefaultDialog(
                 color = LocalAppearance.current.colorPalette.background1,
                 shape = RoundedCornerShape(8.dp)
             )
-            .padding(horizontal = 24.dp, vertical = 16.dp),
+            .padding(
+                horizontal = horizontalPadding,
+                vertical = 16.dp
+            ),
         content = content
     )
 }

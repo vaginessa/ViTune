@@ -218,9 +218,12 @@ fun Lyrics(
             }
         )
 
-        if (isPicking && isShowingSynchronizedLyrics) DefaultDialog(onDismiss = {
-            isPicking = false
-        }) {
+        if (isPicking && isShowingSynchronizedLyrics) DefaultDialog(
+            onDismiss = {
+                isPicking = false
+            },
+            horizontalPadding = 0.dp
+        ) {
             val tracks = remember { mutableStateListOf<Track>() }
             var loading by remember { mutableStateOf(true) }
             var error by remember { mutableStateOf(false) }
