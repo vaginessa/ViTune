@@ -6,14 +6,15 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import kotlin.math.roundToInt
 
+@Suppress("NOTHING_TO_INLINE")
 @JvmInline
 value class Px(val value: Int) {
-    val dp @Composable get() = dp(LocalDensity.current)
-    fun dp(density: Density) = with(density) { value.toDp() }
+    inline val dp @Composable get() = dp(LocalDensity.current)
+    inline fun dp(density: Density) = with(density) { value.toDp() }
 }
 
-val Int.px get() = Px(value = this)
-val Float.px get() = Px(value = roundToInt())
+inline val Int.px inline get() = Px(value = this)
+inline val Float.px inline get() = roundToInt().px
 
 inline val Dp.px: Int
     @Composable
