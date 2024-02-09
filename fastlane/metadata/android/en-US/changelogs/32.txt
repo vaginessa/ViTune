@@ -1,0 +1,11 @@
+* Added update check in Settings -> About
+* Fixed issues with reordering
+* Changed some corner rounding values
+* Fixed inconsistencies with all bottom sheets
+* Fixed visual glitch with pre-cache progress bar
+* Fixed some performance issues
+* Fixed visual glitch while scrolling synchronized lyrics
+* Fixed visual glitch with removing songs from queue/Songs tab
+* Added 'pinch to enlarge' lyrics
+* Fixed inconsistencies with the wavy seek bar and improved look
+* Fixed padding in lyrics picker dialog
