@@ -514,7 +514,7 @@ private fun Duration(
 private fun Density.wavePath(
     size: Size,
     progress: Float,
-    quality: Int = 1
+    quality: Float = PlayerPreferences.wavySeekBarQuality.quality
 ) = Path().apply {
     val (width, height) = size
     val progressTau = progress * 2 * PI.toFloat()
@@ -529,4 +529,5 @@ private fun Density.wavePath(
         lineTo(x, f(x))
         x += quality
     }
+    lineTo(width, f(width))
 }

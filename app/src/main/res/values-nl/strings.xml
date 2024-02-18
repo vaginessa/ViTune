@@ -331,6 +331,13 @@
     <string name="seek_bar_style">Stijl van de zoekbalk</string>
     <string name="static_seek_bar_name">Statisch</string>
     <string name="wavy_seek_bar_name">Golvend</string>
+    <string name="seek_bar_quality">Kwaliteit van de golvende zoekbalk</string>
+    <string name="seek_bar_quality_poor">Slecht</string>
+    <string name="seek_bar_quality_low">Laag</string>
+    <string name="seek_bar_quality_medium">Gemiddeld</string>
+    <string name="seek_bar_quality_high">Hoog</string>
+    <string name="seek_bar_quality_great">Fantastisch</string>
+    <string name="seek_bar_quality_subpixel">Subpixel</string>
 
     <string name="remove_from_blacklist">Haal van de zwarte lijst af</string>
     <string name="add_to_blacklist">Voeg toe aan de zwarte lijst</string>

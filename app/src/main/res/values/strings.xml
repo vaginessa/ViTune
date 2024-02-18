@@ -331,6 +331,13 @@
     <string name="seek_bar_style">Seek bar style</string>
     <string name="static_seek_bar_name">Static</string>
     <string name="wavy_seek_bar_name">Wavy</string>
+    <string name="seek_bar_quality">Wavy seek bar quality</string>
+    <string name="seek_bar_quality_poor">Poor</string>
+    <string name="seek_bar_quality_low">Low</string>
+    <string name="seek_bar_quality_medium">Medium</string>
+    <string name="seek_bar_quality_high">High</string>
+    <string name="seek_bar_quality_great">Great</string>
+    <string name="seek_bar_quality_subpixel">Subpixel</string>
 
     <string name="remove_from_blacklist">Remove from blacklist</string>
     <string name="add_to_blacklist">Add to blacklist</string>
