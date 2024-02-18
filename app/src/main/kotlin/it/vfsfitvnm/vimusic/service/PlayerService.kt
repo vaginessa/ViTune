@@ -223,7 +223,11 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         super.onCreate()
 
         bitmapProvider = BitmapProvider(
-            bitmapSize = (512 * resources.displayMetrics.density).roundToInt(),
+            getBitmapSize = {
+                (512 * resources.displayMetrics.density)
+                    .roundToInt()
+                    .coerceAtMost(AppearancePreferences.maxThumbnailSize)
+            },
             getColor = { isSystemInDarkMode ->
                 if (isSystemInDarkMode) Color.BLACK else Color.WHITE
             }

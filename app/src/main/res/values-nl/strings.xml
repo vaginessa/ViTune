@@ -7,6 +7,7 @@
     <string name="format_db">%1$s dB</string>
     <string name="format_kbps">%1$s kb/s</string>
     <string name="format_ms">%1$s ms</string>
+    <string name="format_px">%1$s pixels</string>
 
     <string name="format_go_to_artist">Meer van %1$s</string>
     <string name="format_top_playlist">Top %1$s</string>
@@ -348,6 +349,10 @@
     <string name="new_version_available">Er is een nieuwe versie beschikbaar</string>
     <string name="more_information">Meer informatie</string>
     <string name="up_to_date">Je bent up-to-date: er is geen update beschikbaar</string>
+
+    <string name="dynamic_thumbnails">Dynamische miniaturen</string>
+    <string name="max_dynamic_thumbnail_size">Maximale dynamische miniatuurgrootte</string>
+    <string name="max_dynamic_thumbnail_size_description">De maximale grootte van een miniatuur wanneer een dynamische miniatuur wordt gebruikt</string>
 
     <plurals name="format_reset_blacklist_description">
         <item quantity="one">Haal %1$s nummer van de zwarte lijst</item>

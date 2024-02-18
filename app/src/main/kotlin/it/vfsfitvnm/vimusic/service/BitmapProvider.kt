@@ -13,7 +13,7 @@ import it.vfsfitvnm.vimusic.utils.thumbnail
 
 context(Context)
 class BitmapProvider(
-    private val bitmapSize: Int,
+    private val getBitmapSize: () -> Int,
     private val getColor: (isDark: Boolean) -> Int
 ) {
     var lastUri: Uri? = null
@@ -47,9 +47,10 @@ class BitmapProvider(
 
         lastIsSystemInDarkMode = isSystemInDarkMode
 
+        val size = getBitmapSize()
         defaultBitmap = Bitmap.createBitmap(
-            /* width = */ bitmapSize,
-            /* height = */ bitmapSize,
+            /* width = */ size,
+            /* height = */ size,
             /* config = */ Bitmap.Config.ARGB_8888
         ).applyCanvas {
             drawColor(getColor(isSystemInDarkMode))
@@ -66,7 +67,7 @@ class BitmapProvider(
 
         lastEnqueued = applicationContext.imageLoader.enqueue(
             ImageRequest.Builder(applicationContext)
-                .data(uri.thumbnail(bitmapSize))
+                .data(uri.thumbnail(getBitmapSize()))
                 .allowHardware(false)
                 .listener(
                     onError = { _, _ ->

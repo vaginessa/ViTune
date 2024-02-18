@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SnapshotMutationPolicy
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -36,11 +37,13 @@ import it.vfsfitvnm.vimusic.Database
 import it.vfsfitvnm.vimusic.DatabaseInitializer
 import it.vfsfitvnm.vimusic.LocalPlayerServiceBinder
 import it.vfsfitvnm.vimusic.R
+import it.vfsfitvnm.vimusic.preferences.AppearancePreferences
 import it.vfsfitvnm.vimusic.preferences.DataPreferences
 import it.vfsfitvnm.vimusic.preferences.PlayerPreferences
 import it.vfsfitvnm.vimusic.query
 import it.vfsfitvnm.vimusic.service.PlayerMediaBrowserService
 import it.vfsfitvnm.vimusic.ui.components.themed.SecondaryTextButton
+import it.vfsfitvnm.vimusic.ui.components.themed.SliderDialog
 import it.vfsfitvnm.vimusic.ui.screens.Route
 import it.vfsfitvnm.vimusic.utils.findActivity
 import it.vfsfitvnm.vimusic.utils.isAtLeastAndroid12
@@ -50,6 +53,7 @@ import it.vfsfitvnm.vimusic.utils.toast
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 import kotlin.system.exitProcess
 
 @SuppressLint("BatteryLife")
@@ -149,6 +153,34 @@ fun OtherSettings() {
                 selectedValue = DataPreferences.quickPicksSource,
                 onValueSelected = { DataPreferences.quickPicksSource = it },
                 valueText = { it.displayName() }
+            )
+        }
+        SettingsGroup(title = stringResource(R.string.dynamic_thumbnails)) {
+            var selectingThumbnailSize by remember { mutableStateOf(false) }
+            SettingsEntry(
+                title = stringResource(R.string.max_dynamic_thumbnail_size),
+                text = stringResource(R.string.max_dynamic_thumbnail_size_description),
+                onClick = {
+                    selectingThumbnailSize = true
+                }
+            )
+            if (selectingThumbnailSize) SliderDialog(
+                onDismiss = { selectingThumbnailSize = false },
+                title = stringResource(R.string.max_dynamic_thumbnail_size),
+                provideState = {
+                    remember(AppearancePreferences.maxThumbnailSize) {
+                        mutableFloatStateOf(AppearancePreferences.maxThumbnailSize.toFloat())
+                    }
+                },
+                onSlideCompleted = { AppearancePreferences.maxThumbnailSize = it.roundToInt() },
+                min = 16f,
+                max = 2160f,
+                toDisplay = {
+                    stringResource(
+                        R.string.format_px,
+                        it.roundToInt()
+                    )
+                }
             )
         }
         SettingsGroup(title = stringResource(R.string.service_lifetime)) {
