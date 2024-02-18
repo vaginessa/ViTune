@@ -5,6 +5,9 @@ body:
   - type: markdown
     attributes:
       value: |
+        Thank you for filling out this issue template. If you meant to submit a suggestion, feature request, etc., please fill out the [appropriate template](https://github.com/25huizengek1/ViMusic/issues/new/choose).
+        Please do not submit a bug report for a network issue, unless it's an issue specific to ViMusic.
+
         ## ⚠️ Make sure you are able to reproduce the bug with the [latest version](https://github.com/25huizengek1/ViMusic/releases/latest).
         ## ⚠️ Make sure there is no issue about this bug already.
 
@@ -43,11 +46,11 @@ body:
       required: true
 
   - type: textarea
-    id: sreen-media
+    id: screen-media
     attributes:
       label: Screenshots/Screen recordings
       description: |
-        A picture or video helps us understand the bug more.
+        A picture or screen recording helps us understand the bug more.
 
         You can upload them directly in the text box.
 
@@ -56,7 +59,12 @@ body:
     attributes:
       label: Logs
       description: |
-        If your bug includes a crash, please use `adb logcat` or other ways to provide logs.
+        If your bug includes a crash, please use include logs in your issue.
+
+        To capture logs, you can use `adb logcat`, or, if you have root access on your device or installed [Shizuku](https://shizuku.rikka.app), you can use a logger of your choice, for example: [LogFox](https://github.com/F0x1d/LogFox) to record logs.
+        If you can, please filter on ViMusic (`it.vfsfitvnm.vimusic`/`it.vfsfitvnm.vimusic.nightly`) to unclutter the logs a bit.
+
+        When submitting these logs here, please upload them as a file or upload them on [Pastebin](https://pastebin.com/). This way the issue ticket won't end up looking like a total mess.
   
   - type: input
     id: vimusic-version
@@ -64,6 +72,18 @@ body:
       label: ViMusic version
       placeholder: |
         Example: "v0.6.4"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: vimusic-version-type
+    attributes:
+      label: What kind of build are you using?
+      description: If you are using a debug build, please provide the exact commit hash above.
+      options:
+        - "Release (GitHub / F-Droid)"
+        - "Nightly (F-Droid)"
+        - "Debug (self-built / unsigned from source)"
     validations:
       required: true
 
@@ -79,8 +99,36 @@ body:
       required: true
 
   - type: textarea
+    id: device-info
+    attributes:
+      label: Device info
+      description: |
+        Please specify the brand/series/model of your device and the OS build, if unsure, it's probably an OEM build
+      placeholder: |
+        Examples:
+          "I am using the Google Pixel 8 Pro, running stock Android 14."
+          "I am using the Samsung Galaxy S24 Ultra, running One UI."
+          "I am using the Nothing Phone 2, running Nothing OS."
+    validations:
+      required: true
+
+  - type: textarea
     id: additional-information
     attributes:
       label: Additional information
       placeholder: |
-        Additional details and attachments.
+        Additional details and attachments. If relevant, you should provide a database export here.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      description: This makes sure that common problems and mistakes can be avoided
+      options:
+        - label: I am able to reach YouTube Music through the **official** app/website and can confirm that I live in a [supported country](https://support.google.com/youtubemusic/answer/6313540?hl=en) (and this country is not temporarily unavailable)
+          required: true
+        - label: I am not using a proxy, VPN, device policy or anything else that restricts access to YouTube Music
+          required: true
+        - label: This issue has not been submitted already (this is not a duplicate of another issue)
+          required: true
+        - label: This issue is also reproducible with [vfsfitvnm/ViMusic](https://github.com/vfsfitvnm/ViMusic) (optional)
