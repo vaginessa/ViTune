@@ -23,7 +23,8 @@ data class ColorPalette(
     val text: Color,
     val textSecondary: Color,
     val textDisabled: Color,
-    val isDark: Boolean
+    val isDark: Boolean,
+    val isAmoled: Boolean
 ) {
     companion object : Saver<ColorPalette, List<Any>> {
         override fun restore(value: List<Any>) = when (val accent = value[0] as Int) {
@@ -31,21 +32,22 @@ data class ColorPalette(
             1 -> DefaultLightColorPalette
             2 -> PureBlackColorPalette
             else -> dynamicColorPaletteOf(
-                FloatArray(3).apply { ColorUtils.colorToHSL(accent, this) },
-                value[1] as Boolean
+                accentColor = accent,
+                isDark = value[1] as Boolean,
+                isAmoled = value[2] as Boolean
             )
         }
 
-        override fun SaverScope.save(value: ColorPalette) =
-            listOf(
-                when {
-                    value === DefaultDarkColorPalette -> 0
-                    value === DefaultLightColorPalette -> 1
-                    value === PureBlackColorPalette -> 2
-                    else -> value.accent.toArgb()
-                },
-                value.isDark
-            )
+        override fun SaverScope.save(value: ColorPalette) = listOf(
+            when {
+                value === DefaultDarkColorPalette -> 0
+                value === DefaultLightColorPalette -> 1
+                value === PureBlackColorPalette -> 2
+                else -> value.accent.toArgb()
+            },
+            value.isDark,
+            value.isAmoled
+        )
     }
 }
 
@@ -58,7 +60,8 @@ val DefaultDarkColorPalette = ColorPalette(
     textDisabled = Color(0xff6f6f73),
     accent = Color(0xff5055c0),
     onAccent = Color.White,
-    isDark = true
+    isDark = true,
+    isAmoled = false
 )
 
 val DefaultLightColorPalette = ColorPalette(
@@ -70,7 +73,8 @@ val DefaultLightColorPalette = ColorPalette(
     textDisabled = Color(0xff9d9d9d),
     accent = Color(0xff5055c0),
     onAccent = Color.White,
-    isDark = false
+    isDark = false,
+    isAmoled = false
 )
 
 val PureBlackColorPalette = DefaultDarkColorPalette.copy(
@@ -82,21 +86,24 @@ val PureBlackColorPalette = DefaultDarkColorPalette.copy(
 fun colorPaletteOf(
     name: ColorPaletteName,
     mode: ColorPaletteMode,
-    isSystemInDarkMode: Boolean
+    isDark: Boolean
 ) = when (name) {
-    ColorPaletteName.Default, ColorPaletteName.Dynamic -> when (mode) {
+    ColorPaletteName.Default,
+    ColorPaletteName.Dynamic -> when (mode) {
         ColorPaletteMode.Light -> DefaultLightColorPalette
         ColorPaletteMode.Dark -> DefaultDarkColorPalette
-        ColorPaletteMode.System -> when (isSystemInDarkMode) {
-            true -> DefaultDarkColorPalette
-            false -> DefaultLightColorPalette
-        }
+        ColorPaletteMode.System -> if (isDark) DefaultDarkColorPalette else DefaultLightColorPalette
     }
 
     ColorPaletteName.PureBlack -> PureBlackColorPalette
+    ColorPaletteName.AMOLED -> PureBlackColorPalette.copy(isAmoled = true)
 }
 
-fun dynamicColorPaletteOf(bitmap: Bitmap, isDark: Boolean): ColorPalette? {
+fun dynamicColorPaletteOf(
+    bitmap: Bitmap,
+    isDark: Boolean,
+    isAmoled: Boolean
+): ColorPalette? {
     val palette = Palette
         .from(bitmap)
         .maximumColorCount(8)
@@ -113,43 +120,96 @@ fun dynamicColorPaletteOf(bitmap: Bitmap, isDark: Boolean): ColorPalette? {
         palette.dominantSwatch
     }?.hsl ?: return null
 
-    return if (hsl[1] < 0.08) {
-        val newHsl = palette.swatches
-            .map(Palette.Swatch::getHsl)
-            .sortedByDescending(FloatArray::component2)
-            .find { it[1] != 0f }
-            ?: hsl
-
-        dynamicColorPaletteOf(newHsl, isDark)
-    } else {
-        dynamicColorPaletteOf(hsl, isDark)
-    }
-}
-
-fun dynamicColorPaletteOf(hsl: FloatArray, isDark: Boolean): ColorPalette {
-    return colorPaletteOf(
-        ColorPaletteName.Dynamic,
-        if (isDark) ColorPaletteMode.Dark else ColorPaletteMode.Light,
-        false
-    ).copy(
-        background0 = Color.hsl(hsl[0], hsl[1].coerceAtMost(0.1f), if (isDark) 0.10f else 0.925f),
-        background1 = Color.hsl(hsl[0], hsl[1].coerceAtMost(0.3f), if (isDark) 0.15f else 0.90f),
-        background2 = Color.hsl(hsl[0], hsl[1].coerceAtMost(0.4f), if (isDark) 0.2f else 0.85f),
-        accent = Color.hsl(hsl[0], hsl[1].coerceAtMost(0.5f), 0.5f),
-        text = Color.hsl(hsl[0], hsl[1].coerceAtMost(0.02f), if (isDark) 0.88f else 0.12f),
-        textSecondary = Color.hsl(hsl[0], hsl[1].coerceAtMost(0.1f), if (isDark) 0.65f else 0.40f),
-        textDisabled = Color.hsl(hsl[0], hsl[1].coerceAtMost(0.2f), if (isDark) 0.40f else 0.65f)
+    return dynamicColorPaletteOf(
+        hsl = if (hsl[1] < 0.08)
+            palette.swatches
+                .map(Palette.Swatch::getHsl)
+                .sortedByDescending(FloatArray::component2)
+                .find { it[1] != 0f }
+                ?: hsl
+        else hsl,
+        isDark = isDark,
+        isAmoled = isAmoled
     )
 }
 
-inline val ColorPalette.isDefault get() =
-    this === DefaultDarkColorPalette || this === DefaultLightColorPalette || this === PureBlackColorPalette
+fun dynamicColorPaletteOf(
+    hsl: FloatArray,
+    isDark: Boolean,
+    isAmoled: Boolean
+) = hsl.let { (hue, saturation) ->
+    colorPaletteOf(
+        name = if (isAmoled) ColorPaletteName.AMOLED else ColorPaletteName.Dynamic,
+        mode = if (isDark || isAmoled) ColorPaletteMode.Dark else ColorPaletteMode.Light,
+        isDark = false
+    ).copy(
+        background0 = if (isAmoled) PureBlackColorPalette.background0 else Color.hsl(
+            hue = hue,
+            saturation = saturation.coerceAtMost(0.1f),
+            lightness = if (isDark) 0.10f else 0.925f
+        ),
+        background1 = if (isAmoled) PureBlackColorPalette.background1 else Color.hsl(
+            hue = hue,
+            saturation = saturation.coerceAtMost(0.3f),
+            lightness = if (isDark) 0.15f else 0.90f
+        ),
+        background2 = if (isAmoled) PureBlackColorPalette.background2 else Color.hsl(
+            hue = hue,
+            saturation = saturation.coerceAtMost(0.4f),
+            lightness = if (isDark) 0.2f else 0.85f
+        ),
+        accent = Color.hsl(
+            hue = hue,
+            saturation = saturation.coerceAtMost(if (isAmoled) 0.4f else 0.5f),
+            lightness = 0.5f
+        ),
+        text = if (isAmoled) PureBlackColorPalette.text else Color.hsl(
+            hue = hue,
+            saturation = saturation.coerceAtMost(0.02f),
+            lightness = if (isDark) 0.88f else 0.12f
+        ),
+        textSecondary = if (isAmoled) PureBlackColorPalette.textSecondary else Color.hsl(
+            hue = hue,
+            saturation = saturation.coerceAtMost(0.1f),
+            lightness = if (isDark) 0.65f else 0.40f
+        ),
+        textDisabled = if (isAmoled) PureBlackColorPalette.textDisabled else Color.hsl(
+            hue = hue,
+            saturation = saturation.coerceAtMost(0.2f),
+            lightness = if (isDark) 0.40f else 0.65f
+        )
+    )
+}
+
+fun dynamicColorPaletteOf(
+    accentColor: Color,
+    isDark: Boolean,
+    isAmoled: Boolean
+) = dynamicColorPaletteOf(
+    accentColor = accentColor.toArgb(),
+    isDark = isDark,
+    isAmoled = isAmoled
+)
+
+fun dynamicColorPaletteOf(
+    accentColor: Int,
+    isDark: Boolean,
+    isAmoled: Boolean
+) = dynamicColorPaletteOf(
+    hsl = FloatArray(3).apply { ColorUtils.colorToHSL(accentColor, this) },
+    isDark = isDark,
+    isAmoled = isAmoled
+)
+
+inline val ColorPalette.isDefault
+    get() =
+        this === DefaultDarkColorPalette || this === DefaultLightColorPalette || this === PureBlackColorPalette
 
 inline val ColorPalette.collapsedPlayerProgressBar get() = if (isDefault) text else accent
 inline val ColorPalette.favoritesIcon get() = if (isDefault) red else accent
 inline val ColorPalette.shimmer get() = if (isDefault) Color(0xff838383) else accent
-inline val ColorPalette.primaryButton get() =
-    (if (this === PureBlackColorPalette) Color(0xFF272727) else background2)
+inline val ColorPalette.primaryButton
+    get() = if (this === PureBlackColorPalette || isAmoled) Color(0xFF272727) else background2
 
 @Suppress("UnusedReceiverParameter")
 inline val ColorPalette.overlay get() = PureBlackColorPalette.background0.copy(alpha = 0.75f)

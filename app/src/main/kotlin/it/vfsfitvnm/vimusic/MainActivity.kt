@@ -101,7 +101,9 @@ import it.vfsfitvnm.vimusic.utils.isAtLeastAndroid8
 import it.vfsfitvnm.vimusic.utils.isCompositionLaunched
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -150,7 +152,7 @@ class MainActivity : ComponentActivity() {
                     val colorPalette = colorPaletteOf(
                         name = colorPaletteName,
                         mode = colorPaletteMode,
-                        isSystemInDarkMode = isSystemInDarkTheme
+                        isDark = isSystemInDarkTheme
                     )
 
                     setSystemBarAppearance(colorPalette.isDark)
@@ -173,16 +175,19 @@ class MainActivity : ComponentActivity() {
                 var bitmapListenerJob: Job? = null
                 var appearanceUpdaterJob: Job? = null
 
-                fun setDynamicPalette(colorPaletteMode: ColorPaletteMode) {
-                    val isDark = colorPaletteMode == ColorPaletteMode.Dark ||
-                            colorPaletteMode == ColorPaletteMode.System && isSystemInDarkTheme
+                fun setDynamicPalette(
+                    name: ColorPaletteName,
+                    mode: ColorPaletteMode
+                ) {
+                    val isDark = mode == ColorPaletteMode.Dark ||
+                            mode == ColorPaletteMode.System && isSystemInDarkTheme
 
                     binder?.setBitmapListener { bitmap: Bitmap? ->
                         if (bitmap == null) {
                             val colorPalette = colorPaletteOf(
-                                name = ColorPaletteName.Dynamic,
-                                mode = colorPaletteMode,
-                                isSystemInDarkMode = isSystemInDarkTheme
+                                name = name,
+                                mode = mode,
+                                isDark = isSystemInDarkTheme
                             )
 
                             setSystemBarAppearance(colorPalette.isDark)
@@ -196,7 +201,11 @@ class MainActivity : ComponentActivity() {
                         }
 
                         bitmapListenerJob = coroutineScope.launch(Dispatchers.IO) {
-                            dynamicColorPaletteOf(bitmap, isDark)?.let {
+                            dynamicColorPaletteOf(
+                                bitmap = bitmap,
+                                isDark = isDark,
+                                isAmoled = name == ColorPaletteName.AMOLED
+                            )?.let {
                                 withContext(Dispatchers.Main) {
                                     setSystemBarAppearance(it.isDark)
                                 }
@@ -210,19 +219,29 @@ class MainActivity : ComponentActivity() {
                 }
 
                 with(AppearancePreferences) {
-                    if (colorPaletteName == ColorPaletteName.Dynamic)
-                        setDynamicPalette(colorPaletteMode)
+                    fun setPalette(): Boolean {
+                        if (colorPaletteName != ColorPaletteName.Dynamic && colorPaletteName != ColorPaletteName.AMOLED)
+                            return false
+
+                        setDynamicPalette(colorPaletteName, colorPaletteMode)
+                        return true
+                    }
+                    setPalette()
+
                     appearanceUpdaterJob = coroutineScope.launch {
                         launch {
-                            snapshotFlow { colorPaletteName to colorPaletteMode }.collectLatest { (name, mode) ->
-                                if (name == ColorPaletteName.Dynamic) setDynamicPalette(mode) else {
+                            combine(
+                                flow = colorPaletteNameProperty.stateFlow,
+                                flow2 = colorPaletteModeProperty.stateFlow
+                            ) { name, mode ->
+                                if (!setPalette()) {
                                     bitmapListenerJob?.cancel()
                                     binder?.setBitmapListener(null)
 
                                     val colorPalette = colorPaletteOf(
                                         name = name,
                                         mode = mode,
-                                        isSystemInDarkMode = isSystemInDarkTheme
+                                        isDark = isSystemInDarkTheme
                                     )
 
                                     setSystemBarAppearance(colorPalette.isDark)
@@ -232,15 +251,18 @@ class MainActivity : ComponentActivity() {
                                         typography = appearance.typography.copy(colorPalette.text)
                                     )
                                 }
-                            }
+                            }.collect()
                         }
                         launch {
-                            snapshotFlow { thumbnailRoundness }.collectLatest {
+                            thumbnailRoundnessProperty.stateFlow.collectLatest {
                                 appearance = appearance.copy(thumbnailShapeCorners = it.dp)
                             }
                         }
                         launch {
-                            snapshotFlow { useSystemFont to applyFontPadding }.collectLatest { (system, padding) ->
+                            combine(
+                                flow = useSystemFontProperty.stateFlow,
+                                flow2 = applyFontPaddingProperty.stateFlow
+                            ) { system, padding ->
                                 appearance = appearance.copy(
                                     typography = typographyOf(
                                         appearance.colorPalette.text,
@@ -370,10 +392,22 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    Player(
-                        layoutState = playerBottomSheetState,
-                        modifier = Modifier.align(Alignment.BottomCenter)
-                    )
+                    CompositionLocalProvider(
+                        LocalAppearance provides if (
+                            AppearancePreferences.colorPaletteName == ColorPaletteName.AMOLED
+                        ) appearance.copy(
+                            colorPalette = dynamicColorPaletteOf(
+                                accentColor = appearance.colorPalette.accent,
+                                isDark = true,
+                                isAmoled = false
+                            )
+                        ) else appearance
+                    ) {
+                        Player(
+                            layoutState = playerBottomSheetState,
+                            modifier = Modifier.align(Alignment.BottomCenter)
+                        )
+                    }
 
                     BottomSheetMenu(
                         state = LocalMenuState.current,

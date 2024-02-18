@@ -36,7 +36,8 @@ fun AppearanceSettings() = with(AppearancePreferences) {
             EnumValueSelectorSettingsEntry(
                 title = stringResource(R.string.theme_mode),
                 selectedValue = colorPaletteMode,
-                isEnabled = colorPaletteName != ColorPaletteName.PureBlack,
+                isEnabled = colorPaletteName != ColorPaletteName.PureBlack &&
+                        colorPaletteName != ColorPaletteName.AMOLED,
                 onValueSelected = { colorPaletteMode = it },
                 valueText = { it.nameLocalized }
             )
@@ -152,6 +153,7 @@ val ColorPaletteName.nameLocalized
             ColorPaletteName.Default -> R.string.theme_name_default
             ColorPaletteName.Dynamic -> R.string.theme_name_dynamic
             ColorPaletteName.PureBlack -> R.string.theme_name_pureblack
+            ColorPaletteName.AMOLED -> R.string.theme_name_amoled
         }
     )
 

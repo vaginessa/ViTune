@@ -185,6 +185,7 @@
     <string name="theme_name_default">Default</string>
     <string name="theme_name_dynamic">Dynamic</string>
     <string name="theme_name_pureblack">PureBlack</string>
+    <string name="theme_name_amoled">AMOLED</string>
 
     <string name="theme_mode">Theme mode</string>
     <string name="theme_mode_light">Light</string>
