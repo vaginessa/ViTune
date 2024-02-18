@@ -105,7 +105,10 @@ private fun onDismiss(binder: PlayerService.Binder) {
 fun Player(
     layoutState: BottomSheetState,
     modifier: Modifier = Modifier,
-    shape: RoundedCornerShape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
+    shape: RoundedCornerShape = RoundedCornerShape(
+        topStart = 12.dp,
+        topEnd = 12.dp
+    )
 ) {
     val menuState = LocalMenuState.current
 
@@ -482,7 +485,8 @@ fun Player(
                     )
                 },
                 backgroundColorProvider = { colorPalette.background2 },
-                modifier = Modifier.align(Alignment.BottomCenter)
+                modifier = Modifier.align(Alignment.BottomCenter),
+                shape = shape
             )
         }
     }

@@ -124,7 +124,11 @@ fun Queue(
     layoutState: BottomSheetState,
     beforeContent: @Composable RowScope.() -> Unit,
     afterContent: @Composable RowScope.() -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    shape: RoundedCornerShape = RoundedCornerShape(
+        topStart = 12.dp,
+        topEnd = 12.dp
+    )
 ) {
     val colorPalette = LocalAppearance.current.colorPalette
     val typography = LocalAppearance.current.typography
@@ -146,6 +150,7 @@ fun Queue(
         collapsedContent = {
             Row(
                 modifier = Modifier
+                    .clip(shape)
                     .drawBehind { drawRect(backgroundColorProvider()) }
                     .fillMaxSize()
                     .padding(horizontalBottomPaddingValues),
@@ -248,6 +253,7 @@ fun Queue(
         Column {
             Box(
                 modifier = Modifier
+                    .clip(shape)
                     .background(colorPalette.background1)
                     .weight(1f)
             ) {
