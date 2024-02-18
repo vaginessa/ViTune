@@ -15,8 +15,10 @@ object DataPreferences : GlobalPreferencesHolder() {
     var pauseHistory by boolean(false)
     var pausePlaytime by boolean(false)
     var pauseSearchHistory by boolean(false)
-    var topListLength by int(10)
-    var topListPeriod by enum(TopListPeriod.AllTime)
+    val topListLengthProperty = int(10)
+    var topListLength by topListLengthProperty
+    val topListPeriodProperty = enum(TopListPeriod.AllTime)
+    var topListPeriod by topListPeriodProperty
     var quickPicksSource by enum(QuickPicksSource.Trending)
 
     enum class TopListPeriod(val displayName: @Composable () -> String, val duration: Duration? = null) {
