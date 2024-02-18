@@ -56,7 +56,8 @@ fun AlbumSongs(
         afterContent: (@Composable () -> Unit)?
     ) -> Unit,
     thumbnailContent: @Composable () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    afterHeaderContent: (@Composable () -> Unit)? = null
 ) {
     val (colorPalette, typography) = LocalAppearance.current
     val binder = LocalPlayerServiceBinder.current
@@ -103,6 +104,7 @@ fun AlbumSongs(
                         )
 
                         if (!isLandscape) thumbnailContent()
+                        afterHeaderContent?.invoke()
                     }
                 }
 

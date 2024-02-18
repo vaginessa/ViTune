@@ -33,6 +33,7 @@ import it.vfsfitvnm.vimusic.LocalPlayerServiceBinder
 import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.ui.components.LocalMenuState
 import it.vfsfitvnm.vimusic.ui.components.ShimmerHost
+import it.vfsfitvnm.vimusic.ui.components.themed.Attribution
 import it.vfsfitvnm.vimusic.ui.components.themed.FloatingActionsContainerWithScrollToTop
 import it.vfsfitvnm.vimusic.ui.components.themed.LayoutWithAdaptiveThumbnail
 import it.vfsfitvnm.vimusic.ui.components.themed.NonQueuedMediaItemMenu
@@ -246,49 +247,11 @@ fun ArtistOverview(
                     }
 
                     youtubeArtistPage.description?.let { description ->
-                        val attributionsIndex =
-                            description.lastIndexOf("\n\n${stringResource(R.string.from_wikipedia)}")
-
-                        Row(
+                        Attribution(
+                            text = description,
                             modifier = Modifier
                                 .padding(top = 16.dp)
                                 .padding(vertical = 16.dp, horizontal = 8.dp)
-                                .padding(endPaddingValues)
-                        ) {
-                            BasicText(
-                                text = stringResource(R.string.quote_open),
-                                style = typography.xxl.semiBold,
-                                modifier = Modifier
-                                    .offset(y = (-8).dp)
-                                    .align(Alignment.Top)
-                            )
-
-                            BasicText(
-                                text = if (attributionsIndex == -1) description
-                                else description.substring(0, attributionsIndex),
-                                style = typography.xxs.secondary,
-                                modifier = Modifier
-                                    .padding(horizontal = 8.dp)
-                                    .weight(1f)
-                            )
-
-                            BasicText(
-                                text = stringResource(R.string.quote_close),
-                                style = typography.xxl.semiBold,
-                                modifier = Modifier
-                                    .offset(y = 4.dp)
-                                    .align(Alignment.Bottom)
-                            )
-                        }
-
-                        if (attributionsIndex != -1) BasicText(
-                            text = stringResource(R.string.wikipedia_cc_by_sa),
-                            style = typography.xxs.color(colorPalette.textDisabled)
-                                .align(TextAlign.End),
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp)
-                                .padding(bottom = 16.dp)
-                                .padding(endPaddingValues)
                         )
                     }
                 } ?: ShimmerHost {

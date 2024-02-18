@@ -15,7 +15,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.valentinilk.shimmer.shimmer
 import it.vfsfitvnm.compose.persist.PersistMapCleanup
 import it.vfsfitvnm.compose.persist.persist
@@ -31,6 +30,7 @@ import it.vfsfitvnm.vimusic.query
 import it.vfsfitvnm.vimusic.ui.components.themed.Header
 import it.vfsfitvnm.vimusic.ui.components.themed.HeaderIconButton
 import it.vfsfitvnm.vimusic.ui.components.themed.HeaderPlaceholder
+import it.vfsfitvnm.vimusic.ui.components.themed.PlaylistInfo
 import it.vfsfitvnm.vimusic.ui.components.themed.Scaffold
 import it.vfsfitvnm.vimusic.ui.components.themed.adaptiveThumbnailContent
 import it.vfsfitvnm.vimusic.ui.items.AlbumItem
@@ -39,6 +39,7 @@ import it.vfsfitvnm.vimusic.ui.screens.GlobalRoutes
 import it.vfsfitvnm.vimusic.ui.screens.Route
 import it.vfsfitvnm.vimusic.ui.screens.albumRoute
 import it.vfsfitvnm.vimusic.ui.screens.searchresult.ItemsPage
+import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.utils.asMediaItem
 import kotlinx.coroutines.Dispatchers
@@ -86,13 +87,15 @@ fun AlbumScreen(browseId: String) {
                                     album = Album(
                                         id = browseId,
                                         title = currentAlbumPage.title,
+                                        description = currentAlbumPage.description,
                                         thumbnailUrl = currentAlbumPage.thumbnail?.url,
                                         year = currentAlbumPage.year,
                                         authorsText = currentAlbumPage.authors
                                             ?.joinToString("") { it.name.orEmpty() },
                                         shareUrl = currentAlbumPage.url,
                                         timestamp = System.currentTimeMillis(),
-                                        bookmarkedAt = album?.bookmarkedAt
+                                        bookmarkedAt = album?.bookmarkedAt,
+                                        otherInfo = currentAlbumPage.otherInfo
                                     ),
                                     songAlbumMaps = currentAlbumPage
                                         .songsPage
@@ -169,8 +172,10 @@ fun AlbumScreen(browseId: String) {
                 }
             }
 
-            val thumbnailContent =
-                adaptiveThumbnailContent(album?.timestamp == null, album?.thumbnailUrl)
+            val thumbnailContent = adaptiveThumbnailContent(
+                isLoading = album?.timestamp == null,
+                url = album?.thumbnailUrl
+            )
 
             Scaffold(
                 topIconButtonId = R.drawable.chevron_back,
@@ -187,12 +192,14 @@ fun AlbumScreen(browseId: String) {
                         0 -> AlbumSongs(
                             browseId = browseId,
                             headerContent = headerContent,
-                            thumbnailContent = thumbnailContent
+                            thumbnailContent = thumbnailContent,
+                            afterHeaderContent = {
+                                if (album == null) PlaylistInfo(playlist = albumPage)
+                                else PlaylistInfo(playlist = album)
+                            }
                         )
 
                         1 -> {
-                            val thumbnailSize = 108.dp
-
                             ItemsPage(
                                 tag = "album/$browseId/alternatives",
                                 headerContent = headerContent,
@@ -212,12 +219,12 @@ fun AlbumScreen(browseId: String) {
                                 itemContent = { album ->
                                     AlbumItem(
                                         album = album,
-                                        thumbnailSize = thumbnailSize,
+                                        thumbnailSize = Dimensions.thumbnails.album,
                                         modifier = Modifier.clickable { albumRoute(album.key) }
                                     )
                                 },
                                 itemPlaceholderContent = {
-                                    AlbumItemPlaceholder(thumbnailSize = thumbnailSize)
+                                    AlbumItemPlaceholder(thumbnailSize = Dimensions.thumbnails.album)
                                 }
                             )
                         }

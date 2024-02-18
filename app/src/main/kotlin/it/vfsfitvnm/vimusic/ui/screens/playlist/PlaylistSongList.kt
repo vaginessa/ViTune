@@ -45,6 +45,7 @@ import it.vfsfitvnm.vimusic.ui.components.themed.HeaderIconButton
 import it.vfsfitvnm.vimusic.ui.components.themed.HeaderPlaceholder
 import it.vfsfitvnm.vimusic.ui.components.themed.LayoutWithAdaptiveThumbnail
 import it.vfsfitvnm.vimusic.ui.components.themed.NonQueuedMediaItemMenu
+import it.vfsfitvnm.vimusic.ui.components.themed.PlaylistInfo
 import it.vfsfitvnm.vimusic.ui.components.themed.SecondaryTextButton
 import it.vfsfitvnm.vimusic.ui.components.themed.TextFieldDialog
 import it.vfsfitvnm.vimusic.ui.components.themed.adaptiveThumbnailContent
@@ -163,8 +164,10 @@ fun PlaylistSongList(
         }
     }
 
-    val thumbnailContent =
-        adaptiveThumbnailContent(playlistPage == null, playlistPage?.thumbnail?.url)
+    val thumbnailContent = adaptiveThumbnailContent(
+        isLoading = playlistPage == null,
+        url = playlistPage?.thumbnail?.url
+    )
 
     val lazyListState = rememberLazyListState()
 
@@ -176,7 +179,8 @@ fun PlaylistSongList(
             LazyColumn(
                 state = lazyListState,
                 contentPadding = LocalPlayerAwareWindowInsets.current
-                    .only(WindowInsetsSides.Vertical + WindowInsetsSides.End).asPaddingValues(),
+                    .only(WindowInsetsSides.Vertical + WindowInsetsSides.End)
+                    .asPaddingValues(),
                 modifier = Modifier
                     .background(colorPalette.background0)
                     .fillMaxSize()
@@ -188,6 +192,7 @@ fun PlaylistSongList(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         headerContent()
                         if (!isLandscape) thumbnailContent()
+                        PlaylistInfo(playlist = playlistPage)
                     }
                 }
 

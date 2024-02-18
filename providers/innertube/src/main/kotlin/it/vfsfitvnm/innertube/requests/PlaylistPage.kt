@@ -46,6 +46,9 @@ suspend fun Innertube.playlistPage(body: BrowseBody) = runCatchingCancellable {
         title = musicDetailHeaderRenderer
             ?.title
             ?.text,
+        description = musicDetailHeaderRenderer
+            ?.description
+            ?.text,
         thumbnail = musicDetailHeaderRenderer
             ?.thumbnail
             ?.musicThumbnailRenderer
@@ -72,7 +75,10 @@ suspend fun Innertube.playlistPage(body: BrowseBody) = runCatchingCancellable {
         otherVersions = musicCarouselShelfRenderer
             ?.contents
             ?.mapNotNull(MusicCarouselShelfRenderer.Content::musicTwoRowItemRenderer)
-            ?.mapNotNull(Innertube.AlbumItem::from)
+            ?.mapNotNull(Innertube.AlbumItem::from),
+        otherInfo = musicDetailHeaderRenderer
+            ?.secondSubtitle
+            ?.text
     )
 }
 

@@ -181,12 +181,14 @@ object Innertube {
 
     data class PlaylistOrAlbumPage(
         val title: String?,
+        val description: String?,
         val authors: List<Info<NavigationEndpoint.Endpoint.Browse>>?,
         val year: String?,
         val thumbnail: Thumbnail?,
         val url: String?,
         val songsPage: ItemsPage<SongItem>?,
-        val otherVersions: List<AlbumItem>?
+        val otherVersions: List<AlbumItem>?,
+        val otherInfo: String?
     )
 
     data class NextPage(

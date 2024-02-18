@@ -6,6 +6,10 @@ import kotlinx.serialization.Serializable
 data class Runs(
     val runs: List<Run> = listOf()
 ) {
+    companion object {
+        const val SEPARATOR = " • "
+    }
+
     val text: String
         get() = runs.joinToString("") { it.text.orEmpty() }
 
@@ -13,7 +17,7 @@ data class Runs(
         return runs.flatMapIndexed { index, run ->
             when {
                 index == 0 || index == runs.lastIndex -> listOf(index)
-                run.text == " • " -> listOf(index - 1, index + 1)
+                run.text == SEPARATOR -> listOf(index - 1, index + 1)
                 else -> emptyList()
             }
         }.windowed(size = 2, step = 2) { (from, to) -> runs.slice(from..to) }.let {

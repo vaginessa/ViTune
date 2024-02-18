@@ -642,7 +642,7 @@ interface Database {
         PipedSession::class
     ],
     views = [SortedSongPlaylistMap::class],
-    version = 27,
+    version = 28,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
@@ -666,7 +666,8 @@ interface Database {
         AutoMigration(from = 23, to = 24),
         AutoMigration(from = 24, to = 25),
         AutoMigration(from = 25, to = 26),
-        AutoMigration(from = 26, to = 27)
+        AutoMigration(from = 26, to = 27),
+        AutoMigration(from = 27, to = 28)
     ]
 )
 @TypeConverters(Converters::class)

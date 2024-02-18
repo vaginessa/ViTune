@@ -26,6 +26,7 @@ data class BrowseResponse(
         @Serializable
         data class MusicDetailHeaderRenderer(
             val title: Runs?,
+            val description: Runs?,
             val subtitle: Runs?,
             val secondSubtitle: Runs?,
             val thumbnail: ThumbnailRenderer?
