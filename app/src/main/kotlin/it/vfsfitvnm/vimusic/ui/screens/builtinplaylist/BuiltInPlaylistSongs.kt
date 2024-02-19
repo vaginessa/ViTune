@@ -52,7 +52,6 @@ import kotlinx.coroutines.flow.combineTransform
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.map
-import kotlin.math.min
 
 @OptIn(ExperimentalCoroutinesApi::class, ExperimentalFoundationApi::class)
 @Composable
@@ -82,8 +81,10 @@ fun BuiltInPlaylistSongs(
                     if (period.duration != null) Database.trending(
                         limit = length,
                         period = period.duration.inWholeMilliseconds
-                    ) else Database.songsByPlayTimeDesc().distinctUntilChanged()
-                        .map { it.subList(0, min(length, it.size)) }.cancellable()
+                    ) else Database
+                        .songsByPlayTimeDesc(limit = length)
+                        .distinctUntilChanged()
+                        .cancellable()
                 )
             }
         }.collect { songs = it }

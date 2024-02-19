@@ -102,10 +102,11 @@ interface Database {
         SELECT * FROM Song
         WHERE id NOT LIKE '$LOCAL_KEY_PREFIX%'
         ORDER BY totalPlayTimeMs DESC
+        LIMIT :limit
         """
     )
     @RewriteQueriesToDropUnusedColumns
-    fun songsByPlayTimeDesc(): Flow<List<Song>>
+    fun songsByPlayTimeDesc(limit: Int = -1): Flow<List<Song>>
 
     @Transaction
     @Query("SELECT * FROM Song WHERE id LIKE '$LOCAL_KEY_PREFIX%' ORDER BY ROWID ASC")
