@@ -49,6 +49,7 @@ import it.vfsfitvnm.vimusic.utils.findActivity
 import it.vfsfitvnm.vimusic.utils.isAtLeastAndroid12
 import it.vfsfitvnm.vimusic.utils.isAtLeastAndroid6
 import it.vfsfitvnm.vimusic.utils.isIgnoringBatteryOptimizations
+import it.vfsfitvnm.vimusic.utils.smoothScrollToBottom
 import it.vfsfitvnm.vimusic.utils.toast
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -292,7 +293,7 @@ fun OtherSettings() {
                 onClick = {
                     coroutineScope.launch {
                         delay(500)
-                        scrollState.animateScrollTo(scrollState.maxValue)
+                        scrollState.smoothScrollToBottom()
                     }
                     showTroubleshoot = true
                 },
