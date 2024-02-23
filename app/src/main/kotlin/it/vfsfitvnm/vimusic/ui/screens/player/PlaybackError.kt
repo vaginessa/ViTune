@@ -1,6 +1,8 @@
 package it.vfsfitvnm.vimusic.ui.screens.player
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -16,7 +18,6 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -33,7 +34,7 @@ fun PlaybackError(
     messageProvider: @Composable () -> String,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
-) = Box {
+) = Box(modifier = modifier) {
     val message by rememberUpdatedState(newValue = messageProvider())
 
     AnimatedVisibility(
@@ -42,25 +43,29 @@ fun PlaybackError(
         exit = fadeOut()
     ) {
         Spacer(
-            modifier = modifier
+            modifier = Modifier
                 .pointerInput(Unit) {
-                    detectTapGestures(
-                        onTap = { onDismiss() }
-                    )
+                    detectTapGestures(onTap = { onDismiss() })
                 }
                 .fillMaxSize()
                 .background(Color.Black.copy(0.8f))
         )
     }
 
-    AnimatedVisibility(
-        visible = isDisplayed,
-        enter = slideInVertically { -it },
-        exit = slideOutVertically { -it },
-        modifier = Modifier.align(Alignment.TopCenter)
-    ) {
-        BasicText(
-            text = message,
+    AnimatedContent(
+        targetState = message.takeIf { isDisplayed },
+        transitionSpec = {
+            ContentTransform(
+                targetContentEnter = slideInVertically { -it },
+                initialContentExit = slideOutVertically { -it },
+                sizeTransform = null
+            )
+        },
+        label = "",
+        modifier = Modifier.fillMaxWidth()
+    ) { currentMessage ->
+        if (currentMessage != null) BasicText(
+            text = currentMessage,
             style = LocalAppearance.current.typography.xs.center.medium.color(PureBlackColorPalette.text),
             modifier = Modifier
                 .background(Color.Black.copy(0.4f))
