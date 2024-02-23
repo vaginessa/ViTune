@@ -51,14 +51,15 @@ suspend fun <T : Innertube.Item> Innertube.searchPage(
         ?.toItemsPage(fromMusicShelfRendererContent)
 }
 
-private fun <T : Innertube.Item> MusicShelfRenderer?.toItemsPage(mapper: (MusicShelfRenderer.Content) -> T?) =
-    Innertube.ItemsPage(
-        items = this
-            ?.contents
-            ?.mapNotNull(mapper),
-        continuation = this
-            ?.continuations
-            ?.firstOrNull()
-            ?.nextContinuationData
-            ?.continuation
-    )
+private fun <T : Innertube.Item> MusicShelfRenderer?.toItemsPage(
+    mapper: (MusicShelfRenderer.Content) -> T?
+) = Innertube.ItemsPage(
+    items = this
+        ?.contents
+        ?.mapNotNull(mapper),
+    continuation = this
+        ?.continuations
+        ?.firstOrNull()
+        ?.nextContinuationData
+        ?.continuation
+)

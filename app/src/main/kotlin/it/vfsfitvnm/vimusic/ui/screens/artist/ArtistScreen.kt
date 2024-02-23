@@ -186,8 +186,8 @@ fun ArtistScreen(browseId: String) {
 
                         1 -> ItemsPage(
                             tag = "artist/$browseId/songs",
-                            headerContent = headerContent,
-                            itemsPageProvider = artistPage?.let {
+                            header = headerContent,
+                            provider = artistPage?.let {
                                 @Suppress("SpacingAroundCurly")
                                 { continuation ->
                                     continuation?.let {
@@ -243,9 +243,9 @@ fun ArtistScreen(browseId: String) {
 
                         2 -> ItemsPage(
                             tag = "artist/$browseId/albums",
-                            headerContent = headerContent,
+                            header = headerContent,
                             emptyItemsText = stringResource(R.string.artist_has_no_albums),
-                            itemsPageProvider = artistPage?.let {
+                            provider = artistPage?.let {
                                 @Suppress("SpacingAroundCurly")
                                 { continuation ->
                                     continuation?.let {
@@ -287,9 +287,9 @@ fun ArtistScreen(browseId: String) {
 
                         3 -> ItemsPage(
                             tag = "artist/$browseId/singles",
-                            headerContent = headerContent,
+                            header = headerContent,
                             emptyItemsText = stringResource(R.string.artist_has_no_singles),
-                            itemsPageProvider = artistPage?.let {
+                            provider = artistPage?.let {
                                 @Suppress("SpacingAroundCurly")
                                 { continuation ->
                                     continuation?.let {

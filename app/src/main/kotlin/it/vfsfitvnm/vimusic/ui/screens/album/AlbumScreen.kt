@@ -202,11 +202,11 @@ fun AlbumScreen(browseId: String) {
                         1 -> {
                             ItemsPage(
                                 tag = "album/$browseId/alternatives",
-                                headerContent = headerContent,
+                                header = headerContent,
                                 initialPlaceholderCount = 1,
                                 continuationPlaceholderCount = 1,
                                 emptyItemsText = stringResource(R.string.no_alternative_version),
-                                itemsPageProvider = albumPage?.let {
+                                provider = albumPage?.let {
                                     {
                                         Result.success(
                                             Innertube.ItemsPage(

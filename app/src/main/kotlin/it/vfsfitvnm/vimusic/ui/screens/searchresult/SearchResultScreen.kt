@@ -89,7 +89,7 @@ fun SearchResultScreen(query: String, onSearchAgain: () -> Unit) {
                     when (tabIndex) {
                         0 -> ItemsPage(
                             tag = "searchResults/$query/songs",
-                            itemsPageProvider = { continuation ->
+                            provider = { continuation ->
                                 if (continuation == null) Innertube.searchPage(
                                     body = SearchBody(
                                         query = query,
@@ -102,7 +102,7 @@ fun SearchResultScreen(query: String, onSearchAgain: () -> Unit) {
                                 )
                             },
                             emptyItemsText = stringResource(R.string.no_search_results),
-                            headerContent = headerContent,
+                            header = headerContent,
                             itemContent = { song ->
                                 SongItem(
                                     song = song,
@@ -131,7 +131,7 @@ fun SearchResultScreen(query: String, onSearchAgain: () -> Unit) {
 
                         1 -> ItemsPage(
                             tag = "searchResults/$query/albums",
-                            itemsPageProvider = { continuation ->
+                            provider = { continuation ->
                                 if (continuation == null) {
                                     Innertube.searchPage(
                                         body = SearchBody(
@@ -148,7 +148,7 @@ fun SearchResultScreen(query: String, onSearchAgain: () -> Unit) {
                                 }
                             },
                             emptyItemsText = stringResource(R.string.no_search_results),
-                            headerContent = headerContent,
+                            header = headerContent,
                             itemContent = { album ->
                                 AlbumItem(
                                     album = album,
@@ -163,7 +163,7 @@ fun SearchResultScreen(query: String, onSearchAgain: () -> Unit) {
 
                         2 -> ItemsPage(
                             tag = "searchResults/$query/artists",
-                            itemsPageProvider = { continuation ->
+                            provider = { continuation ->
                                 if (continuation == null) {
                                     Innertube.searchPage(
                                         body = SearchBody(
@@ -180,7 +180,7 @@ fun SearchResultScreen(query: String, onSearchAgain: () -> Unit) {
                                 }
                             },
                             emptyItemsText = stringResource(R.string.no_search_results),
-                            headerContent = headerContent,
+                            header = headerContent,
                             itemContent = { artist ->
                                 ArtistItem(
                                     artist = artist,
@@ -196,7 +196,7 @@ fun SearchResultScreen(query: String, onSearchAgain: () -> Unit) {
 
                         3 -> ItemsPage(
                             tag = "searchResults/$query/videos",
-                            itemsPageProvider = { continuation ->
+                            provider = { continuation ->
                                 if (continuation == null) Innertube.searchPage(
                                     body = SearchBody(
                                         query = query,
@@ -209,7 +209,7 @@ fun SearchResultScreen(query: String, onSearchAgain: () -> Unit) {
                                 )
                             },
                             emptyItemsText = stringResource(R.string.no_search_results),
-                            headerContent = headerContent,
+                            header = headerContent,
                             itemContent = { video ->
                                 VideoItem(
                                     video = video,
@@ -242,7 +242,7 @@ fun SearchResultScreen(query: String, onSearchAgain: () -> Unit) {
 
                         4 -> ItemsPage(
                             tag = "searchResults/$query/playlists",
-                            itemsPageProvider = { continuation ->
+                            provider = { continuation ->
                                 if (continuation == null) Innertube.searchPage(
                                     body = SearchBody(
                                         query = query,
@@ -255,7 +255,7 @@ fun SearchResultScreen(query: String, onSearchAgain: () -> Unit) {
                                 )
                             },
                             emptyItemsText = stringResource(R.string.no_search_results),
-                            headerContent = headerContent,
+                            header = headerContent,
                             itemContent = { playlist ->
                                 PlaylistItem(
                                     playlist = playlist,

@@ -14,7 +14,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -36,30 +38,30 @@ import kotlinx.coroutines.withContext
 @Composable
 inline fun <T : Innertube.Item> ItemsPage(
     tag: String,
-    crossinline headerContent: @Composable (textButton: (@Composable () -> Unit)?) -> Unit,
+    crossinline header: @Composable (textButton: (@Composable () -> Unit)?) -> Unit,
     crossinline itemContent: @Composable LazyItemScope.(T) -> Unit,
     noinline itemPlaceholderContent: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     initialPlaceholderCount: Int = 8,
     continuationPlaceholderCount: Int = 3,
     emptyItemsText: String = stringResource(R.string.no_items_found),
-    noinline itemsPageProvider: (suspend (String?) -> Result<Innertube.ItemsPage<T>?>?)? = null
+    noinline provider: (suspend (String?) -> Result<Innertube.ItemsPage<T>?>?)? = null
 ) = ItemsPage(
     tag = tag,
-    headerContent = { before, _ -> headerContent(before) },
+    header = { before, _ -> header(before) },
     itemContent = itemContent,
     itemPlaceholderContent = itemPlaceholderContent,
     modifier = modifier,
     initialPlaceholderCount = initialPlaceholderCount,
     continuationPlaceholderCount = continuationPlaceholderCount,
     emptyItemsText = emptyItemsText,
-    itemsPageProvider = itemsPageProvider
+    provider = provider
 )
 
 @Composable
 inline fun <T : Innertube.Item> ItemsPage(
     tag: String,
-    crossinline headerContent: @Composable (
+    crossinline header: @Composable (
         beforeContent: (@Composable () -> Unit)?,
         afterContent: (@Composable () -> Unit)?
     ) -> Unit,
@@ -69,30 +71,32 @@ inline fun <T : Innertube.Item> ItemsPage(
     initialPlaceholderCount: Int = 8,
     continuationPlaceholderCount: Int = 3,
     emptyItemsText: String = stringResource(R.string.no_items_found),
-    noinline itemsPageProvider: (suspend (String?) -> Result<Innertube.ItemsPage<T>?>?)? = null
+    noinline provider: (suspend (String?) -> Result<Innertube.ItemsPage<T>?>?)? = null
 ) {
     val (_, typography) = LocalAppearance.current
-
-    val updatedItemsPageProvider by rememberUpdatedState(itemsPageProvider)
-
+    val updatedProvider by rememberUpdatedState(provider)
     val lazyListState = rememberLazyListState()
-
     var itemsPage by persist<Innertube.ItemsPage<T>?>(tag)
 
-    LaunchedEffect(lazyListState, updatedItemsPageProvider) {
-        val currentItemsPageProvider = updatedItemsPageProvider ?: return@LaunchedEffect
-
-        if (lazyListState.layoutInfo.visibleItemsInfo.any { it.key == "loading" }) {
-            withContext(Dispatchers.IO) {
-                currentItemsPageProvider(itemsPage?.continuation)
-            }?.onSuccess {
-                if (it == null) {
-                    if (itemsPage == null) itemsPage = Innertube.ItemsPage(null, null)
-                } else itemsPage += it
-            }?.onFailure {
-                itemsPage = itemsPage?.copy(continuation = null)
-            }?.exceptionOrNull()?.printStackTrace()
+    val shouldLoad by remember {
+        derivedStateOf {
+            lazyListState.layoutInfo.visibleItemsInfo.any { it.key == "loading" }
         }
+    }
+
+    LaunchedEffect(shouldLoad, updatedProvider) {
+        if (!shouldLoad) return@LaunchedEffect
+        val provideItems = updatedProvider ?: return@LaunchedEffect
+
+        withContext(Dispatchers.IO) {
+            provideItems(itemsPage?.continuation)
+        }?.onSuccess {
+            if (it == null) {
+                if (itemsPage == null) itemsPage = Innertube.ItemsPage(null, null)
+            } else itemsPage += it
+        }?.onFailure {
+            itemsPage = itemsPage?.copy(continuation = null)
+        }?.exceptionOrNull()?.printStackTrace()
     }
 
     Box(modifier = modifier) {
@@ -107,7 +111,7 @@ inline fun <T : Innertube.Item> ItemsPage(
                 key = "header",
                 contentType = "header"
             ) {
-                headerContent(null, null)
+                header(null, null)
             }
 
             items(
