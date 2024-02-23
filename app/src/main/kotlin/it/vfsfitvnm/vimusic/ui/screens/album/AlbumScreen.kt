@@ -7,8 +7,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.saveable.Saver
-import androidx.compose.runtime.saveable.SaverScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
@@ -42,6 +40,7 @@ import it.vfsfitvnm.vimusic.ui.screens.searchresult.ItemsPage
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.utils.asMediaItem
+import it.vfsfitvnm.vimusic.utils.stateFlowSaver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -53,14 +52,7 @@ import kotlinx.coroutines.withContext
 fun AlbumScreen(browseId: String) {
     val saveableStateHolder = rememberSaveableStateHolder()
 
-    val tabIndexState = rememberSaveable(
-        saver = object : Saver<MutableStateFlow<Int>, Int> {
-            override fun restore(value: Int) = MutableStateFlow(value)
-            override fun SaverScope.save(value: MutableStateFlow<Int>) = value.value
-        }
-    ) {
-        MutableStateFlow(0)
-    }
+    val tabIndexState = rememberSaveable(saver = stateFlowSaver()) { MutableStateFlow(0) }
     val tabIndex by tabIndexState.collectAsState()
 
     var album by persist<Album?>("album/$browseId/album")
