@@ -270,7 +270,7 @@ class MainActivity : ComponentActivity() {
                                         padding
                                     )
                                 )
-                            }
+                            }.collectLatest { }
                         }
                     }
                 }
