@@ -48,12 +48,14 @@ import it.vfsfitvnm.vimusic.utils.forcePlayFromBeginning
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.cancellable
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.combineTransform
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 
-@OptIn(ExperimentalCoroutinesApi::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalCoroutinesApi::class)
 @Composable
 fun BuiltInPlaylistSongs(
     builtInPlaylist: BuiltInPlaylist,
@@ -69,23 +71,28 @@ fun BuiltInPlaylistSongs(
         when (builtInPlaylist) {
             BuiltInPlaylist.Favorites -> Database.favorites()
 
-            BuiltInPlaylist.Offline -> Database.songsWithContentLength().map { songs ->
-                songs.filter { binder?.isCached(it) ?: false }.map { it.song }
-            }
+            BuiltInPlaylist.Offline ->
+                Database
+                    .songsWithContentLength()
+                    .map { songs ->
+                        songs.filter { binder?.isCached(it) ?: false }.map { it.song }
+                    }
 
-            BuiltInPlaylist.Top -> combineTransform(
+            BuiltInPlaylist.Top -> combine(
                 flow = topListPeriodProperty.stateFlow,
                 flow2 = topListLengthProperty.stateFlow
-            ) { period, length ->
-                emitAll(
-                    if (period.duration != null) Database.trending(
+            ) { period, length -> period to length }.flatMapLatest { (period, length) ->
+                if (period.duration == null) Database
+                    .songsByPlayTimeDesc(limit = length)
+                    .distinctUntilChanged()
+                    .cancellable()
+                else Database
+                    .trending(
                         limit = length,
                         period = period.duration.inWholeMilliseconds
-                    ) else Database
-                        .songsByPlayTimeDesc(limit = length)
-                        .distinctUntilChanged()
-                        .cancellable()
-                )
+                    )
+                    .distinctUntilChanged()
+                    .cancellable()
             }
         }.collect { songs = it }
     }
