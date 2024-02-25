@@ -1,0 +1,8 @@
+* Added AMOLED theme
+* Added more control on thumbnail quality
+* Added rounding for consistency with the rest of the UI
+* Improved performance
+* Added 'wavy seek bar quality'
+* Added more playlist/album info
+* Added top/local playlists to Android Auto
+* Improved animations
