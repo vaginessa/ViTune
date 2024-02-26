@@ -40,7 +40,7 @@ compose_material3 = { module = "androidx.compose.material3:material3", version =
 
 compose_activity = { module = "androidx.activity:activity-compose", version = "1.8.2" }
 compose_shimmer = { module = "com.valentinilk.shimmer:compose-shimmer", version = "1.2.0" }
-compose_coil = { module = "io.coil-kt:coil-compose", version = "2.5.0" }
+compose_coil = { module = "io.coil-kt:coil-compose", version = "2.6.0" }
 
 room = { module = "androidx.room:room-ktx", version.ref = "room" }
 room_compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
