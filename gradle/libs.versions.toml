@@ -32,7 +32,7 @@ kotlin_immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutab
 
 compose_bom = { module = "androidx.compose:compose-bom", version = "2024.02.01" }
 compose_animation = { module = "androidx.compose.animation:animation" }
-compose_foundation = { module = "androidx.compose.foundation:foundation", version = "1.6.1" }
+compose_foundation = { module = "androidx.compose.foundation:foundation", version = "1.6.2" }
 compose_ui = { module = "androidx.compose.ui:ui" }
 compose_ui_util = { module = "androidx.compose.ui:ui-util" }
 compose_ripple = { module = "androidx.compose.material:material-ripple" }
