@@ -280,10 +280,12 @@ class MainActivity : ComponentActivity(), MonetColorsChangedListener {
                                 flow = colorPaletteNameProperty.stateFlow,
                                 flow2 = colorPaletteModeProperty.stateFlow
                             ) { name, mode ->
-                                if (!setPalette()) {
+                                val isStatic = setPalette()
+                                if (!isStatic || name == ColorPaletteName.MaterialYou) {
                                     bitmapListenerJob?.cancel()
                                     binder?.setBitmapListener(null)
-
+                                }
+                                if (!isStatic) {
                                     val colorPalette = colorPaletteOf(
                                         name = name,
                                         mode = mode,

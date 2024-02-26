@@ -5,5 +5,5 @@ enum class ColorPaletteName(val isDynamic: Boolean) {
     Dynamic(isDynamic = true),
     MaterialYou(isDynamic = true),
     PureBlack(isDynamic = false),
-    AMOLED(isDynamic = false)
+    AMOLED(isDynamic = true)
 }
