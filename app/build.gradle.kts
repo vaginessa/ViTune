@@ -111,6 +111,8 @@ dependencies {
     implementation(libs.compose.material3)
 
     implementation(libs.palette)
+    implementation(libs.monet)
+    implementation(libs.materialComponents)
 
     implementation(libs.exoplayer)
     implementation(libs.exoplayer.workmanager)

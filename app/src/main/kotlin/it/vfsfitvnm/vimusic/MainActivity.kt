@@ -63,11 +63,17 @@ import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import com.kieronquinn.monetcompat.core.MonetActivityAccessException
+import com.kieronquinn.monetcompat.core.MonetCompat
+import com.kieronquinn.monetcompat.interfaces.MonetColorsChangedListener
 import com.valentinilk.shimmer.LocalShimmerTheme
 import com.valentinilk.shimmer.defaultShimmerTheme
+import dev.kdrag0n.monet.theme.ColorScheme
 import it.vfsfitvnm.compose.persist.LocalPersistMap
 import it.vfsfitvnm.innertube.Innertube
 import it.vfsfitvnm.innertube.models.bodies.BrowseBody
@@ -88,11 +94,13 @@ import it.vfsfitvnm.vimusic.ui.screens.home.HomeScreen
 import it.vfsfitvnm.vimusic.ui.screens.player.Player
 import it.vfsfitvnm.vimusic.ui.screens.playlistRoute
 import it.vfsfitvnm.vimusic.ui.styling.Appearance
+import it.vfsfitvnm.vimusic.ui.styling.DefaultLightColorPalette
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.ui.styling.colorPaletteOf
 import it.vfsfitvnm.vimusic.ui.styling.dynamicColorPaletteOf
 import it.vfsfitvnm.vimusic.ui.styling.typographyOf
+import it.vfsfitvnm.vimusic.utils.LocalMonetCompat
 import it.vfsfitvnm.vimusic.utils.asMediaItem
 import it.vfsfitvnm.vimusic.utils.forcePlay
 import it.vfsfitvnm.vimusic.utils.intent
@@ -109,7 +117,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class MainActivity : ComponentActivity() {
+class MainActivity : ComponentActivity(), MonetColorsChangedListener {
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             if (service is PlayerService.Binder) this@MainActivity.binder = service
@@ -123,6 +131,9 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private var _monet: MonetCompat? by mutableStateOf(null)
+    val monet: MonetCompat get() = _monet ?: throw MonetActivityAccessException()
+
     private var binder by mutableStateOf<PlayerService.Binder?>(null)
 
     override fun onStart() {
@@ -130,11 +141,35 @@ class MainActivity : ComponentActivity() {
         bindService(intent<PlayerService>(), serviceConnection, Context.BIND_AUTO_CREATE)
     }
 
-    @Suppress("CyclomaticComplexMethod")
-    @OptIn(ExperimentalLayoutApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        MonetCompat.setup(this)
+        _monet = MonetCompat.getInstance()
+        monet.defaultAccentColor = DefaultLightColorPalette.accent.toArgb()
+        monet.defaultBackgroundColor = DefaultLightColorPalette.background0.toArgb()
+        monet.defaultPrimaryColor = DefaultLightColorPalette.background1.toArgb()
+        monet.defaultSecondaryColor = DefaultLightColorPalette.background2.toArgb()
+        monet.addMonetColorsChangedListener(
+            listener = this,
+            notifySelf = false
+        )
+        monet.updateMonetColors()
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.CREATED) {
+                monet.awaitMonetReady()
+                setContent()
+            }
+        }
+
+        onNewIntent(intent)
+    }
+
+    // TODO: clean up the theme mess
+    @Suppress("CyclomaticComplexMethod")
+    @OptIn(ExperimentalLayoutApi::class)
+    fun setContent() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         val launchedFromNotification = intent?.extras?.getBoolean("expandPlayerBottomSheet") == true
@@ -180,9 +215,21 @@ class MainActivity : ComponentActivity() {
                     mode: ColorPaletteMode
                 ) {
                     val isDark = mode == ColorPaletteMode.Dark ||
-                            mode == ColorPaletteMode.System && isSystemInDarkTheme
+                            (mode == ColorPaletteMode.System && isSystemInDarkTheme)
 
-                    binder?.setBitmapListener { bitmap: Bitmap? ->
+                    if (name == ColorPaletteName.MaterialYou) dynamicColorPaletteOf(
+                        accentColor = monet.getAccentColor(
+                            context = this@MainActivity,
+                            darkMode = isDark
+                        ),
+                        isDark = isDark,
+                        isAmoled = false
+                    ).let {
+                        appearance = appearance.copy(
+                            colorPalette = it,
+                            typography = appearance.typography.copy(it.text)
+                        )
+                    } else binder?.setBitmapListener { bitmap: Bitmap? ->
                         if (bitmap == null) {
                             val colorPalette = colorPaletteOf(
                                 name = name,
@@ -220,8 +267,7 @@ class MainActivity : ComponentActivity() {
 
                 with(AppearancePreferences) {
                     fun setPalette(): Boolean {
-                        if (colorPaletteName != ColorPaletteName.Dynamic && colorPaletteName != ColorPaletteName.AMOLED)
-                            return false
+                        if (!colorPaletteName.isDynamic) return false
 
                         setDynamicPalette(colorPaletteName, colorPaletteMode)
                         return true
@@ -369,7 +415,8 @@ class MainActivity : ComponentActivity() {
                     LocalPlayerServiceBinder provides binder,
                     LocalPlayerAwareWindowInsets provides playerAwareWindowInsets,
                     LocalLayoutDirection provides LayoutDirection.Ltr,
-                    LocalPersistMap provides Dependencies.application.persistMap
+                    LocalPersistMap provides Dependencies.application.persistMap,
+                    LocalMonetCompat provides monet
                 ) {
                     val isDownloading by downloadState.collectAsState()
 
@@ -447,8 +494,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-
-        onNewIntent(intent)
     }
 
     @Suppress("CyclomaticComplexMethod")
@@ -502,9 +547,23 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        monet.removeMonetColorsChangedListener(this)
+        _monet = null
+    }
+
     override fun onStop() {
         unbindService(serviceConnection)
         super.onStop()
+    }
+
+    override fun onMonetColorsChanged(
+        monet: MonetCompat,
+        monetColors: ColorScheme,
+        isInitialChange: Boolean
+    ) {
+        if (!isInitialChange) recreate()
     }
 
     private fun setSystemBarAppearance(isDark: Boolean) {

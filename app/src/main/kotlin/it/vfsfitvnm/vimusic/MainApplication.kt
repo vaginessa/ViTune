@@ -6,6 +6,7 @@ import coil.ImageLoader
 import coil.ImageLoaderFactory
 import coil.disk.DiskCache
 import coil.util.DebugLogger
+import com.kieronquinn.monetcompat.core.MonetCompat
 import it.vfsfitvnm.compose.persist.PersistMap
 import it.vfsfitvnm.vimusic.preferences.DataPreferences
 import androidx.work.Configuration as WorkManagerConfiguration
@@ -15,6 +16,7 @@ class MainApplication : Application(), ImageLoaderFactory, WorkManagerConfigurat
         super.onCreate()
         Dependencies.init(this)
         DatabaseInitializer()
+        MonetCompat.enablePaletteCompat()
     }
 
     override fun newImageLoader() = ImageLoader.Builder(this)

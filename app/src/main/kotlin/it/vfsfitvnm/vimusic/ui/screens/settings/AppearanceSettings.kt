@@ -166,6 +166,7 @@ val ColorPaletteName.nameLocalized
             ColorPaletteName.Dynamic -> R.string.theme_name_dynamic
             ColorPaletteName.PureBlack -> R.string.theme_name_pureblack
             ColorPaletteName.AMOLED -> R.string.theme_name_amoled
+            ColorPaletteName.MaterialYou -> R.string.theme_name_materialyou
         }
     )
 

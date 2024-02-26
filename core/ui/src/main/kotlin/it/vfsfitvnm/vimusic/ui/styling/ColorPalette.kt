@@ -89,7 +89,7 @@ fun colorPaletteOf(
     isDark: Boolean
 ) = when (name) {
     ColorPaletteName.Default,
-    ColorPaletteName.Dynamic -> when (mode) {
+    ColorPaletteName.Dynamic, ColorPaletteName.MaterialYou -> when (mode) {
         ColorPaletteMode.Light -> DefaultLightColorPalette
         ColorPaletteMode.Dark -> DefaultDarkColorPalette
         ColorPaletteMode.System -> if (isDark) DefaultDarkColorPalette else DefaultLightColorPalette
