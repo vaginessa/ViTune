@@ -123,6 +123,7 @@ fun <T> ValueSelectorSettingsEntry(
     values: ImmutableList<T>,
     onValueSelected: (T) -> Unit,
     modifier: Modifier = Modifier,
+    text: String? = null,
     isEnabled: Boolean = true,
     usePadding: Boolean = true,
     valueText: @Composable (T) -> String = { it.toString() },
@@ -142,7 +143,7 @@ fun <T> ValueSelectorSettingsEntry(
     SettingsEntry(
         modifier = modifier,
         title = title,
-        text = valueText(selectedValue),
+        text = text ?: valueText(selectedValue),
         onClick = { isShowingDialog = true },
         isEnabled = isEnabled,
         trailingContent = trailingContent,

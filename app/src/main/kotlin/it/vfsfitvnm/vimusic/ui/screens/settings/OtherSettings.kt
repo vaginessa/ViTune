@@ -174,14 +174,10 @@ fun OtherSettings() {
                     }
                 },
                 onSlideCompleted = { AppearancePreferences.maxThumbnailSize = it.roundToInt() },
-                min = 16f,
-                max = 2160f,
-                toDisplay = {
-                    stringResource(
-                        R.string.format_px,
-                        it.roundToInt()
-                    )
-                }
+                min = 32f,
+                max = 1920f,
+                toDisplay = { stringResource(R.string.format_px, it.roundToInt()) },
+                steps = 58
             )
         }
         SettingsGroup(title = stringResource(R.string.service_lifetime)) {
