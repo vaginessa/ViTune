@@ -15,9 +15,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
@@ -38,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -436,18 +435,11 @@ fun MediaItemMenu(
                 }
             }
 
-            Spacer(Modifier.height(8.dp))
-
-            Spacer(
+            HorizontalDivider(
                 modifier = Modifier
                     .alpha(0.5f)
-                    .align(Alignment.CenterHorizontally)
-                    .background(colorPalette.textDisabled)
-                    .height(1.dp)
-                    .fillMaxWidth(1f)
+                    .padding(vertical = 8.dp)
             )
-
-            Spacer(Modifier.height(8.dp))
 
             if (!isLocal && !isCached(mediaItem.mediaId)) MenuEntry(
                 icon = R.drawable.download,
@@ -674,9 +666,7 @@ fun MediaItemMenu(
                     Image(
                         painter = painterResource(R.drawable.chevron_forward),
                         contentDescription = null,
-                        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
-                            colorPalette.textSecondary
-                        ),
+                        colorFilter = ColorFilter.tint(colorPalette.textSecondary),
                         modifier = Modifier.size(16.dp)
                     )
                 }

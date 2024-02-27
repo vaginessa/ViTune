@@ -3,6 +3,7 @@ package it.vfsfitvnm.vimusic.utils
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -19,7 +20,22 @@ inline val TextStyle.semiBold get() = weight(FontWeight.SemiBold)
 inline val TextStyle.bold get() = weight(FontWeight.Bold)
 inline val TextStyle.center get() = align(TextAlign.Center)
 
+inline val TextStyle.primary: TextStyle
+    @Composable
+    @ReadOnlyComposable
+    get() = color(LocalAppearance.current.colorPalette.onAccent)
+
 inline val TextStyle.secondary: TextStyle
     @Composable
     @ReadOnlyComposable
     get() = color(LocalAppearance.current.colorPalette.textSecondary)
+
+inline val TextStyle.disabled: TextStyle
+    @Composable
+    @ReadOnlyComposable
+    get() = color(LocalAppearance.current.colorPalette.textDisabled)
+
+inline val ColorFilter.Companion.disabled
+    @Composable
+    @ReadOnlyComposable
+    get() = tint(LocalAppearance.current.colorPalette.textDisabled)

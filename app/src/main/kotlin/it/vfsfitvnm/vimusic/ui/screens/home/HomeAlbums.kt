@@ -79,20 +79,19 @@ fun HomeAlbums(
                 Header(title = stringResource(R.string.albums)) {
                     HeaderIconButton(
                         icon = R.drawable.calendar,
-                        color = if (albumSortBy == AlbumSortBy.Year) colorPalette.text else colorPalette.textDisabled,
+                        enabled = albumSortBy == AlbumSortBy.Year,
                         onClick = { albumSortBy = AlbumSortBy.Year }
                     )
 
                     HeaderIconButton(
                         icon = R.drawable.text,
-                        color = if (albumSortBy == AlbumSortBy.Title) colorPalette.text else colorPalette.textDisabled,
+                        enabled = albumSortBy == AlbumSortBy.Title,
                         onClick = { albumSortBy = AlbumSortBy.Title }
                     )
 
                     HeaderIconButton(
                         icon = R.drawable.time,
-                        color = if (albumSortBy == AlbumSortBy.DateAdded) colorPalette.text
-                        else colorPalette.textDisabled,
+                        enabled = albumSortBy == AlbumSortBy.DateAdded,
                         onClick = { albumSortBy = AlbumSortBy.DateAdded }
                     )
 

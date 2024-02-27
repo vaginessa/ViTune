@@ -18,7 +18,7 @@ import it.vfsfitvnm.vimusic.LocalPlayerAwareWindowInsets
 import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.utils.align
-import it.vfsfitvnm.vimusic.utils.color
+import it.vfsfitvnm.vimusic.utils.disabled
 import it.vfsfitvnm.vimusic.utils.secondary
 import it.vfsfitvnm.vimusic.utils.semiBold
 
@@ -27,7 +27,7 @@ fun Attribution(
     text: String,
     modifier: Modifier = Modifier
 ) = Column {
-    val (colorPalette, typography) = LocalAppearance.current
+    val (_, typography) = LocalAppearance.current
     val windowInsets = LocalPlayerAwareWindowInsets.current
 
     val endPaddingValues = windowInsets
@@ -66,8 +66,7 @@ fun Attribution(
 
     if (attributionsIndex != -1) BasicText(
         text = stringResource(R.string.wikipedia_cc_by_sa),
-        style = typography.xxs.color(colorPalette.textDisabled)
-            .align(TextAlign.End),
+        style = typography.xxs.disabled.align(TextAlign.End),
         modifier = Modifier
             .padding(horizontal = 16.dp)
             .padding(bottom = 16.dp)

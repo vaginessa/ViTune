@@ -82,6 +82,7 @@ import it.vfsfitvnm.vimusic.ui.styling.onOverlayShimmer
 import it.vfsfitvnm.vimusic.utils.SynchronizedLyrics
 import it.vfsfitvnm.vimusic.utils.center
 import it.vfsfitvnm.vimusic.utils.color
+import it.vfsfitvnm.vimusic.utils.disabled
 import it.vfsfitvnm.vimusic.utils.medium
 import it.vfsfitvnm.vimusic.utils.semiBold
 import it.vfsfitvnm.vimusic.utils.toast
@@ -409,10 +410,9 @@ fun Lyrics(
                             ) { index, sentence ->
                                 BasicText(
                                     text = sentence,
-                                    style = typography.xs.center.medium.color(
-                                        if (index == synchronizedLyrics.index) PureBlackColorPalette.text
-                                        else PureBlackColorPalette.textDisabled
-                                    ),
+                                    style = typography.xs.center.medium.let {
+                                        if (index == synchronizedLyrics.index) it else it.disabled
+                                    },
                                     modifier = Modifier.padding(vertical = 4.dp, horizontal = 32.dp)
                                 )
                             }

@@ -228,7 +228,7 @@ private fun ClassicControls(
 
             IconButton(
                 icon = R.drawable.infinite,
-                color = if (trackLoopEnabled) colorPalette.text else colorPalette.textDisabled,
+                enabled = trackLoopEnabled,
                 onClick = { trackLoopEnabled = !trackLoopEnabled },
                 modifier = Modifier
                     .weight(1f)

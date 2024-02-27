@@ -134,22 +134,19 @@ fun HomePlaylists(
 
                     HeaderIconButton(
                         icon = R.drawable.medical,
-                        color = if (playlistSortBy == PlaylistSortBy.SongCount) colorPalette.text
-                        else colorPalette.textDisabled,
+                        enabled = playlistSortBy == PlaylistSortBy.SongCount,
                         onClick = { playlistSortBy = PlaylistSortBy.SongCount }
                     )
 
                     HeaderIconButton(
                         icon = R.drawable.text,
-                        color = if (playlistSortBy == PlaylistSortBy.Name) colorPalette.text
-                        else colorPalette.textDisabled,
+                        enabled = playlistSortBy == PlaylistSortBy.Name,
                         onClick = { playlistSortBy = PlaylistSortBy.Name }
                     )
 
                     HeaderIconButton(
                         icon = R.drawable.time,
-                        color = if (playlistSortBy == PlaylistSortBy.DateAdded) colorPalette.text
-                        else colorPalette.textDisabled,
+                        enabled = playlistSortBy == PlaylistSortBy.DateAdded,
                         onClick = { playlistSortBy = PlaylistSortBy.DateAdded }
                     )
 

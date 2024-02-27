@@ -23,6 +23,7 @@ import it.vfsfitvnm.vimusic.Database
 import it.vfsfitvnm.vimusic.R
 import it.vfsfitvnm.vimusic.transaction
 import it.vfsfitvnm.vimusic.utils.intent
+import it.vfsfitvnm.vimusic.utils.toast
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -213,7 +214,7 @@ class PrecacheService : DownloadService(
                             /* foreground      = */ false
                         )
                     }.exceptionOrNull()?.printStackTrace()?.also {
-                        Toast.makeText(context, R.string.error_pre_cache, Toast.LENGTH_SHORT).show()
+                        context.toast(context.getString(R.string.error_pre_cache))
                     }
                 }
             }

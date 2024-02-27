@@ -40,7 +40,7 @@ import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.utils.asMediaItem
 import it.vfsfitvnm.vimusic.utils.center
-import it.vfsfitvnm.vimusic.utils.color
+import it.vfsfitvnm.vimusic.utils.disabled
 import it.vfsfitvnm.vimusic.utils.enqueue
 import it.vfsfitvnm.vimusic.utils.forcePlayAtIndex
 import it.vfsfitvnm.vimusic.utils.forcePlayFromBeginning
@@ -120,7 +120,7 @@ fun AlbumSongs(
                         thumbnailContent = {
                             BasicText(
                                 text = "${index + 1}",
-                                style = typography.s.semiBold.center.color(colorPalette.textDisabled),
+                                style = typography.s.semiBold.center.disabled,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier

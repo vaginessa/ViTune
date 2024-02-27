@@ -16,11 +16,11 @@ data class ScrollingInfo(
 )
 
 @Composable
-fun LazyListState.scrollingInfo(): ScrollingInfo {
+fun LazyListState.scrollingInfo(key: Any = Unit): ScrollingInfo {
     var previousIndex by remember(this) { mutableIntStateOf(firstVisibleItemIndex) }
     var previousScrollOffset by remember(this) { mutableIntStateOf(firstVisibleItemScrollOffset) }
 
-    return remember(this) {
+    return remember(this, key) {
         derivedStateOf {
             val isScrollingDown =
                 if (previousIndex == firstVisibleItemIndex) firstVisibleItemScrollOffset > previousScrollOffset
@@ -39,11 +39,11 @@ fun LazyListState.scrollingInfo(): ScrollingInfo {
 }
 
 @Composable
-fun LazyGridState.scrollingInfo(): ScrollingInfo {
+fun LazyGridState.scrollingInfo(key: Any = Unit): ScrollingInfo {
     var previousIndex by remember(this) { mutableIntStateOf(firstVisibleItemIndex) }
     var previousScrollOffset by remember(this) { mutableIntStateOf(firstVisibleItemScrollOffset) }
 
-    return remember(this) {
+    return remember(this, key) {
         derivedStateOf {
             val isScrollingDown =
                 if (previousIndex == firstVisibleItemIndex) firstVisibleItemScrollOffset > previousScrollOffset
@@ -62,10 +62,10 @@ fun LazyGridState.scrollingInfo(): ScrollingInfo {
 }
 
 @Composable
-fun ScrollState.scrollingInfo(): ScrollingInfo {
+fun ScrollState.scrollingInfo(key: Any = Unit): ScrollingInfo {
     var previousValue by remember(this) { mutableIntStateOf(value) }
 
-    return remember(this) {
+    return remember(this, key) {
         derivedStateOf {
             val isScrollingDown = value > previousValue
             previousValue = value

@@ -59,6 +59,7 @@ import it.vfsfitvnm.vimusic.ui.components.themed.SecondaryTextButton
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.utils.align
 import it.vfsfitvnm.vimusic.utils.center
+import it.vfsfitvnm.vimusic.utils.disabled
 import it.vfsfitvnm.vimusic.utils.medium
 import it.vfsfitvnm.vimusic.utils.secondary
 import kotlinx.coroutines.delay
@@ -182,7 +183,7 @@ fun OnlineSearch(
                             .size(20.dp)
                             .paint(
                                 painter = timeIconPainter,
-                                colorFilter = ColorFilter.tint(colorPalette.textDisabled)
+                                colorFilter = ColorFilter.disabled
                             )
                     )
 
@@ -197,7 +198,7 @@ fun OnlineSearch(
                     Image(
                         painter = closeIconPainter,
                         contentDescription = null,
-                        colorFilter = ColorFilter.tint(colorPalette.textDisabled),
+                        colorFilter = ColorFilter.disabled,
                         modifier = Modifier
                             .clickable(
                                 indication = rippleIndication,
@@ -215,7 +216,7 @@ fun OnlineSearch(
                     Image(
                         painter = arrowForwardIconPainter,
                         contentDescription = null,
-                        colorFilter = ColorFilter.tint(colorPalette.textDisabled),
+                        colorFilter = ColorFilter.disabled,
                         modifier = Modifier
                             .clickable(
                                 indication = rippleIndication,
@@ -262,7 +263,7 @@ fun OnlineSearch(
                         Image(
                             painter = arrowForwardIconPainter,
                             contentDescription = null,
-                            colorFilter = ColorFilter.tint(colorPalette.textDisabled),
+                            colorFilter = ColorFilter.disabled,
                             modifier = Modifier
                                 .clickable(
                                     indication = rippleIndication,

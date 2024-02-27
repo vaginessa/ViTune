@@ -96,15 +96,13 @@ fun HomeArtistList(
                 Header(title = stringResource(R.string.artists)) {
                     HeaderIconButton(
                         icon = R.drawable.text,
-                        color = if (artistSortBy == ArtistSortBy.Name) colorPalette.text
-                        else colorPalette.textDisabled,
+                        enabled = artistSortBy == ArtistSortBy.Name,
                         onClick = { artistSortBy = ArtistSortBy.Name }
                     )
 
                     HeaderIconButton(
                         icon = R.drawable.time,
-                        color = if (artistSortBy == ArtistSortBy.DateAdded) colorPalette.text
-                        else colorPalette.textDisabled,
+                        enabled = artistSortBy == ArtistSortBy.DateAdded,
                         onClick = { artistSortBy = ArtistSortBy.DateAdded }
                     )
 

@@ -38,7 +38,18 @@ val Context.isIgnoringBatteryOptimizations
     get() = !isAtLeastAndroid6 ||
             getSystemService<PowerManager>()?.isIgnoringBatteryOptimizations(packageName) ?: true
 
-fun Context.toast(message: String) = Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+fun Context.toast(
+    message: String,
+    duration: ToastDuration = ToastDuration.Short
+) = Toast.makeText(this, message, duration.length).show()
+
+@JvmInline
+value class ToastDuration private constructor(internal val length: Int) {
+    companion object {
+        val Short = ToastDuration(length = Toast.LENGTH_SHORT)
+        val Long = ToastDuration(length = Toast.LENGTH_LONG)
+    }
+}
 
 fun launchYouTubeMusic(
     context: Context,

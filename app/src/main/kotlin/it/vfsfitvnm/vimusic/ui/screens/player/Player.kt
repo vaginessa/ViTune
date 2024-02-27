@@ -457,7 +457,7 @@ fun Player(
                     if (playerLayout == PlayerPreferences.PlayerLayout.New) IconButton(
                         onClick = { trackLoopEnabled = !trackLoopEnabled },
                         icon = R.drawable.infinite,
-                        color = if (trackLoopEnabled) colorPalette.text else colorPalette.textDisabled,
+                        enabled = trackLoopEnabled,
                         modifier = Modifier
                             .padding(vertical = 8.dp)
                             .size(20.dp)

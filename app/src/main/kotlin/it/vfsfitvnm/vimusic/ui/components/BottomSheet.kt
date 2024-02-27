@@ -4,8 +4,8 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.AnimationVector1D
-import androidx.compose.animation.core.SpringSpec
 import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Indication
 import androidx.compose.foundation.LocalIndication
@@ -23,9 +23,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.SaverScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -76,7 +77,7 @@ fun BottomSheet(
                 onDragEnd = {
                     val velocity = -velocityTracker.calculateVelocity().y
                     velocityTracker.resetTracking()
-                    state.performFling(velocity, onDismiss)
+                    state.fling(velocity, onDismiss)
                 }
             )
         }
@@ -108,7 +109,7 @@ class BottomSheetState(
     draggableState: DraggableState,
     private val coroutineScope: CoroutineScope,
     private val animatable: Animatable<Dp, AnimationVector1D>,
-    private val onAnchorChanged: (Int) -> Unit,
+    private val onAnchorChanged: (Anchor) -> Unit,
     val collapsedBound: Dp
 ) : DraggableState by draggableState {
     private val dismissedBound get() = animatable.lowerBound!!
@@ -123,60 +124,52 @@ class BottomSheetState(
         1f - (animatable.upperBound!! - animatable.value) / (animatable.upperBound!! - collapsedBound)
     }
 
-    fun collapse(animationSpec: AnimationSpec<Dp>) {
-        onAnchorChanged(COLLAPSED_ANCHOR)
-        coroutineScope.launch {
-            animatable.animateTo(collapsedBound, animationSpec)
-        }
+    private fun deferAnimateTo(
+        newValue: Dp,
+        spec: AnimationSpec<Dp> = spring()
+    ) = coroutineScope.launch {
+        animatable.animateTo(newValue, spec)
     }
 
-    fun expand(animationSpec: AnimationSpec<Dp>) {
-        onAnchorChanged(EXPANDED_ANCHOR)
-        coroutineScope.launch {
-            animatable.animateTo(animatable.upperBound!!, animationSpec)
-        }
+    fun collapse(spec: AnimationSpec<Dp>) {
+        onAnchorChanged(Anchor.Collapsed)
+        deferAnimateTo(collapsedBound, spec)
     }
 
-    private fun collapse() = collapse(SpringSpec())
+    fun expand(spec: AnimationSpec<Dp>) {
+        onAnchorChanged(Anchor.Expanded)
+        deferAnimateTo(animatable.upperBound!!, spec)
+    }
 
-    private fun expand() = expand(SpringSpec())
-
+    private fun collapse() = collapse(spring())
+    private fun expand() = expand(spring())
     fun collapseSoft() = collapse(tween(300))
-
     fun expandSoft() = expand(tween(300))
 
     fun dismiss() {
-        onAnchorChanged(DISMISSED_ANCHOR)
-        coroutineScope.launch {
-            animatable.animateTo(animatable.lowerBound!!)
-        }
+        onAnchorChanged(Anchor.Dismissed)
+        deferAnimateTo(animatable.lowerBound!!)
     }
 
-    fun snapTo(value: Dp) {
-        coroutineScope.launch {
-            animatable.snapTo(value)
-        }
+    fun snapTo(value: Dp) = coroutineScope.launch {
+        animatable.snapTo(value)
     }
 
-    fun performFling(velocity: Float, onDismiss: (() -> Unit)?) = when {
+    fun fling(velocity: Float, onDismiss: (() -> Unit)?) = when {
         velocity > 250 -> expand()
         velocity < -250 -> {
             if (value < collapsedBound && onDismiss != null) {
                 dismiss()
                 onDismiss.invoke()
-            } else {
-                collapse()
-            }
+            } else collapse()
         }
 
         else -> {
-            val l0 = dismissedBound
             val l1 = (collapsedBound - dismissedBound) / 2
             val l2 = (expandedBound - collapsedBound) / 2
-            val l3 = expandedBound
 
             when (value) {
-                in l0..l1 -> {
+                in dismissedBound..l1 -> {
                     if (onDismiss != null) {
                         dismiss()
                         onDismiss.invoke()
@@ -184,7 +177,7 @@ class BottomSheetState(
                 }
 
                 in l1..l2 -> collapse()
-                in l2..l3 -> expand()
+                in l2..expandedBound -> expand()
                 else -> Unit
             }
         }
@@ -218,7 +211,7 @@ class BottomSheetState(
 
             override suspend fun onPreFling(available: Velocity) = if (isTopReached) {
                 val velocity = -available.y
-                performFling(velocity, null)
+                fling(velocity, null)
 
                 available
             } else Velocity.Zero
@@ -228,29 +221,47 @@ class BottomSheetState(
                 return Velocity.Zero
             }
         }
-}
 
-const val EXPANDED_ANCHOR = 2
-const val COLLAPSED_ANCHOR = 1
-const val DISMISSED_ANCHOR = 0
+    @JvmInline
+    value class Anchor private constructor(internal val value: Int) {
+        companion object {
+            val Dismissed = Anchor(value = 0)
+            val Collapsed = Anchor(value = 1)
+            val Expanded = Anchor(value = 2)
+        }
+
+        object Saver : androidx.compose.runtime.saveable.Saver<Anchor, Int> {
+            override fun restore(value: Int) = when (value) {
+                0 -> Dismissed
+                1 -> Collapsed
+                2 -> Expanded
+                else -> error("Anchor $value does not exist!")
+            }
+
+            override fun SaverScope.save(value: Anchor) = value.value
+        }
+    }
+}
 
 @Composable
 fun rememberBottomSheetState(
     dismissedBound: Dp,
     expandedBound: Dp,
     collapsedBound: Dp = dismissedBound,
-    initialAnchor: Int = DISMISSED_ANCHOR
+    initialAnchor: BottomSheetState.Anchor = BottomSheetState.Anchor.Dismissed
 ): BottomSheetState {
     val density = LocalDensity.current
     val coroutineScope = rememberCoroutineScope()
 
-    var previousAnchor by rememberSaveable { mutableIntStateOf(initialAnchor) }
+    var previousAnchor by rememberSaveable(stateSaver = BottomSheetState.Anchor.Saver) {
+        mutableStateOf(initialAnchor)
+    }
 
     return remember(dismissedBound, expandedBound, collapsedBound, coroutineScope) {
         val initialValue = when (previousAnchor) {
-            EXPANDED_ANCHOR -> expandedBound
-            COLLAPSED_ANCHOR -> collapsedBound
-            DISMISSED_ANCHOR -> dismissedBound
+            BottomSheetState.Anchor.Dismissed -> dismissedBound
+            BottomSheetState.Anchor.Collapsed -> collapsedBound
+            BottomSheetState.Anchor.Expanded -> expandedBound
             else -> error("Unknown BottomSheet anchor")
         }
 

@@ -111,6 +111,7 @@ import it.vfsfitvnm.vimusic.utils.mediaItems
 import it.vfsfitvnm.vimusic.utils.shouldBePlaying
 import it.vfsfitvnm.vimusic.utils.thumbnail
 import it.vfsfitvnm.vimusic.utils.timer
+import it.vfsfitvnm.vimusic.utils.toast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -610,7 +611,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             bassBoost?.setStrength(PlayerPreferences.bassBoostLevel.toShort())
             bassBoost?.enabled = true
         }.onFailure {
-            Toast.makeText(this, R.string.error_bassboost_init, Toast.LENGTH_SHORT).show()
+            toast(getString(R.string.error_bassboost_init))
         }
     }
 

@@ -15,6 +15,27 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
+
+@Composable
+fun HeaderIconButton(
+    onClick: () -> Unit,
+    @DrawableRes icon: Int,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    indication: Indication? = rememberRipple(bounded = false)
+) {
+    val (colorPalette) = LocalAppearance.current
+
+    HeaderIconButton(
+        onClick = onClick,
+        icon = icon,
+        modifier = modifier,
+        indication = indication,
+        enabled = true,
+        color = if (enabled) colorPalette.text else colorPalette.textDisabled
+    )
+}
 
 @Composable
 fun HeaderIconButton(
@@ -34,6 +55,26 @@ fun HeaderIconButton(
         .padding(all = 4.dp)
         .size(18.dp)
 )
+
+@Composable
+fun IconButton(
+    onClick: () -> Unit,
+    @DrawableRes icon: Int,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    indication: Indication? = rememberRipple(bounded = false)
+) {
+    val (colorPalette) = LocalAppearance.current
+
+    IconButton(
+        onClick = onClick,
+        icon = icon,
+        modifier = modifier,
+        indication = indication,
+        enabled = true,
+        color = if (enabled) colorPalette.text else colorPalette.textDisabled
+    )
+}
 
 @Composable
 fun IconButton(

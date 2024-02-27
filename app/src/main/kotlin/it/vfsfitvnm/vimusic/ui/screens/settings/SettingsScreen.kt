@@ -272,7 +272,7 @@ fun SettingsEntry(
 
         if (text != null) BasicText(
             text = text,
-            style = typography.xs.semiBold.copy(color = colorPalette.textSecondary)
+            style = typography.xs.semiBold.secondary
         )
     }
 

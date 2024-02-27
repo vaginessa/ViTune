@@ -11,8 +11,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
-import it.vfsfitvnm.vimusic.utils.color
+import it.vfsfitvnm.vimusic.utils.disabled
 import it.vfsfitvnm.vimusic.utils.medium
+import it.vfsfitvnm.vimusic.utils.primary
 
 @Composable
 fun DialogTextButton(
@@ -24,15 +25,15 @@ fun DialogTextButton(
 ) {
     val (colorPalette, typography) = LocalAppearance.current
 
-    val textColor = when {
-        !enabled -> colorPalette.textDisabled
-        primary -> colorPalette.onAccent
-        else -> colorPalette.text
-    }
-
     BasicText(
         text = text,
-        style = typography.xs.medium.color(textColor),
+        style = typography.xs.medium.let {
+            when {
+                !enabled -> it.disabled
+                primary -> it.primary
+                else -> it
+            }
+        },
         modifier = modifier
             .clip(RoundedCornerShape(36.dp))
             .background(if (primary) colorPalette.accent else Color.Transparent)

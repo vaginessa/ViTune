@@ -238,19 +238,19 @@ fun HomeSongs(
 
                     HeaderIconButton(
                         icon = R.drawable.trending,
-                        color = if (sortBy == SongSortBy.PlayTime) colorPalette.text else colorPalette.textDisabled,
+                        enabled = sortBy == SongSortBy.PlayTime,
                         onClick = { setSortBy(SongSortBy.PlayTime) }
                     )
 
                     HeaderIconButton(
                         icon = R.drawable.text,
-                        color = if (sortBy == SongSortBy.Title) colorPalette.text else colorPalette.textDisabled,
+                        enabled = sortBy == SongSortBy.Title,
                         onClick = { setSortBy(SongSortBy.Title) }
                     )
 
                     HeaderIconButton(
                         icon = R.drawable.time,
-                        color = if (sortBy == SongSortBy.DateAdded) colorPalette.text else colorPalette.textDisabled,
+                        enabled = sortBy == SongSortBy.DateAdded,
                         onClick = { setSortBy(SongSortBy.DateAdded) }
                     )
 
