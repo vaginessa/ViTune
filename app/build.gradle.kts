@@ -112,7 +112,7 @@ dependencies {
 
     implementation(libs.palette)
     implementation(libs.monet)
-    implementation(libs.materialComponents)
+    runtimeOnly(projects.core.materialCompat)
 
     implementation(libs.exoplayer)
     implementation(libs.exoplayer.workmanager)

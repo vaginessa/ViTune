@@ -26,6 +26,7 @@ rootProject.name = "ViMusic"
 
 include(":app")
 include(":core:data")
+include(":core:material-compat")
 include(":core:ui")
 include(":compose:persist")
 include(":compose:preferences")
