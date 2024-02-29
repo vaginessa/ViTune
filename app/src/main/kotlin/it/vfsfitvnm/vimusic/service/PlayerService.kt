@@ -154,18 +154,21 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
     private lateinit var cache: SimpleCache
     private lateinit var player: ExoPlayer
 
+    private val defaultActions =
+        PlaybackState.ACTION_PLAY or
+                PlaybackState.ACTION_PAUSE or
+                PlaybackState.ACTION_PLAY_PAUSE or
+                PlaybackState.ACTION_STOP or
+                PlaybackState.ACTION_SKIP_TO_PREVIOUS or
+                PlaybackState.ACTION_SKIP_TO_NEXT or
+                PlaybackState.ACTION_SKIP_TO_QUEUE_ITEM or
+                PlaybackState.ACTION_SEEK_TO or
+                PlaybackState.ACTION_REWIND or
+                PlaybackState.ACTION_PLAY_FROM_SEARCH
+
     private val stateBuilder
         get() = PlaybackState.Builder().setActions(
-            (PlaybackState.ACTION_PLAY or
-                    PlaybackState.ACTION_PAUSE or
-                    PlaybackState.ACTION_PLAY_PAUSE or
-                    PlaybackState.ACTION_STOP or
-                    PlaybackState.ACTION_SKIP_TO_PREVIOUS or
-                    PlaybackState.ACTION_SKIP_TO_NEXT or
-                    PlaybackState.ACTION_SKIP_TO_QUEUE_ITEM or
-                    PlaybackState.ACTION_SEEK_TO or
-                    PlaybackState.ACTION_REWIND or
-                    PlaybackState.ACTION_PLAY_FROM_SEARCH).let {
+            defaultActions.let {
                 if (isAtLeastAndroid12) it or PlaybackState.ACTION_SET_PLAYBACK_SPEED else it
             }
         ).addCustomAction(

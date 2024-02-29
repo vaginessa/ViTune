@@ -267,6 +267,7 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
             binder.playFromSearch(query)
         }
 
+        @Suppress("CyclomaticComplexMethod")
         @OptIn(UnstableApi::class)
         override fun onPlayFromMediaId(mediaId: String?, extras: Bundle?) {
             val data = mediaId?.split('/') ?: return

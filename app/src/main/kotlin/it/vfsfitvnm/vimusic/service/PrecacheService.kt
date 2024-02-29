@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.ServiceConnection
 import android.net.Uri
 import android.os.IBinder
-import android.widget.Toast
 import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi

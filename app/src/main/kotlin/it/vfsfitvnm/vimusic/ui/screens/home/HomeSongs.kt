@@ -82,7 +82,6 @@ import it.vfsfitvnm.vimusic.utils.secondary
 import it.vfsfitvnm.vimusic.utils.semiBold
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlin.time.Duration.Companion.milliseconds
 
 private val Song.formattedTotalPlayTime: String
     @Composable get() {
