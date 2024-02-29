@@ -2,7 +2,7 @@ package it.vfsfitvnm.vimusic.enums
 
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import it.vfsfitvnm.vimusic.roundedShape
+import it.vfsfitvnm.vimusic.utils.roundedShape
 
 enum class ThumbnailRoundness(val dp: Dp) {
     None(0.dp),

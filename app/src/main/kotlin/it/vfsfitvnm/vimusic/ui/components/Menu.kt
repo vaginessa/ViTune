@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
+import it.vfsfitvnm.vimusic.ui.modifiers.pressable
 
 val LocalMenuState = staticCompositionLocalOf { MenuState() }
 
@@ -44,8 +45,8 @@ class MenuState {
 
 @Composable
 fun BottomSheetMenu(
-    state: MenuState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    state: MenuState = LocalMenuState.current
 ) {
     AnimatedVisibility(
         visible = state.isDisplayed,
@@ -56,11 +57,7 @@ fun BottomSheetMenu(
 
         Spacer(
             modifier = Modifier
-                .pointerInput(Unit) {
-                    detectTapGestures {
-                        state.hide()
-                    }
-                }
+                .pressable(onRelease = state::hide)
                 .background(Color.Black.copy(alpha = 0.5f))
                 .fillMaxSize()
         )

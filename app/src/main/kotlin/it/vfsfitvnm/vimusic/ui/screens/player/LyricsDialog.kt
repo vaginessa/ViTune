@@ -29,6 +29,7 @@ import it.vfsfitvnm.vimusic.utils.forceSeekToNext
 import it.vfsfitvnm.vimusic.utils.forceSeekToPrevious
 import it.vfsfitvnm.vimusic.utils.px
 import it.vfsfitvnm.vimusic.utils.thumbnail
+import it.vfsfitvnm.vimusic.utils.windowState
 
 @Composable
 fun LyricsDialog(
@@ -40,7 +41,7 @@ fun LyricsDialog(
     val thumbnailShape = appearance.thumbnailShape
 
     val player = LocalPlayerServiceBinder.current?.player ?: return@Dialog
-    val (window, error) = currentWindow()
+    val (window, error) = windowState()
 
     LaunchedEffect(window, error) {
         if (window == null || window.mediaItem.isLocal || error != null) onDismiss()

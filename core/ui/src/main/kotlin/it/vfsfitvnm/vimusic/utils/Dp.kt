@@ -1,4 +1,4 @@
-package it.vfsfitvnm.vimusic
+package it.vfsfitvnm.vimusic.utils
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.Dp

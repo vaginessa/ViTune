@@ -46,6 +46,7 @@ import it.vfsfitvnm.vimusic.utils.forceSeekToNext
 import it.vfsfitvnm.vimusic.utils.forceSeekToPrevious
 import it.vfsfitvnm.vimusic.utils.px
 import it.vfsfitvnm.vimusic.utils.thumbnail
+import it.vfsfitvnm.vimusic.utils.windowState
 import java.net.UnknownHostException
 import java.nio.channels.UnresolvedAddressException
 
@@ -64,7 +65,7 @@ fun Thumbnail(
     val thumbnailShape = LocalAppearance.current.thumbnailShape
     val thumbnailSize = Dimensions.thumbnails.player.song
 
-    val (nullableWindow, error) = currentWindow()
+    val (nullableWindow, error) = windowState()
     val window = nullableWindow ?: return
 
     AnimatedContent(

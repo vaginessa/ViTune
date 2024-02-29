@@ -6,7 +6,6 @@ import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.SaverScope
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.core.graphics.ColorUtils
 import androidx.palette.graphics.Palette
 import it.vfsfitvnm.vimusic.enums.ColorPaletteMode
 import it.vfsfitvnm.vimusic.enums.ColorPaletteName
@@ -32,7 +31,7 @@ data class ColorPalette(
             1 -> DefaultLightColorPalette
             2 -> PureBlackColorPalette
             else -> dynamicColorPaletteOf(
-                accentColor = accent,
+                accentColor = Color(accent),
                 isDark = value[1] as Boolean,
                 isAmoled = value[2] as Boolean
             )
@@ -99,11 +98,10 @@ fun colorPaletteOf(
     ColorPaletteName.AMOLED -> PureBlackColorPalette.copy(isAmoled = true)
 }
 
-fun dynamicColorPaletteOf(
+fun dynamicAccentColorOf(
     bitmap: Bitmap,
-    isDark: Boolean,
-    isAmoled: Boolean
-): ColorPalette? {
+    isDark: Boolean
+): Hsl? {
     val palette = Palette
         .from(bitmap)
         .maximumColorCount(8)
@@ -120,60 +118,64 @@ fun dynamicColorPaletteOf(
         palette.dominantSwatch
     }?.hsl ?: return null
 
-    return dynamicColorPaletteOf(
-        hsl = if (hsl[1] < 0.08)
-            palette.swatches
-                .map(Palette.Swatch::getHsl)
-                .sortedByDescending(FloatArray::component2)
-                .find { it[1] != 0f }
-                ?: hsl
-        else hsl,
-        isDark = isDark,
-        isAmoled = isAmoled
-    )
+    val arr = if (hsl[1] < 0.08)
+        palette.swatches
+            .map(Palette.Swatch::getHsl)
+            .sortedByDescending(FloatArray::component2)
+            .find { it[1] != 0f }
+            ?: hsl
+    else hsl
+
+    return arr.hsl
 }
 
+@Suppress("CyclomaticComplexMethod")
 fun dynamicColorPaletteOf(
-    hsl: FloatArray,
+    hsl: Hsl,
     isDark: Boolean,
     isAmoled: Boolean
 ) = hsl.let { (hue, saturation) ->
-    colorPaletteOf(
-        name = if (isAmoled) ColorPaletteName.AMOLED else ColorPaletteName.Dynamic,
-        mode = if (isDark || isAmoled) ColorPaletteMode.Dark else ColorPaletteMode.Light,
-        isDark = false
+    val accentColor = Color.hsl(
+        hue = hue,
+        saturation = saturation.coerceAtMost(if (isAmoled) 0.4f else 0.5f),
+        lightness = 0.5f
+    )
+
+    if (isAmoled) PureBlackColorPalette.copy(
+        isAmoled = true,
+        accent = accentColor
+    ) else colorPaletteOf(
+        name = ColorPaletteName.Dynamic,
+        mode = if (isDark) ColorPaletteMode.Dark else ColorPaletteMode.Light,
+        isDark = isDark
     ).copy(
-        background0 = if (isAmoled) PureBlackColorPalette.background0 else Color.hsl(
+        background0 = Color.hsl(
             hue = hue,
             saturation = saturation.coerceAtMost(0.1f),
             lightness = if (isDark) 0.10f else 0.925f
         ),
-        background1 = if (isAmoled) PureBlackColorPalette.background1 else Color.hsl(
+        background1 = Color.hsl(
             hue = hue,
             saturation = saturation.coerceAtMost(0.3f),
             lightness = if (isDark) 0.15f else 0.90f
         ),
-        background2 = if (isAmoled) PureBlackColorPalette.background2 else Color.hsl(
+        background2 = Color.hsl(
             hue = hue,
             saturation = saturation.coerceAtMost(0.4f),
             lightness = if (isDark) 0.2f else 0.85f
         ),
-        accent = Color.hsl(
-            hue = hue,
-            saturation = saturation.coerceAtMost(if (isAmoled) 0.4f else 0.5f),
-            lightness = 0.5f
-        ),
-        text = if (isAmoled) PureBlackColorPalette.text else Color.hsl(
+        accent = accentColor,
+        text = Color.hsl(
             hue = hue,
             saturation = saturation.coerceAtMost(0.02f),
             lightness = if (isDark) 0.88f else 0.12f
         ),
-        textSecondary = if (isAmoled) PureBlackColorPalette.textSecondary else Color.hsl(
+        textSecondary = Color.hsl(
             hue = hue,
             saturation = saturation.coerceAtMost(0.1f),
             lightness = if (isDark) 0.65f else 0.40f
         ),
-        textDisabled = if (isAmoled) PureBlackColorPalette.textDisabled else Color.hsl(
+        textDisabled = Color.hsl(
             hue = hue,
             saturation = saturation.coerceAtMost(0.2f),
             lightness = if (isDark) 0.40f else 0.65f
@@ -186,17 +188,7 @@ fun dynamicColorPaletteOf(
     isDark: Boolean,
     isAmoled: Boolean
 ) = dynamicColorPaletteOf(
-    accentColor = accentColor.toArgb(),
-    isDark = isDark,
-    isAmoled = isAmoled
-)
-
-fun dynamicColorPaletteOf(
-    accentColor: Int,
-    isDark: Boolean,
-    isAmoled: Boolean
-) = dynamicColorPaletteOf(
-    hsl = FloatArray(3).apply { ColorUtils.colorToHSL(accentColor, this) },
+    hsl = accentColor.hsl,
     isDark = isDark,
     isAmoled = isAmoled
 )

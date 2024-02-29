@@ -19,21 +19,18 @@ class BitmapProvider(
     var lastUri: Uri? = null
         private set
 
-    var lastBitmap: Bitmap? = null
-    private var lastIsSystemInDarkMode = false
-
-    private var lastEnqueued: Disposable? = null
-
-    private lateinit var defaultBitmap: Bitmap
-
-    val bitmap: Bitmap
-        get() = lastBitmap ?: defaultBitmap
-
-    var listener: ((Bitmap?) -> Unit)? = null
+    private var lastBitmap: Bitmap? = null
         set(value) {
             field = value
-            value?.invoke(lastBitmap)
+            listener?.invoke(value)
         }
+    private var lastIsSystemInDarkMode = false
+    private var currentTask: Disposable? = null
+
+    private lateinit var defaultBitmap: Bitmap
+    val bitmap get() = lastBitmap ?: defaultBitmap
+
+    private var listener: ((Bitmap?) -> Unit)? = null
 
     init {
         setDefaultBitmap()
@@ -59,13 +56,25 @@ class BitmapProvider(
         return lastBitmap == null
     }
 
-    fun load(uri: Uri?, onDone: (Bitmap) -> Unit) {
-        if (lastUri == uri) return
+    fun load(
+        uri: Uri?,
+        onDone: (Bitmap) -> Unit = { }
+    ) {
+        if (lastUri == uri) {
+            listener?.invoke(lastBitmap)
+            return
+        }
 
-        lastEnqueued?.dispose()
+        currentTask?.dispose()
         lastUri = uri
 
-        lastEnqueued = applicationContext.imageLoader.enqueue(
+        if (uri == null) {
+            lastBitmap = null
+            onDone(bitmap)
+            return
+        }
+
+        currentTask = applicationContext.imageLoader.enqueue(
             ImageRequest.Builder(applicationContext)
                 .data(uri.thumbnail(getBitmapSize()))
                 .allowHardware(false)
@@ -73,15 +82,18 @@ class BitmapProvider(
                     onError = { _, _ ->
                         lastBitmap = null
                         onDone(bitmap)
-                        listener?.invoke(lastBitmap)
                     },
                     onSuccess = { _, result ->
                         lastBitmap = (result.drawable as BitmapDrawable).bitmap
                         onDone(bitmap)
-                        listener?.invoke(lastBitmap)
                     }
                 )
                 .build()
         )
+    }
+
+    fun setListener(callback: ((Bitmap?) -> Unit)?) {
+        listener = callback
+        listener?.invoke(lastBitmap)
     }
 }

@@ -26,7 +26,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.text.format.DateUtils
-import android.widget.Toast
 import androidx.annotation.OptIn
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -445,10 +444,11 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         maybeNormalizeVolume()
         maybeProcessRadio()
 
-        when {
-            mediaItem == null -> bitmapProvider.listener?.invoke(null)
-            mediaItem.mediaMetadata.artworkUri == bitmapProvider.lastUri ->
-                bitmapProvider.listener?.invoke(bitmapProvider.lastBitmap)
+        with(bitmapProvider) {
+            when {
+                mediaItem == null -> load(null)
+                mediaItem.mediaMetadata.artworkUri == lastUri -> bitmapProvider.load(lastUri)
+            }
         }
 
         if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO || reason == Player.MEDIA_ITEM_TRANSITION_REASON_SEEK)
@@ -793,10 +793,8 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             )
             .setOngoing(false)
             .setContentIntent(
-                activityPendingIntent<MainActivity>(
-                    flags = PendingIntent.FLAG_UPDATE_CURRENT
-                ) {
-                    putExtra("expandPlayerBottomSheet", true)
+                activityPendingIntent<MainActivity>(flags = PendingIntent.FLAG_UPDATE_CURRENT) {
+                    putExtra("fromNotification", true)
                 }
             )
             .setDeleteIntent(broadcastPendingIntent<NotificationDismissReceiver>())
@@ -940,9 +938,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                 isInvincibilityEnabled = value
             }
 
-        fun setBitmapListener(listener: ((Bitmap?) -> Unit)?) {
-            bitmapProvider.listener = listener
-        }
+        fun setBitmapListener(listener: ((Bitmap?) -> Unit)?) = bitmapProvider.setListener(listener)
 
         fun startSleepTimer(delayMillis: Long) {
             timerJob?.cancel()

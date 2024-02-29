@@ -4,22 +4,30 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.common.Timeline
+import it.vfsfitvnm.vimusic.LocalPlayerServiceBinder
+import it.vfsfitvnm.vimusic.service.PlayerService
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 
 @Composable
-inline fun Player.DisposableListener(crossinline listenerProvider: () -> Player.Listener) {
-    DisposableEffect(this) {
-        val listener = listenerProvider()
-        addListener(listener)
-        onDispose { removeListener(listener) }
-    }
+inline fun Player.DisposableListener(
+    key: Any = this,
+    crossinline listenerProvider: () -> Player.Listener
+) = DisposableEffect(key) {
+    val listener = listenerProvider()
+
+    addListener(listener)
+    onDispose { removeListener(listener) }
 }
 
 @Composable
@@ -70,4 +78,33 @@ fun Player.positionAndDurationState(): State<Pair<Long, Long>> {
     }
 
     return state
+}
+
+typealias WindowState = Pair<Timeline.Window?, PlaybackException?>
+
+@Composable
+fun windowState(
+    binder: PlayerService.Binder? = LocalPlayerServiceBinder.current
+): WindowState {
+    val player = binder?.player ?: return null to null
+    var window by remember { mutableStateOf(player.currentWindow) }
+    var error by remember { mutableStateOf<PlaybackException?>(player.playerError) }
+
+    player.DisposableListener {
+        object : Player.Listener {
+            override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                window = player.currentWindow
+            }
+
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                error = player.playerError
+            }
+
+            override fun onPlayerError(playbackException: PlaybackException) {
+                error = playbackException
+            }
+        }
+    }
+
+    return window to error
 }

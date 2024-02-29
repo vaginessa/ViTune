@@ -5,23 +5,18 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
-import android.graphics.Bitmap
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -36,26 +31,21 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material.ripple.LocalRippleTheme
-import androidx.compose.material.ripple.RippleAlpha
-import androidx.compose.material.ripple.RippleTheme
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
@@ -75,7 +65,6 @@ import com.kieronquinn.monetcompat.core.MonetActivityAccessException
 import com.kieronquinn.monetcompat.core.MonetCompat
 import com.kieronquinn.monetcompat.interfaces.MonetColorsChangedListener
 import com.valentinilk.shimmer.LocalShimmerTheme
-import com.valentinilk.shimmer.defaultShimmerTheme
 import dev.kdrag0n.monet.theme.ColorScheme
 import it.vfsfitvnm.compose.persist.LocalPersistMap
 import it.vfsfitvnm.compose.persist.PersistMap
@@ -84,46 +73,42 @@ import it.vfsfitvnm.innertube.Innertube
 import it.vfsfitvnm.innertube.models.bodies.BrowseBody
 import it.vfsfitvnm.innertube.requests.playlistPage
 import it.vfsfitvnm.innertube.requests.song
-import it.vfsfitvnm.vimusic.enums.ColorPaletteMode
 import it.vfsfitvnm.vimusic.enums.ColorPaletteName
 import it.vfsfitvnm.vimusic.preferences.AppearancePreferences
 import it.vfsfitvnm.vimusic.preferences.DataPreferences
 import it.vfsfitvnm.vimusic.service.PlayerService
 import it.vfsfitvnm.vimusic.service.downloadState
 import it.vfsfitvnm.vimusic.ui.components.BottomSheetMenu
-import it.vfsfitvnm.vimusic.ui.components.LocalMenuState
 import it.vfsfitvnm.vimusic.ui.components.rememberBottomSheetState
 import it.vfsfitvnm.vimusic.ui.components.themed.LinearProgressIndicator
+import it.vfsfitvnm.vimusic.ui.rippleTheme
 import it.vfsfitvnm.vimusic.ui.screens.albumRoute
 import it.vfsfitvnm.vimusic.ui.screens.artistRoute
 import it.vfsfitvnm.vimusic.ui.screens.home.HomeScreen
 import it.vfsfitvnm.vimusic.ui.screens.player.Player
 import it.vfsfitvnm.vimusic.ui.screens.playlistRoute
-import it.vfsfitvnm.vimusic.ui.styling.Appearance
+import it.vfsfitvnm.vimusic.ui.shimmerTheme
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
-import it.vfsfitvnm.vimusic.ui.styling.colorPaletteOf
+import it.vfsfitvnm.vimusic.ui.styling.SystemBarAppearance
+import it.vfsfitvnm.vimusic.ui.styling.appearance
 import it.vfsfitvnm.vimusic.ui.styling.dynamicColorPaletteOf
-import it.vfsfitvnm.vimusic.ui.styling.typographyOf
+import it.vfsfitvnm.vimusic.utils.DisposableListener
 import it.vfsfitvnm.vimusic.utils.LocalMonetCompat
 import it.vfsfitvnm.vimusic.utils.asMediaItem
+import it.vfsfitvnm.vimusic.utils.collectProvidedBitmapAsState
 import it.vfsfitvnm.vimusic.utils.forcePlay
 import it.vfsfitvnm.vimusic.utils.intent
 import it.vfsfitvnm.vimusic.utils.invokeOnReady
-import it.vfsfitvnm.vimusic.utils.isAtLeastAndroid6
-import it.vfsfitvnm.vimusic.utils.isAtLeastAndroid8
-import it.vfsfitvnm.vimusic.utils.isCompositionLaunched
 import it.vfsfitvnm.vimusic.utils.setDefaultPalette
 import it.vfsfitvnm.vimusic.utils.toast
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+private const val TAG = "MainActivity"
 
 class MainActivity : ComponentActivity(), MonetColorsChangedListener {
     private val serviceConnection = object : ServiceConnection {
@@ -152,6 +137,8 @@ class MainActivity : ComponentActivity(), MonetColorsChangedListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
         MonetCompat.setup(this)
         _monet = MonetCompat.getInstance()
         monet.setDefaultPalette()
@@ -160,217 +147,49 @@ class MainActivity : ComponentActivity(), MonetColorsChangedListener {
             notifySelf = false
         )
         monet.updateMonetColors()
-        monet.invokeOnReady(block = ::setContent)
+        monet.invokeOnReady {
+            setContent()
+        }
 
         onNewIntent(intent)
     }
 
-    // TODO: clean up the theme mess
+    @Composable
+    fun AppWrapper(
+        modifier: Modifier = Modifier,
+        content: @Composable BoxWithConstraintsScope.() -> Unit
+    ) = with(AppearancePreferences) {
+        val sampleBitmap by binder.collectProvidedBitmapAsState()
+        val appearance = appearance(
+            name = colorPaletteName,
+            mode = colorPaletteMode,
+            materialAccentColor = Color(monet.getAccentColor(this@MainActivity)),
+            sampleBitmap = sampleBitmap,
+            useSystemFont = useSystemFont,
+            applyFontPadding = applyFontPadding,
+            thumbnailRoundness = thumbnailRoundness.dp
+        )
+
+        SystemBarAppearance(palette = appearance.colorPalette)
+
+        BoxWithConstraints(
+            modifier = modifier
+                .fillMaxSize()
+                .background(appearance.colorPalette.background0)
+        ) {
+            CompositionLocalProvider(LocalAppearance provides appearance) {
+                content()
+            }
+        }
+    }
+
     @Suppress("CyclomaticComplexMethod")
     @OptIn(ExperimentalLayoutApi::class)
     fun setContent() {
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-
-        val launchedFromNotification = intent?.extras?.getBoolean("expandPlayerBottomSheet") == true
+        val fromNotification = intent?.extras?.getBoolean("fromNotification") == true
 
         setContent {
-            val coroutineScope = rememberCoroutineScope()
-            val isSystemInDarkTheme = isSystemInDarkTheme()
-
-            var appearance by rememberSaveable(
-                isSystemInDarkTheme,
-                isCompositionLaunched(),
-                stateSaver = Appearance.AppearanceSaver
-            ) {
-                with(AppearancePreferences) {
-                    val colorPalette = colorPaletteOf(
-                        name = colorPaletteName,
-                        mode = colorPaletteMode,
-                        isDark = isSystemInDarkTheme
-                    )
-
-                    setSystemBarAppearance(colorPalette.isDark)
-
-                    mutableStateOf(
-                        Appearance(
-                            colorPalette = colorPalette,
-                            typography = typographyOf(
-                                color = colorPalette.text,
-                                useSystemFont = useSystemFont,
-                                applyFontPadding = applyFontPadding
-                            ),
-                            thumbnailShapeCorners = thumbnailRoundness.dp
-                        )
-                    )
-                }
-            }
-
-            DisposableEffect(binder, isSystemInDarkTheme) {
-                var bitmapListenerJob: Job? = null
-                var appearanceUpdaterJob: Job? = null
-
-                fun setDynamicPalette(
-                    name: ColorPaletteName,
-                    mode: ColorPaletteMode
-                ) {
-                    val isDark = mode == ColorPaletteMode.Dark ||
-                            (mode == ColorPaletteMode.System && isSystemInDarkTheme)
-
-                    if (name == ColorPaletteName.MaterialYou) dynamicColorPaletteOf(
-                        accentColor = monet.getAccentColor(
-                            context = this@MainActivity,
-                            darkMode = isDark
-                        ),
-                        isDark = isDark,
-                        isAmoled = false
-                    ).let {
-                        appearance = appearance.copy(
-                            colorPalette = it,
-                            typography = appearance.typography.copy(it.text)
-                        )
-                    } else binder?.setBitmapListener { bitmap: Bitmap? ->
-                        if (bitmap == null) {
-                            val colorPalette = colorPaletteOf(
-                                name = name,
-                                mode = mode,
-                                isDark = isSystemInDarkTheme
-                            )
-
-                            setSystemBarAppearance(colorPalette.isDark)
-
-                            appearance = appearance.copy(
-                                colorPalette = colorPalette,
-                                typography = appearance.typography.copy(colorPalette.text)
-                            )
-
-                            return@setBitmapListener
-                        }
-
-                        bitmapListenerJob = coroutineScope.launch(Dispatchers.IO) {
-                            dynamicColorPaletteOf(
-                                bitmap = bitmap,
-                                isDark = isDark,
-                                isAmoled = name == ColorPaletteName.AMOLED
-                            )?.let {
-                                withContext(Dispatchers.Main) {
-                                    setSystemBarAppearance(it.isDark)
-                                }
-                                appearance = appearance.copy(
-                                    colorPalette = it,
-                                    typography = appearance.typography.copy(it.text)
-                                )
-                            }
-                        }
-                    }
-                }
-
-                with(AppearancePreferences) {
-                    fun setPalette(): Boolean {
-                        if (!colorPaletteName.isDynamic) return false
-
-                        setDynamicPalette(colorPaletteName, colorPaletteMode)
-                        return true
-                    }
-                    setPalette()
-
-                    appearanceUpdaterJob = coroutineScope.launch {
-                        launch {
-                            combine(
-                                flow = colorPaletteNameProperty.stateFlow,
-                                flow2 = colorPaletteModeProperty.stateFlow
-                            ) { name, mode ->
-                                val isStatic = setPalette()
-                                if (!isStatic || name == ColorPaletteName.MaterialYou) {
-                                    bitmapListenerJob?.cancel()
-                                    binder?.setBitmapListener(null)
-                                }
-                                if (!isStatic) {
-                                    val colorPalette = colorPaletteOf(
-                                        name = name,
-                                        mode = mode,
-                                        isDark = isSystemInDarkTheme
-                                    )
-
-                                    setSystemBarAppearance(colorPalette.isDark)
-
-                                    appearance = appearance.copy(
-                                        colorPalette = colorPalette,
-                                        typography = appearance.typography.copy(colorPalette.text)
-                                    )
-                                }
-                            }.collect()
-                        }
-                        launch {
-                            thumbnailRoundnessProperty.stateFlow.collectLatest {
-                                appearance = appearance.copy(thumbnailShapeCorners = it.dp)
-                            }
-                        }
-                        launch {
-                            combine(
-                                flow = useSystemFontProperty.stateFlow,
-                                flow2 = applyFontPaddingProperty.stateFlow
-                            ) { system, padding ->
-                                appearance = appearance.copy(
-                                    typography = typographyOf(
-                                        appearance.colorPalette.text,
-                                        system,
-                                        padding
-                                    )
-                                )
-                            }.collectLatest { }
-                        }
-                    }
-                }
-
-                onDispose {
-                    bitmapListenerJob?.cancel()
-                    appearanceUpdaterJob?.cancel()
-                    binder?.setBitmapListener(null)
-                }
-            }
-
-            val rippleTheme = remember(
-                appearance.colorPalette.text,
-                appearance.colorPalette.isDark
-            ) {
-                object : RippleTheme {
-                    @Composable
-                    override fun defaultColor(): Color = RippleTheme.defaultRippleColor(
-                        contentColor = appearance.colorPalette.text,
-                        lightTheme = !appearance.colorPalette.isDark
-                    )
-
-                    @Composable
-                    override fun rippleAlpha(): RippleAlpha = RippleTheme.defaultRippleAlpha(
-                        contentColor = appearance.colorPalette.text,
-                        lightTheme = !appearance.colorPalette.isDark
-                    )
-                }
-            }
-
-            val shimmerTheme = remember {
-                defaultShimmerTheme.copy(
-                    animationSpec = infiniteRepeatable(
-                        animation = tween(
-                            durationMillis = 800,
-                            easing = LinearEasing,
-                            delayMillis = 250
-                        ),
-                        repeatMode = RepeatMode.Restart
-                    ),
-                    shaderColors = listOf(
-                        Color.Unspecified.copy(alpha = 0.25f),
-                        Color.White.copy(alpha = 0.50f),
-                        Color.Unspecified.copy(alpha = 0.25f)
-                    )
-                )
-            }
-
-            BoxWithConstraints(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(appearance.colorPalette.background0)
-            ) {
+            AppWrapper {
                 val density = LocalDensity.current
                 val windowsInsets = WindowInsets.systemBars
                 val bottomDp = with(density) { windowsInsets.getBottom(density).toDp() }
@@ -388,31 +207,28 @@ class MainActivity : ComponentActivity(), MonetColorsChangedListener {
                     expandedBound = maxHeight
                 )
 
-                val playerAwareWindowInsets by remember(
+                val playerAwareWindowInsets = remember(
                     bottomDp,
                     animatedBottomDp,
                     playerBottomSheetState.value,
                     imeVisible,
                     imeBottomDp
                 ) {
-                    derivedStateOf {
-                        val bottom =
-                            if (imeVisible) imeBottomDp.coerceAtLeast(playerBottomSheetState.value)
-                            else playerBottomSheetState.value.coerceIn(
-                                animatedBottomDp..playerBottomSheetState.collapsedBound
-                            )
+                    val bottom =
+                        if (imeVisible) imeBottomDp.coerceAtLeast(playerBottomSheetState.value)
+                        else playerBottomSheetState.value.coerceIn(
+                            animatedBottomDp..playerBottomSheetState.collapsedBound
+                        )
 
-                        windowsInsets
-                            .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
-                            .add(WindowInsets(bottom = bottom))
-                    }
+                    windowsInsets
+                        .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
+                        .add(WindowInsets(bottom = bottom))
                 }
 
                 CompositionLocalProvider(
-                    LocalAppearance provides appearance,
-                    LocalIndication provides rememberRipple(bounded = true),
-                    LocalRippleTheme provides rippleTheme,
-                    LocalShimmerTheme provides shimmerTheme,
+                    LocalIndication provides rememberRipple(),
+                    LocalRippleTheme provides rippleTheme(),
+                    LocalShimmerTheme provides shimmerTheme(),
                     LocalPlayerServiceBinder provides binder,
                     LocalPlayerAwareWindowInsets provides playerAwareWindowInsets,
                     LocalLayoutDirection provides LayoutDirection.Ltr,
@@ -441,15 +257,17 @@ class MainActivity : ComponentActivity(), MonetColorsChangedListener {
                     }
 
                     CompositionLocalProvider(
-                        LocalAppearance provides if (
-                            AppearancePreferences.colorPaletteName == ColorPaletteName.AMOLED
-                        ) appearance.copy(
-                            colorPalette = dynamicColorPaletteOf(
-                                accentColor = appearance.colorPalette.accent,
-                                isDark = true,
-                                isAmoled = false
-                            )
-                        ) else appearance
+                        LocalAppearance provides LocalAppearance.current.let {
+                            if (
+                                AppearancePreferences.colorPaletteName == ColorPaletteName.AMOLED
+                            ) it.copy(
+                                colorPalette = dynamicColorPaletteOf(
+                                    accentColor = it.colorPalette.accent,
+                                    isDark = true,
+                                    isAmoled = false
+                                )
+                            ) else it
+                        }
                     ) {
                         Player(
                             layoutState = playerBottomSheetState,
@@ -458,40 +276,39 @@ class MainActivity : ComponentActivity(), MonetColorsChangedListener {
                     }
 
                     BottomSheetMenu(
-                        state = LocalMenuState.current,
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
                             .imePadding()
                     )
                 }
 
-                DisposableEffect(binder?.player) {
-                    val player = binder?.player ?: return@DisposableEffect onDispose { }
+                LaunchedEffect(binder?.player) {
+                    val player = binder?.player ?: return@LaunchedEffect
 
-                    if (player.currentMediaItem == null) {
-                        if (!playerBottomSheetState.isDismissed) playerBottomSheetState.dismiss()
-                    } else {
-                        if (playerBottomSheetState.isDismissed) {
-                            if (launchedFromNotification) {
-                                intent.replaceExtras(Bundle())
-                                playerBottomSheetState.expand(tween(700))
-                            } else playerBottomSheetState.collapse(tween(700))
+                    when {
+                        player.currentMediaItem == null ->
+                            if (!playerBottomSheetState.isDismissed) playerBottomSheetState.dismiss()
+
+                        playerBottomSheetState.isDismissed -> if (fromNotification) {
+                            intent.replaceExtras(null)
+                            playerBottomSheetState.expandSoft()
+                        } else playerBottomSheetState.collapseSoft()
+                    }
+                }
+
+                binder?.player?.DisposableListener {
+                    object : Player.Listener {
+                        override fun onMediaItemTransition(
+                            mediaItem: MediaItem?,
+                            reason: Int
+                        ) = when {
+                            reason != Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED || mediaItem == null -> Unit
+                            mediaItem.mediaMetadata.extras?.getBoolean("isFromPersistentQueue") == true ->
+                                playerBottomSheetState.collapseSoft()
+
+                            else -> playerBottomSheetState.expandSoft()
                         }
                     }
-
-                    val listener = object : Player.Listener {
-                        override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-                            if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED && mediaItem != null) {
-                                if (mediaItem.mediaMetadata.extras?.getBoolean("isFromPersistentQueue") != true) {
-                                    playerBottomSheetState.expand(tween(500))
-                                } else playerBottomSheetState.collapse(tween(700))
-                            }
-                        }
-                    }
-
-                    player.addListener(listener)
-
-                    onDispose { player.removeListener(listener) }
                 }
             }
         }
@@ -506,7 +323,7 @@ class MainActivity : ComponentActivity(), MonetColorsChangedListener {
         intent?.data = null
         this.intent = null
 
-        Log.d("MainActivity", "Opening url: $uri")
+        Log.d(TAG, "Opening url: $uri")
 
         lifecycleScope.launch(Dispatchers.IO) {
             when (val path = uri.pathSegments.firstOrNull()) {
@@ -538,6 +355,7 @@ class MainActivity : ComponentActivity(), MonetColorsChangedListener {
                 }?.let { videoId ->
                     Innertube.song(videoId)?.getOrNull()?.let { song ->
                         val binder = snapshotFlow { binder }.filterNotNull().first()
+
                         withContext(Dispatchers.Main) {
                             binder.player.forcePlay(song.asMediaItem)
                         }
@@ -565,25 +383,11 @@ class MainActivity : ComponentActivity(), MonetColorsChangedListener {
     ) {
         if (!isInitialChange) recreate()
     }
-
-    private fun setSystemBarAppearance(isDark: Boolean) {
-        with(WindowCompat.getInsetsController(window, window.decorView.rootView)) {
-            isAppearanceLightStatusBars = !isDark
-            isAppearanceLightNavigationBars = !isDark
-        }
-
-        if (!isAtLeastAndroid6) window.statusBarColor =
-            (if (isDark) Color.Transparent else Color.Black.copy(alpha = 0.2f)).toArgb()
-
-        if (!isAtLeastAndroid8) window.navigationBarColor =
-            (if (isDark) Color.Transparent else Color.Black.copy(alpha = 0.2f)).toArgb()
-    }
 }
 
 val LocalPlayerServiceBinder = staticCompositionLocalOf<PlayerService.Binder?> { null }
-
 val LocalPlayerAwareWindowInsets =
-    staticCompositionLocalOf<WindowInsets> { error("No player insets provided") }
+    compositionLocalOf<WindowInsets> { error("No player insets provided") }
 
 class MainApplication : Application(), ImageLoaderFactory, Configuration.Provider {
     override fun onCreate() {
