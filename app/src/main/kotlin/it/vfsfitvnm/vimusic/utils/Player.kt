@@ -30,11 +30,14 @@ fun Player.seamlessPlay(mediaItem: MediaItem) =
     if (mediaItem.mediaId == currentMediaItem?.mediaId) safeClearQueue() else forcePlay(mediaItem)
 
 fun Player.shuffleQueue() {
+    val mediaItems = currentTimeline
+        .mediaItems
+        .toMutableList()
+        .apply { removeAt(currentMediaItemIndex) }
+        .shuffled()
+
     safeClearQueue()
-    addMediaItems(
-        currentTimeline.mediaItems.toMutableList()
-            .apply { removeAt(currentMediaItemIndex) }.shuffled()
-    )
+    addMediaItems(mediaItems)
 }
 
 fun Player.forcePlay(mediaItem: MediaItem) {

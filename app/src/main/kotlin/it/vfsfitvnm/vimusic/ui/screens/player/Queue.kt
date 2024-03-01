@@ -144,6 +144,10 @@ fun Queue(
 
     PersistMapCleanup(prefix = "queue/suggestions")
 
+    val scrollConnection = remember {
+        layoutState.preUpPostDownNestedScrollConnection
+    }
+
     BottomSheet(
         state = layoutState,
         modifier = modifier,
@@ -186,12 +190,25 @@ fun Queue(
         var windows by remember { mutableStateOf(player.currentTimeline.windows) }
         var shouldBePlaying by remember { mutableStateOf(player.shouldBePlaying) }
 
-        val visibleSuggestions by remember(suggestions) {
+        val reorderingState = rememberReorderingState(
+            lazyListState = rememberLazyListState(),
+            key = windows,
+            onDragEnd = player::moveMediaItem,
+            extraItemCount = 0
+        )
+
+        val visibleSuggestions by remember {
             derivedStateOf {
                 suggestions
                     ?.getOrNull()
                     .orEmpty()
                     .filter { windows.none { window -> window.mediaItem.mediaId == it.mediaId } }
+            }
+        }
+
+        val shouldLoadSuggestions by remember {
+            derivedStateOf {
+                reorderingState.lazyListState.layoutInfo.visibleItemsInfo.any { it.key == "loading" }
             }
         }
 
@@ -218,8 +235,8 @@ fun Queue(
             }
         }
 
-        LaunchedEffect(mediaItemIndex) {
-            withContext(Dispatchers.IO) {
+        LaunchedEffect(mediaItemIndex, shouldLoadSuggestions) {
+            if (shouldLoadSuggestions) withContext(Dispatchers.IO) {
                 suggestions = runCatching {
                     Innertube.nextPage(
                         NextBody(
@@ -230,19 +247,8 @@ fun Queue(
             }
         }
 
-        val reorderingState = rememberReorderingState(
-            lazyListState = rememberLazyListState(),
-            key = windows,
-            onDragEnd = player::moveMediaItem,
-            extraItemCount = 0
-        )
-
         LaunchedEffect(Unit) {
             reorderingState.lazyListState.scrollToItem(index = mediaItemIndex.coerceAtLeast(0))
-        }
-
-        val scrollConnection = remember {
-            layoutState.preUpPostDownNestedScrollConnection
         }
 
         val musicBarsTransition = updateTransition(
@@ -268,7 +274,8 @@ fun Queue(
                     ) {
                         itemsIndexed(
                             items = windows,
-                            key = { _, window -> window.uid.hashCode() }
+                            key = { _, window -> window.uid.hashCode() },
+                            contentType = { _, _ -> ContentType.Window }
                         ) { i, window ->
                             val isPlayingThisMediaItem = mediaItemIndex == window.firstPeriodIndex
 
@@ -347,13 +354,20 @@ fun Queue(
                             )
                         }
 
-                        item {
+                        item(
+                            key = "divider",
+                            contentType = { ContentType.Divider }
+                        ) {
                             if (visibleSuggestions.isNotEmpty()) HorizontalDivider(
                                 modifier = Modifier.padding(start = 28.dp + Dimensions.thumbnails.song)
                             )
                         }
 
-                        items(visibleSuggestions) {
+                        items(
+                            items = visibleSuggestions,
+                            key = { "suggestion_${it.mediaId}" },
+                            contentType = { ContentType.Suggestion }
+                        ) {
                             SongItem(
                                 song = it,
                                 thumbnailSize = Dimensions.thumbnails.song,
@@ -394,7 +408,10 @@ fun Queue(
                             }
                         }
 
-                        item {
+                        item(
+                            key = "loading",
+                            contentType = { ContentType.Placeholder }
+                        ) {
                             if (binder.isLoadingRadio || suggestions == null)
                                 Column(modifier = Modifier.shimmer()) {
                                     repeat(3) { index ->
@@ -559,5 +576,15 @@ fun Queue(
                 )
             }
         }
+    }
+}
+
+@JvmInline
+private value class ContentType private constructor(val value: Int) {
+    companion object {
+        val Window = ContentType(value = 0)
+        val Divider = ContentType(value = 1)
+        val Suggestion = ContentType(value = 2)
+        val Placeholder = ContentType(value = 3)
     }
 }
