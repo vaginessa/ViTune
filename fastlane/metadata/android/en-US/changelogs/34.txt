@@ -1,0 +1,7 @@
+* Fixed font settings
+* Added Material You
+* Fixed screens not loading on unsupported languages
+* Added sensible defaults to max dynamic thumbnail size
+* Improved performance
+* Fixed rendering lag
+* Fixed theming inconsistencies
