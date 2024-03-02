@@ -252,6 +252,30 @@ private fun ModernControls(
 ) {
     val binder = LocalPlayerServiceBinder.current ?: return
 
+    val previousButtonContent: @Composable RowScope.() -> Unit = {
+        SkipButton(
+            iconId = R.drawable.play_skip_back,
+            onClick = binder.player::forceSeekToPrevious,
+            modifier = Modifier.weight(1f),
+            offsetOnPress = -FORWARD_BACKWARD_OFFSET
+        )
+    }
+
+    val likeButtonContent: @Composable RowScope.() -> Unit = {
+        BigIconButton(
+            iconId = if (likedAt == null) R.drawable.heart_outline else R.drawable.heart,
+            onClick = {
+                transaction {
+                    Database.like(
+                        songId = media.id,
+                        likedAt = if (likedAt == null) System.currentTimeMillis() else null
+                    )
+                }
+            },
+            modifier = Modifier.weight(1f)
+        )
+    }
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
@@ -267,18 +291,7 @@ private fun ModernControls(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(if (PlayerPreferences.showLike) 4.dp else 8.dp)
         ) {
-            if (PlayerPreferences.showLike) BigIconButton(
-                iconId = if (likedAt == null) R.drawable.heart_outline else R.drawable.heart,
-                onClick = {
-                    transaction {
-                        Database.like(
-                            songId = media.id,
-                            likedAt = if (likedAt == null) System.currentTimeMillis() else null
-                        )
-                    }
-                },
-                modifier = Modifier.weight(1f)
-            )
+            if (PlayerPreferences.showLike) previousButtonContent()
             PlayButton(
                 radius = playButtonRadius,
                 shouldBePlaying = shouldBePlaying,
@@ -298,12 +311,7 @@ private fun ModernControls(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            SkipButton(
-                iconId = R.drawable.play_skip_back,
-                onClick = binder.player::forceSeekToPrevious,
-                modifier = Modifier.weight(1f),
-                offsetOnPress = -FORWARD_BACKWARD_OFFSET
-            )
+            if (PlayerPreferences.showLike) likeButtonContent() else previousButtonContent()
 
             Column(modifier = Modifier.weight(4f)) {
                 SeekBar(
