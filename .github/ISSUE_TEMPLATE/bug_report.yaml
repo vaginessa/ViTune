@@ -1,6 +1,6 @@
 name: 🐛 Bug report
 description: Something isn't working, uh?
-labels: [bug]
+labels: [ bug ]
 body:
   - type: markdown
     attributes:
@@ -65,7 +65,7 @@ body:
         If you can, please filter on ViMusic (`it.vfsfitvnm.vimusic`/`it.vfsfitvnm.vimusic.nightly`) to unclutter the logs a bit.
 
         When submitting these logs here, please upload them as a file or upload them on [Pastebin](https://pastebin.com/). This way the issue ticket won't end up looking like a total mess.
-  
+
   - type: input
     id: vimusic-version
     attributes:
@@ -113,6 +113,19 @@ body:
       required: true
 
   - type: textarea
+    id: vimusic-issue-description
+    attributes:
+      label: Upstream reproducibility
+      placeholder: |
+        If this issue is also reproducible with [vfsfitvnm/ViMusic](https://github.com/vfsfitvnm/ViMusic), please provide relevant information.
+
+        If you are unsure, leave this field empty.
+
+        Examples:
+          "This issue has been reported in vfsfitvnm#xxxx"
+          "In ViMusic, click on (...) and the exact same issue occurs."
+
+  - type: textarea
     id: additional-information
     attributes:
       label: Additional information
@@ -131,4 +144,3 @@ body:
           required: true
         - label: This issue has not been submitted already (this is not a duplicate of another issue)
           required: true
-        - label: This issue is also reproducible with [vfsfitvnm/ViMusic](https://github.com/vfsfitvnm/ViMusic) (optional)
