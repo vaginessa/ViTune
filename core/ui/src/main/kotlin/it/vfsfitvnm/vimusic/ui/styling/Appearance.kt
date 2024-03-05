@@ -4,6 +4,7 @@ import android.app.Activity
 import android.graphics.Bitmap
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -28,6 +29,7 @@ import it.vfsfitvnm.vimusic.utils.roundedShape
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+@Immutable
 data class Appearance(
     val colorPalette: ColorPalette,
     val typography: Typography,
@@ -73,38 +75,40 @@ inline fun rememberAppearance(
 fun appearance(
     name: ColorPaletteName,
     mode: ColorPaletteMode,
-    materialAccentColor: Color?,
+    materialAccentColor: Color,
     sampleBitmap: Bitmap?,
     useSystemFont: Boolean,
     applyFontPadding: Boolean,
-    thumbnailRoundness: Dp
+    thumbnailRoundness: Dp,
+    isSystemInDarkTheme: Boolean = isSystemInDarkTheme()
 ): Appearance {
-    val isSystemInDarkTheme = isSystemInDarkTheme()
-
-    val isDark by remember {
-        derivedStateOf {
-            mode == ColorPaletteMode.Dark || (mode == ColorPaletteMode.System && isSystemInDarkTheme)
-        }
+    val isDark = remember(mode, isSystemInDarkTheme) {
+        mode == ColorPaletteMode.Dark || (mode == ColorPaletteMode.System && isSystemInDarkTheme)
     }
 
-    val defaultTheme by remember {
-        derivedStateOf {
-            val colorPalette = colorPaletteOf(
-                name = ColorPaletteName.Default,
-                mode = mode,
-                isDark = isSystemInDarkTheme
-            )
+    val defaultTheme = remember(
+        isDark,
+        mode,
+        isSystemInDarkTheme,
+        useSystemFont,
+        applyFontPadding,
+        thumbnailRoundness
+    ) {
+        val colorPalette = colorPaletteOf(
+            name = ColorPaletteName.Default,
+            mode = mode,
+            isDark = isSystemInDarkTheme
+        )
 
-            Appearance(
-                colorPalette = colorPalette,
-                typography = typographyOf(
-                    color = colorPalette.text,
-                    useSystemFont = useSystemFont,
-                    applyFontPadding = applyFontPadding
-                ),
-                thumbnailShapeCorners = thumbnailRoundness
-            )
-        }
+        Appearance(
+            colorPalette = colorPalette,
+            typography = typographyOf(
+                color = colorPalette.text,
+                useSystemFont = useSystemFont,
+                applyFontPadding = applyFontPadding
+            ),
+            thumbnailShapeCorners = thumbnailRoundness
+        )
     }
 
     var dynamicAccentColor by rememberSaveable(stateSaver = Hsl.Saver) {
@@ -122,7 +126,7 @@ fun appearance(
         } ?: defaultTheme.colorPalette.accent.hsl
     }
 
-    val colorPalette by remember(name) {
+    val colorPalette by remember(name, isDark) {
         derivedStateOf {
             when (name) {
                 ColorPaletteName.Default -> defaultTheme.colorPalette
@@ -132,8 +136,7 @@ fun appearance(
                     isAmoled = false
                 )
 
-                ColorPaletteName.MaterialYou -> if (materialAccentColor == null) defaultTheme.colorPalette
-                else dynamicColorPaletteOf(
+                ColorPaletteName.MaterialYou -> dynamicColorPaletteOf(
                     accentColor = materialAccentColor,
                     isDark = isDark,
                     isAmoled = false
