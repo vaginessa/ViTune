@@ -1,5 +1,7 @@
 package it.vfsfitvnm.vimusic.ui.components.themed
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -9,10 +11,16 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import it.vfsfitvnm.vimusic.LocalPlayerAwareWindowInsets
 import it.vfsfitvnm.vimusic.R
@@ -36,32 +44,50 @@ fun Attribution(
 
     val attributionsIndex = text.lastIndexOf("\n\n${stringResource(R.string.from_wikipedia)}")
 
-    Row(
-        modifier = modifier.padding(endPaddingValues)
-    ) {
-        BasicText(
-            text = stringResource(R.string.quote_open),
-            style = typography.xxl.semiBold,
-            modifier = Modifier
-                .offset(y = (-8).dp)
-                .align(Alignment.Top)
-        )
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    var overflow by remember { mutableStateOf(false) }
 
-        BasicText(
-            text = if (attributionsIndex == -1) text else text.substring(0, attributionsIndex),
-            style = typography.xxs.secondary,
-            modifier = Modifier
-                .padding(horizontal = 8.dp)
-                .weight(1f)
-        )
+    AnimatedContent(
+        targetState = expanded,
+        label = ""
+    ) { isExpanded ->
+        Row(
+            modifier = modifier
+                .padding(endPaddingValues)
+                .let {
+                    if (overflow) it.clickable {
+                        expanded = !expanded
+                    } else it
+                }
+        ) {
+            BasicText(
+                text = stringResource(R.string.quote_open),
+                style = typography.xxl.semiBold,
+                modifier = Modifier
+                    .offset(y = (-8).dp)
+                    .align(Alignment.Top)
+            )
+            BasicText(
+                text = if (attributionsIndex == -1) text else text.substring(0, attributionsIndex),
+                style = typography.xxs.secondary,
+                modifier = Modifier
+                    .padding(horizontal = 8.dp)
+                    .weight(1f),
+                maxLines = if (isExpanded) Int.MAX_VALUE else 1,
+                overflow = TextOverflow.Ellipsis,
+                onTextLayout = {
+                    if (!expanded) overflow = it.hasVisualOverflow
+                }
+            )
 
-        BasicText(
-            text = stringResource(R.string.quote_close),
-            style = typography.xxl.semiBold,
-            modifier = Modifier
-                .offset(y = 4.dp)
-                .align(Alignment.Bottom)
-        )
+            BasicText(
+                text = stringResource(R.string.quote_close),
+                style = typography.xxl.semiBold,
+                modifier = Modifier
+                    .offset(y = 4.dp)
+                    .align(Alignment.Bottom)
+            )
+        }
     }
 
     if (attributionsIndex != -1) BasicText(
