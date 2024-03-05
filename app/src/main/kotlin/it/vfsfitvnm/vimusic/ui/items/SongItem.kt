@@ -1,6 +1,7 @@
 package it.vfsfitvnm.vimusic.ui.items
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
@@ -161,7 +162,10 @@ fun SongItem(
 
         ItemInfoContainer {
             trailingContent?.let {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
                     BasicText(
                         text = title.orEmpty(),
                         style = typography.xs.semiBold,
@@ -179,7 +183,10 @@ fun SongItem(
                 overflow = TextOverflow.Ellipsis
             )
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 authors?.let {
                     BasicText(
                         text = authors,
